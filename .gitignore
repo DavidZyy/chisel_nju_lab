@@ -1,0 +1,13 @@
+.metals/
+.vscode/
+.bloop/
+.bsp/
+.github/
+quartus/
+obj_dir/
+generated/
+target/
+test_run_dir/
+project/
+
+# !src/
