@@ -55,7 +55,7 @@ class alu extends Module {
         io.carry    := sum(4)
         io.overflow := (io.A(3) === io.B(3)) && (io.Result(3) =/= io.A(3))
     }.elsewhen(io.op === "b001".U) {
-        io.carry    := io.A < io.B 
+        io.carry    := io.A < io.B
         io.overflow := (io.A(3) =/= io.B(3)) && (io.Result(3) =/= io.A(3))
     }
 }
