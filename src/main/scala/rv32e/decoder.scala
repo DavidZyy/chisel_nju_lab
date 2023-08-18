@@ -10,10 +10,10 @@ import rv32e.config.Inst._
 
 /* contrl signals */
 class contrl_signals extends Bundle {
-    // val ctrl_jmp=   Output(UInt(1.W))
-    // val ctrl_br =   Output(UInt(1.W))
-    val mem_wen =   Output(UInt(1.W))
-    val reg_wen =   Output(UInt(1.W))
+    // val mem_wen =   Output(UInt(1.W))
+    val mem_wen =   Output(Bool())
+    // val reg_wen =   Output(UInt(1.W))
+    val reg_wen =   Output(Bool())
     val src1_op =   Output(UInt(SRCOP_WIDTH.W))
     val src2_op =   Output(UInt(SRCOP_WIDTH.W))
     val alu_op  =   Output(UInt(ALUOP_WIDTH.W))

@@ -6,11 +6,9 @@ import chisel3.util._
 import rv32e.config.Configs._
 
 class PCRegIO extends Bundle {
-    val addrOut         =   Output(UInt(ADDR_WIDTH.W))
-    val ctrlJump        =   Input(Bool())
-    val ctrlBranch      =   Input(Bool())
-    val resultBranch    =   Input(Bool())
-    val addrTarget      =   Input(UInt(ADDR_WIDTH.W))
+    val cur_pc          =   Output(UInt(ADDR_WIDTH.W))
+    val ctrl_br         =   Input(Bool())   // come from bru result
+    val addr_target     =   Input(UInt(ADDR_WIDTH.W)) // come from alu result
 }
 
 class PCReg extends Module {
@@ -18,11 +16,11 @@ class PCReg extends Module {
 
     val regPC = RegInit(UInt(ADDR_WIDTH.W), START_ADDR.U)
 
-    when (io.ctrlJump || (io.ctrlBranch && io.resultBranch)) {
-        regPC := io.addrTarget
+    when (io.ctrl_br) {
+        regPC := io.addr_target
     } .otherwise {
         regPC := regPC + ADDR_BYTE_WIDTH.U
     }
 
-    io.addrOut := regPC
+    io.cur_pc := regPC
 }

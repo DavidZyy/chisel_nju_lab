@@ -13,7 +13,7 @@ class MemInstIO extends Bundle {
     val inst = Output(UInt(INST_WIDTH.W))   // 指令输出
 }
 
-class MemInst extends Module {
+class Rom extends Module {
     val io = IO(new MemInstIO())    // 输入输出接口
 
     // 指令内存，能存放MEM_INST_SIZE条INST_WIDTH位的指令

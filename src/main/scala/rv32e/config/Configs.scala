@@ -12,9 +12,11 @@ object Configs {
     val INST_BYTE_WIDTH =   4
 
     val MEM_INST_SIZE   =   1024
+    val MEM_DATA_SIZE   =   2048 
 
     val START_ADDR: Long =  0x00000000
 
+    /* 2^4 = 16 general registers */
     val REG_OP_WIDTH = 4
 }
 
