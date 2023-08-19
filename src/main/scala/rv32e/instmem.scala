@@ -18,7 +18,6 @@ class Rom extends Module {
 
     // 指令内存，能存放MEM_INST_SIZE条INST_WIDTH位的指令
     val mem = Mem(MEM_INST_SIZE, UInt(INST_WIDTH.W))
-    loadMemoryFromFile(mem, "src/test/scala/rv32e/MemInst.hex", MemoryLoadFileType.Hex)
 
     io.inst := mem.read(io.addr >> 2)    // 读取对应位置的指令并输出
 }
