@@ -38,10 +38,10 @@ class top extends Module {
     Decoder_i.io.inst := Rom_i.io.inst
 
     // reg file
-    RegFile_i.io.rf_in.rd  := Decoder_i.io.out.rd
-    RegFile_i.io.rf_in.rs1 := Decoder_i.io.out.rs1
-    RegFile_i.io.rf_in.rs2 := Decoder_i.io.out.rs2
-    RegFile_i.io.rf_in.reg_wen := Decoder_i.io.out.ctrl_sig.reg_wen
+    RegFile_i.io.in.rd  := Decoder_i.io.out.rd
+    RegFile_i.io.in.rs1 := Decoder_i.io.out.rs1
+    RegFile_i.io.in.rs2 := Decoder_i.io.out.rs2
+    RegFile_i.io.in.reg_wen := Decoder_i.io.out.ctrl_sig.reg_wen
 
     val is_load = 
         Decoder_i.io.out.ctrl_sig.lsu_op === ("b"+lsu_lb).U |
@@ -55,18 +55,18 @@ class top extends Module {
         Decoder_i.io.out.ctrl_sig.bru_op === ("b"+bru_jalr).U
 
     when(is_load) {
-        RegFile_i.io.rf_in.wdata := Ram_i.io.ram_out.rdata
+        RegFile_i.io.in.wdata := Ram_i.io.out.rdata
     } .elsewhen(is_jump) {
-        RegFile_i.io.rf_in.wdata := PCReg_i.io.cur_pc + ADDR_BYTE_WIDTH.U
+        RegFile_i.io.in.wdata := PCReg_i.io.cur_pc + ADDR_BYTE_WIDTH.U
     } .otherwise{
-        RegFile_i.io.rf_in.wdata := Alu_i.io.alu_out.alu_result
+        RegFile_i.io.in.wdata := Alu_i.io.alu_out.alu_result
     }
 
     // alu
     Alu_i.io.alu_in.alu_op := Decoder_i.io.out.ctrl_sig.alu_op
 
     when(Decoder_i.io.out.ctrl_sig.src1_op === ("b"+src_rf).U){
-        Alu_i.io.alu_in.src1 := RegFile_i.io.rf_out.rdata1
+        Alu_i.io.alu_in.src1 := RegFile_i.io.out.rdata1
     } .elsewhen(Decoder_i.io.out.ctrl_sig.src1_op === ("b"+src_pc).U) {
         Alu_i.io.alu_in.src1 := PCReg_i.io.cur_pc
     } .otherwise {
@@ -74,7 +74,7 @@ class top extends Module {
     }
 
     when(Decoder_i.io.out.ctrl_sig.src2_op === ("b"+src_rf).U){
-        Alu_i.io.alu_in.src2 := RegFile_i.io.rf_out.rdata2
+        Alu_i.io.alu_in.src2 := RegFile_i.io.out.rdata2
     } .elsewhen(Decoder_i.io.out.ctrl_sig.src2_op === ("b"+src_imm).U) {
         Alu_i.io.alu_in.src2 := Decoder_i.io.out.imm
     } .otherwise {
@@ -83,21 +83,22 @@ class top extends Module {
 
     // bru
     Bru_i.io.bru_in.bru_op := Decoder_i.io.out.ctrl_sig.bru_op
-    Bru_i.io.bru_in.src1   := RegFile_i.io.rf_out.rdata1
-    Bru_i.io.bru_in.src2   := RegFile_i.io.rf_out.rdata2
+    Bru_i.io.bru_in.src1   := RegFile_i.io.out.rdata1
+    Bru_i.io.bru_in.src2   := RegFile_i.io.out.rdata2
 
     // ram
-    Ram_i.io.ram_in.addr  := Alu_i.io.alu_out.alu_result
-    Ram_i.io.ram_in.wdata := RegFile_i.io.rf_out.rdata2
-    Ram_i.io.ram_in.mem_wen := Decoder_i.io.out.ctrl_sig.mem_wen
-    Ram_i.io.ram_in.lsu_op  := Decoder_i.io.out.ctrl_sig.lsu_op
+    Ram_i.io.in.addr  := Alu_i.io.alu_out.alu_result
+    Ram_i.io.in.wdata := RegFile_i.io.out.rdata2
+    Ram_i.io.in.mem_wen := Decoder_i.io.out.ctrl_sig.mem_wen
+    Ram_i.io.in.lsu_op  := Decoder_i.io.out.ctrl_sig.lsu_op
+    Ram_i.io.in.mem_ren := is_load
 
     io.out.inst := Rom_i.io.inst
     io.out.pc   := PCReg_i.io.cur_pc
 }
 
 
-object decoder_main extends App {
-    emitVerilog(new top(), Array("--target-dir", "generated"))
+object top_main extends App {
+    emitVerilog(new top(), Array("--target-dir", "generated/cpu"))
     // emitVerilog(new WriteSmem(), Array("--target-dir", "generated"))
 }

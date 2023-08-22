@@ -10,6 +10,7 @@ import rv32e.config.Inst._
 import empty.alu
 
 class ram_in_class extends Bundle {
+    val mem_ren =   Input(Bool())
     val mem_wen =   Input(Bool())
     val addr    =   Input(UInt(ADDR_WIDTH.W))
     val wdata   =   Input(UInt(DATA_WIDTH.W))
@@ -20,19 +21,41 @@ class ram_out_class extends Bundle {
     val rdata   =   Output(UInt(DATA_WIDTH.W))
 }
 
+class RamBB extends BlackBox with HasBlackBoxResource {
+    val io = IO(new Bundle {
+        val addr  = Input(UInt(DATA_WIDTH.W))
+        val wdata = Input(UInt(DATA_WIDTH.W))
+        val mem_wen = Input(Bool())
+        val valid   = Input(Bool())
+        // val mem_ren = Input(Bool())
+        val rdata = Output(UInt(DATA_WIDTH.W))
+    })
+    addResource("/RamBB.v")
+}
+
 class Ram extends Module {
     val io = IO(new Bundle {
-        val ram_in  = (new ram_in_class )
-        val ram_out = (new ram_out_class)
+        val in  = (new ram_in_class )
+        val out = (new ram_out_class)
     })
 
-    val lsu_op = io.ram_in.lsu_op
+    val lsu_op = io.in.lsu_op
+    val true_addr = io.in.addr
 
-    val addr_low_2 = io.ram_in.addr(1, 0) 
+    val addr_low_2 = true_addr(1, 0) 
 
-    val mem = Mem(MEM_INST_SIZE, UInt(DATA_WIDTH.W))
+    val valid = io.in.mem_ren | io.in.mem_wen
 
-    val rdata_align_4 = mem.read(io.ram_in.addr >> 2)
+    val RamBB_i1 = Module(new RamBB())
+
+    RamBB_i1.io.addr    := io.in.addr
+    RamBB_i1.io.mem_wen := io.in.mem_wen
+    RamBB_i1.io.valid   := valid
+    // RamBB_i1.io.wdata   := wdata_align_4
+    val rdata_align_4 = RamBB_i1.io.rdata
+    // val mem = Mem(MEM_INST_SIZE, UInt(DATA_WIDTH.W))
+
+    // val rdata_align_4 = mem.read(true_addr >> 2)
 
     val lb_rdata  = Wire(UInt(DATA_WIDTH.W))
     val lbu_rdata = Wire(UInt(DATA_WIDTH.W))
@@ -66,7 +89,7 @@ class Ram extends Module {
 
     lw_rdata := rdata_align_4
 
-    io.ram_out.rdata    :=  MuxLookup(lsu_op, 0.U, Array(
+    io.out.rdata    :=  MuxLookup(lsu_op, 0.U, Array(
         ("b" + lsu_x  ).U -> 0.U,
         ("b" + lsu_lb ).U -> lb_rdata,
         ("b" + lsu_lbu).U -> lbu_rdata,
@@ -99,10 +122,15 @@ class Ram extends Module {
         ("b" + lsu_sw).U -> sw_wmask,
     ))
 
-    when (io.ram_in.mem_wen) {
-        mem.write(io.ram_in.addr >> 2.U, 
-        ((io.ram_in.wdata << (8.U * addr_low_2)) & wmask | rdata_align_4 & ~wmask))
-    }
+    val wdata_align_4 =
+        ((io.in.wdata << (8.U * addr_low_2)) & wmask | rdata_align_4 & ~wmask)
+
+    RamBB_i1.io.wdata   := wdata_align_4
+
+    // when (io.in.mem_wen) {
+    //     mem.write(true_addr >> 2.U, 
+    //     ((io.in.wdata << (8.U * addr_low_2)) & wmask | rdata_align_4 & ~wmask))
+    // }
 }
 
 
