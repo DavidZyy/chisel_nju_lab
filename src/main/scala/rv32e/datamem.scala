@@ -23,6 +23,7 @@ class ram_out_class extends Bundle {
 
 class RamBB extends BlackBox with HasBlackBoxResource {
     val io = IO(new Bundle {
+        val clock = Input(Clock())
         val addr  = Input(UInt(DATA_WIDTH.W))
         val wdata = Input(UInt(DATA_WIDTH.W))
         val mem_wen = Input(Bool())
@@ -48,7 +49,8 @@ class Ram extends Module {
 
     val RamBB_i1 = Module(new RamBB())
 
-    RamBB_i1.io.addr    := io.in.addr
+    RamBB_i1.io.clock   := clock
+    RamBB_i1.io.addr    := (io.in.addr >> 2) << 2 // align to 4
     RamBB_i1.io.mem_wen := io.in.mem_wen
     RamBB_i1.io.valid   := valid
     // RamBB_i1.io.wdata   := wdata_align_4

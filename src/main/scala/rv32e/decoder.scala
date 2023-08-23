@@ -92,9 +92,9 @@ LBU     ->  BitPat("b" + fu_alu + lsu_lbu + bru_x + i_type + alu_add + src_rf + 
 LH      ->  BitPat("b" + fu_alu + lsu_lh  + bru_x + i_type + alu_add + src_rf + src_imm + reg_w_yes + mem_w_no),
 LHU     ->  BitPat("b" + fu_alu + lsu_lhu + bru_x + i_type + alu_add + src_rf + src_imm + reg_w_yes + mem_w_no),
 LW      ->  BitPat("b" + fu_alu + lsu_lw  + bru_x + i_type + alu_add + src_rf + src_imm + reg_w_yes + mem_w_no),
-SB      ->  BitPat("b" + fu_alu + lsu_sb  + bru_x + i_type + alu_add + src_rf + src_imm + reg_w_no  + mem_w_yes),
-SH      ->  BitPat("b" + fu_alu + lsu_sh  + bru_x + i_type + alu_add + src_rf + src_imm + reg_w_no  + mem_w_yes),
-SW      ->  BitPat("b" + fu_alu + lsu_sw  + bru_x + i_type + alu_add + src_rf + src_imm + reg_w_no  + mem_w_yes),
+SB      ->  BitPat("b" + fu_alu + lsu_sb  + bru_x + s_type + alu_add + src_rf + src_imm + reg_w_no  + mem_w_yes),
+SH      ->  BitPat("b" + fu_alu + lsu_sh  + bru_x + s_type + alu_add + src_rf + src_imm + reg_w_no  + mem_w_yes),
+SW      ->  BitPat("b" + fu_alu + lsu_sw  + bru_x + s_type + alu_add + src_rf + src_imm + reg_w_no  + mem_w_yes),
 
         /* 2.8 Environment Call and Breakpoints */
 EBREAK  ->  BitPat("b" + fu_alu + lsu_x + bru_x + no_type + alu_x + src_x + src_x + reg_w_no + mem_w_no)
