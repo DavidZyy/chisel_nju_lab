@@ -12,6 +12,7 @@ import empty.alu
 class out_class extends Bundle {
     val  inst = Output(UInt(INST_WIDTH.W))
     val  pc   = Output(UInt(DATA_WIDTH.W))
+    val  is_load = Output(Bool())
 }
 
 class top extends Module {
@@ -19,13 +20,14 @@ class top extends Module {
         val out = (new out_class)
     })
 
-    val PCReg_i     = Module(new PCReg())
-    val Rom_i       = Module(new Rom())
-    val Decoder_i   = Module(new Decoder())
-    val RegFile_i   = Module(new RegFile())       
-    val Alu_i       = Module(new Alu())
-    val Bru_i       = Module(new Bru())
-    val Ram_i       = Module(new Ram())
+    val PCReg_i         = Module(new PCReg())
+    val Rom_i           = Module(new Rom())
+    val Decoder_i       = Module(new Decoder())
+    val RegFile_i       = Module(new RegFile())       
+    val Alu_i           = Module(new Alu())
+    val Bru_i           = Module(new Bru())
+    val Ram_i           = Module(new Ram())
+    val ebreak_moudle_i = Module(new ebreak_moudle())
 
     // pc
     PCReg_i.io.ctrl_br := Bru_i.io.bru_out.ctrl_br
@@ -93,10 +95,13 @@ class top extends Module {
     Ram_i.io.in.lsu_op  := Decoder_i.io.out.ctrl_sig.lsu_op
     Ram_i.io.in.mem_ren := is_load
 
-    io.out.inst := Rom_i.io.inst
-    io.out.pc   := PCReg_i.io.cur_pc
-}
+    // ebreak
+    ebreak_moudle_i.is_ebreak := Decoder_i.io.out.ctrl_sig.is_ebreak
 
+    io.out.inst    := Rom_i.io.inst
+    io.out.pc      := PCReg_i.io.cur_pc
+    io.out.is_load := is_load
+}
 
 object top_main extends App {
     emitVerilog(new top(), Array("--target-dir", "generated/cpu"))

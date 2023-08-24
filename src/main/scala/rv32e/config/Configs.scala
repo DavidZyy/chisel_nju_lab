@@ -43,10 +43,17 @@ object Dec_Info {
 //     val ctrl_br_yes = "1"
 //     val ctrl_br_no  = "0"
 
+    /* ebreak inst */
+    val EBREAK_OP_WIDTH = 1
+    val EBREAK_OP_LSB = 0
+    val EBREAK_OP_MSB = EBREAK_OP_LSB + EBREAK_OP_WIDTH - 1
+    val ebreak_yes = "1"
+    val ebreak_no  = "0"
+
     /* memory write enable */
     val MEM_W_OP_WIDTH = 1
     // val MEM_W_OP_LSB = CTRL_BR_MSB + 1
-    val MEM_W_OP_LSB = 0
+    val MEM_W_OP_LSB = EBREAK_OP_MSB + 1
     val MEM_W_OP_MSB = MEM_W_OP_LSB + MEM_W_OP_WIDTH - 1
     val mem_w_yes = "1" // mem write yes
     val mem_w_no  = "0" // mem write no

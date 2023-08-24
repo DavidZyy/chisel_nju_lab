@@ -30,6 +30,7 @@ class RamBB extends BlackBox with HasBlackBoxResource {
         val valid   = Input(Bool())
         // val mem_ren = Input(Bool())
         val rdata = Output(UInt(DATA_WIDTH.W))
+        val rdata_4_w = Output(UInt(DATA_WIDTH.W))
     })
     addResource("/RamBB.v")
 }
@@ -55,6 +56,7 @@ class Ram extends Module {
     RamBB_i1.io.valid   := valid
     // RamBB_i1.io.wdata   := wdata_align_4
     val rdata_align_4 = RamBB_i1.io.rdata
+    val rdata_4_w     = RamBB_i1.io.rdata_4_w
     // val mem = Mem(MEM_INST_SIZE, UInt(DATA_WIDTH.W))
 
     // val rdata_align_4 = mem.read(true_addr >> 2)
@@ -124,8 +126,10 @@ class Ram extends Module {
         ("b" + lsu_sw).U -> sw_wmask,
     ))
 
-    val wdata_align_4 =
-        ((io.in.wdata << (8.U * addr_low_2)) & wmask | rdata_align_4 & ~wmask)
+    val wdata_align_4 = 
+        // 0.U
+        // (((io.in.wdata << (8.U * addr_low_2)) & wmask) | (rdata_align_4))
+        (((io.in.wdata << (8.U * addr_low_2)) & wmask) | (rdata_4_w & ~wmask))
 
     RamBB_i1.io.wdata   := wdata_align_4
 

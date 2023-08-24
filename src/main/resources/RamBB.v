@@ -1,4 +1,4 @@
-
+/* verilator lint_off UNUSEDSIGNAL */
 /* verilator lint_off BLKSEQ */
 import "DPI-C" function void vaddr_read(
   input int raddr, output int rdata);
@@ -15,8 +15,17 @@ module RamBB (
     // input mem_ren,
     input valid,
     input [`DATA_WIDTH-1:0] wdata,
-    output reg [`DATA_WIDTH-1:0] rdata
+    output reg [`DATA_WIDTH-1:0] rdata,
+    output reg [`DATA_WIDTH-1:0] rdata_4_w
 );
+
+always @(*) begin
+    if (valid) begin
+        vaddr_read(addr, rdata_4_w);
+    end else begin
+        rdata_4_w = 0;
+    end
+end
 
 // always @(*) begin
 always @(negedge clock) begin

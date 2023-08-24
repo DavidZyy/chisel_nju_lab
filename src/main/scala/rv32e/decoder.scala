@@ -14,6 +14,7 @@ class contrl_signals extends Bundle {
     val mem_wen =   Output(Bool())
     // val reg_wen =   Output(UInt(1.W))
     val reg_wen =   Output(Bool())
+    val is_ebreak = Output(Bool())
     val src1_op =   Output(UInt(SRCOP_WIDTH.W))
     val src2_op =   Output(UInt(SRCOP_WIDTH.W))
     val alu_op  =   Output(UInt(ALUOP_WIDTH.W))
@@ -49,57 +50,57 @@ class Decoder extends Module {
         Map(
         /* 2.4 Integer Computational Instructions */
             /* Integer Register-Immediate Instructions */
-ADDI    ->  BitPat("b" + fu_alu + lsu_x + bru_x + i_type + alu_add  + src_rf + src_imm + reg_w_yes + mem_w_no),
-SLTI    ->  BitPat("b" + fu_alu + lsu_x + bru_x + i_type + alu_slt  + src_rf + src_imm + reg_w_yes + mem_w_no),
-SLTIU   ->  BitPat("b" + fu_alu + lsu_x + bru_x + i_type + alu_sltu + src_rf + src_imm + reg_w_yes + mem_w_no),
-ANDI    ->  BitPat("b" + fu_alu + lsu_x + bru_x + i_type + alu_and  + src_rf + src_imm + reg_w_yes + mem_w_no),
-ORI     ->  BitPat("b" + fu_alu + lsu_x + bru_x + i_type + alu_or   + src_rf + src_imm + reg_w_yes + mem_w_no),
-XORI    ->  BitPat("b" + fu_alu + lsu_x + bru_x + i_type + alu_xor  + src_rf + src_imm + reg_w_yes + mem_w_no),
-SLLI    ->  BitPat("b" + fu_alu + lsu_x + bru_x + i_type + alu_sll  + src_rf + src_imm + reg_w_yes + mem_w_no),
-SRLI    ->  BitPat("b" + fu_alu + lsu_x + bru_x + i_type + alu_srl  + src_rf + src_imm + reg_w_yes + mem_w_no),
-SRAI    ->  BitPat("b" + fu_alu + lsu_x + bru_x + i_type + alu_sra  + src_rf + src_imm + reg_w_yes + mem_w_no),
-LUI     ->  BitPat("b" + fu_alu + lsu_x + bru_x + u_type + alu_add  + src_x  + src_imm + reg_w_yes + mem_w_no),
-AUIPC   ->  BitPat("b" + fu_alu + lsu_x + bru_x + u_type + alu_add  + src_pc + src_imm + reg_w_yes + mem_w_no),
+ADDI    ->  BitPat("b" + fu_alu + lsu_x + bru_x + i_type + alu_add  + src_rf + src_imm + reg_w_yes + mem_w_no + ebreak_no),
+SLTI    ->  BitPat("b" + fu_alu + lsu_x + bru_x + i_type + alu_slt  + src_rf + src_imm + reg_w_yes + mem_w_no + ebreak_no),
+SLTIU   ->  BitPat("b" + fu_alu + lsu_x + bru_x + i_type + alu_sltu + src_rf + src_imm + reg_w_yes + mem_w_no + ebreak_no),
+ANDI    ->  BitPat("b" + fu_alu + lsu_x + bru_x + i_type + alu_and  + src_rf + src_imm + reg_w_yes + mem_w_no + ebreak_no),
+ORI     ->  BitPat("b" + fu_alu + lsu_x + bru_x + i_type + alu_or   + src_rf + src_imm + reg_w_yes + mem_w_no + ebreak_no),
+XORI    ->  BitPat("b" + fu_alu + lsu_x + bru_x + i_type + alu_xor  + src_rf + src_imm + reg_w_yes + mem_w_no + ebreak_no),
+SLLI    ->  BitPat("b" + fu_alu + lsu_x + bru_x + i_type + alu_sll  + src_rf + src_imm + reg_w_yes + mem_w_no + ebreak_no),
+SRLI    ->  BitPat("b" + fu_alu + lsu_x + bru_x + i_type + alu_srl  + src_rf + src_imm + reg_w_yes + mem_w_no + ebreak_no),
+SRAI    ->  BitPat("b" + fu_alu + lsu_x + bru_x + i_type + alu_sra  + src_rf + src_imm + reg_w_yes + mem_w_no + ebreak_no),
+LUI     ->  BitPat("b" + fu_alu + lsu_x + bru_x + u_type + alu_add  + src_x  + src_imm + reg_w_yes + mem_w_no + ebreak_no),
+AUIPC   ->  BitPat("b" + fu_alu + lsu_x + bru_x + u_type + alu_add  + src_pc + src_imm + reg_w_yes + mem_w_no + ebreak_no),
 
             /* Integer Register-Register Instructions */
-ADD     ->  BitPat("b" + fu_alu + lsu_x + bru_x + r_type + alu_add  + src_rf + src_rf  + reg_w_yes + mem_w_no),
-SLT     ->  BitPat("b" + fu_alu + lsu_x + bru_x + r_type + alu_slt  + src_rf + src_rf  + reg_w_yes + mem_w_no),
-SLTU    ->  BitPat("b" + fu_alu + lsu_x + bru_x + r_type + alu_sltu + src_rf + src_rf  + reg_w_yes + mem_w_no),
-AND     ->  BitPat("b" + fu_alu + lsu_x + bru_x + r_type + alu_and  + src_rf + src_rf  + reg_w_yes + mem_w_no),
-OR      ->  BitPat("b" + fu_alu + lsu_x + bru_x + r_type + alu_or   + src_rf + src_rf  + reg_w_yes + mem_w_no),
-XOR     ->  BitPat("b" + fu_alu + lsu_x + bru_x + r_type + alu_xor  + src_rf + src_rf  + reg_w_yes + mem_w_no),
-SLL     ->  BitPat("b" + fu_alu + lsu_x + bru_x + r_type + alu_sll  + src_rf + src_rf  + reg_w_yes + mem_w_no),
-SRL     ->  BitPat("b" + fu_alu + lsu_x + bru_x + r_type + alu_srl  + src_rf + src_rf  + reg_w_yes + mem_w_no),
-SUB     ->  BitPat("b" + fu_alu + lsu_x + bru_x + r_type + alu_sub  + src_rf + src_rf  + reg_w_yes + mem_w_no),
-SRA     ->  BitPat("b" + fu_alu + lsu_x + bru_x + r_type + alu_sra  + src_rf + src_rf  + reg_w_yes + mem_w_no),
+ADD     ->  BitPat("b" + fu_alu + lsu_x + bru_x + r_type + alu_add  + src_rf + src_rf  + reg_w_yes + mem_w_no + ebreak_no),
+SLT     ->  BitPat("b" + fu_alu + lsu_x + bru_x + r_type + alu_slt  + src_rf + src_rf  + reg_w_yes + mem_w_no + ebreak_no),
+SLTU    ->  BitPat("b" + fu_alu + lsu_x + bru_x + r_type + alu_sltu + src_rf + src_rf  + reg_w_yes + mem_w_no + ebreak_no),
+AND     ->  BitPat("b" + fu_alu + lsu_x + bru_x + r_type + alu_and  + src_rf + src_rf  + reg_w_yes + mem_w_no + ebreak_no),
+OR      ->  BitPat("b" + fu_alu + lsu_x + bru_x + r_type + alu_or   + src_rf + src_rf  + reg_w_yes + mem_w_no + ebreak_no),
+XOR     ->  BitPat("b" + fu_alu + lsu_x + bru_x + r_type + alu_xor  + src_rf + src_rf  + reg_w_yes + mem_w_no + ebreak_no),
+SLL     ->  BitPat("b" + fu_alu + lsu_x + bru_x + r_type + alu_sll  + src_rf + src_rf  + reg_w_yes + mem_w_no + ebreak_no),
+SRL     ->  BitPat("b" + fu_alu + lsu_x + bru_x + r_type + alu_srl  + src_rf + src_rf  + reg_w_yes + mem_w_no + ebreak_no),
+SUB     ->  BitPat("b" + fu_alu + lsu_x + bru_x + r_type + alu_sub  + src_rf + src_rf  + reg_w_yes + mem_w_no + ebreak_no),
+SRA     ->  BitPat("b" + fu_alu + lsu_x + bru_x + r_type + alu_sra  + src_rf + src_rf  + reg_w_yes + mem_w_no + ebreak_no),
 
         /* 2.5 Control Transfer Instructions */
             /* Unconditional Jumps */
-JAL     ->  BitPat("b" + fu_alu + lsu_x + bru_jal  + j_type + alu_add + src_pc + src_imm + reg_w_yes + mem_w_no),
-JALR    ->  BitPat("b" + fu_alu + lsu_x + bru_jalr + i_type + alu_add + src_rf + src_imm + reg_w_yes + mem_w_no),
+JAL     ->  BitPat("b" + fu_alu + lsu_x + bru_jal  + j_type + alu_add + src_pc + src_imm + reg_w_yes + mem_w_no + ebreak_no),
+JALR    ->  BitPat("b" + fu_alu + lsu_x + bru_jalr + i_type + alu_add + src_rf + src_imm + reg_w_yes + mem_w_no + ebreak_no),
 
             /* Conditional Branches */
-BEQ     ->  BitPat("b" + fu_alu + lsu_x + bru_beq  + b_type + alu_add + src_pc + src_imm + reg_w_no + mem_w_no),
-BNE     ->  BitPat("b" + fu_alu + lsu_x + bru_bne  + b_type + alu_add + src_pc + src_imm + reg_w_no + mem_w_no),
-BLT     ->  BitPat("b" + fu_alu + lsu_x + bru_blt  + b_type + alu_add + src_pc + src_imm + reg_w_no + mem_w_no),
-BGE     ->  BitPat("b" + fu_alu + lsu_x + bru_bge  + b_type + alu_add + src_pc + src_imm + reg_w_no + mem_w_no),
-BLTU    ->  BitPat("b" + fu_alu + lsu_x + bru_bltu + b_type + alu_add + src_pc + src_imm + reg_w_no + mem_w_no),
-BGEU    ->  BitPat("b" + fu_alu + lsu_x + bru_bgeu + b_type + alu_add + src_pc + src_imm + reg_w_no + mem_w_no),
+BEQ     ->  BitPat("b" + fu_alu + lsu_x + bru_beq  + b_type + alu_add + src_pc + src_imm + reg_w_no + mem_w_no + ebreak_no),
+BNE     ->  BitPat("b" + fu_alu + lsu_x + bru_bne  + b_type + alu_add + src_pc + src_imm + reg_w_no + mem_w_no + ebreak_no),
+BLT     ->  BitPat("b" + fu_alu + lsu_x + bru_blt  + b_type + alu_add + src_pc + src_imm + reg_w_no + mem_w_no + ebreak_no),
+BGE     ->  BitPat("b" + fu_alu + lsu_x + bru_bge  + b_type + alu_add + src_pc + src_imm + reg_w_no + mem_w_no + ebreak_no),
+BLTU    ->  BitPat("b" + fu_alu + lsu_x + bru_bltu + b_type + alu_add + src_pc + src_imm + reg_w_no + mem_w_no + ebreak_no),
+BGEU    ->  BitPat("b" + fu_alu + lsu_x + bru_bgeu + b_type + alu_add + src_pc + src_imm + reg_w_no + mem_w_no + ebreak_no),
 
         /* 2.6 Load and Store Instructions */
-LB      ->  BitPat("b" + fu_alu + lsu_lb  + bru_x + i_type + alu_add + src_rf + src_imm + reg_w_yes + mem_w_no),
-LBU     ->  BitPat("b" + fu_alu + lsu_lbu + bru_x + i_type + alu_add + src_rf + src_imm + reg_w_yes + mem_w_no),
-LH      ->  BitPat("b" + fu_alu + lsu_lh  + bru_x + i_type + alu_add + src_rf + src_imm + reg_w_yes + mem_w_no),
-LHU     ->  BitPat("b" + fu_alu + lsu_lhu + bru_x + i_type + alu_add + src_rf + src_imm + reg_w_yes + mem_w_no),
-LW      ->  BitPat("b" + fu_alu + lsu_lw  + bru_x + i_type + alu_add + src_rf + src_imm + reg_w_yes + mem_w_no),
-SB      ->  BitPat("b" + fu_alu + lsu_sb  + bru_x + s_type + alu_add + src_rf + src_imm + reg_w_no  + mem_w_yes),
-SH      ->  BitPat("b" + fu_alu + lsu_sh  + bru_x + s_type + alu_add + src_rf + src_imm + reg_w_no  + mem_w_yes),
-SW      ->  BitPat("b" + fu_alu + lsu_sw  + bru_x + s_type + alu_add + src_rf + src_imm + reg_w_no  + mem_w_yes),
+LB      ->  BitPat("b" + fu_alu + lsu_lb  + bru_x + i_type + alu_add + src_rf + src_imm + reg_w_yes + mem_w_no  + ebreak_no),
+LBU     ->  BitPat("b" + fu_alu + lsu_lbu + bru_x + i_type + alu_add + src_rf + src_imm + reg_w_yes + mem_w_no  + ebreak_no),
+LH      ->  BitPat("b" + fu_alu + lsu_lh  + bru_x + i_type + alu_add + src_rf + src_imm + reg_w_yes + mem_w_no  + ebreak_no),
+LHU     ->  BitPat("b" + fu_alu + lsu_lhu + bru_x + i_type + alu_add + src_rf + src_imm + reg_w_yes + mem_w_no  + ebreak_no),
+LW      ->  BitPat("b" + fu_alu + lsu_lw  + bru_x + i_type + alu_add + src_rf + src_imm + reg_w_yes + mem_w_no  + ebreak_no),
+SB      ->  BitPat("b" + fu_alu + lsu_sb  + bru_x + s_type + alu_add + src_rf + src_imm + reg_w_no  + mem_w_yes + ebreak_no),
+SH      ->  BitPat("b" + fu_alu + lsu_sh  + bru_x + s_type + alu_add + src_rf + src_imm + reg_w_no  + mem_w_yes + ebreak_no),
+SW      ->  BitPat("b" + fu_alu + lsu_sw  + bru_x + s_type + alu_add + src_rf + src_imm + reg_w_no  + mem_w_yes + ebreak_no),
 
         /* 2.8 Environment Call and Breakpoints */
-EBREAK  ->  BitPat("b" + fu_alu + lsu_x + bru_x + no_type + alu_x + src_x + src_x + reg_w_no + mem_w_no)
+EBREAK  ->  BitPat("b" + fu_alu + lsu_x + bru_x + no_type + alu_x + src_x + src_x + reg_w_no + mem_w_no + ebreak_yes)
         ),
-            BitPat("b" + fu_alu + lsu_x + bru_x + no_type + alu_x + src_x + src_x + reg_w_no + mem_w_no)
+            BitPat("b" + fu_alu + lsu_x + bru_x + no_type + alu_x + src_x + src_x + reg_w_no + mem_w_no + ebreak_no)
     )
 
     val decode_info =   decoder(io.inst, table)
@@ -113,6 +114,7 @@ EBREAK  ->  BitPat("b" + fu_alu + lsu_x + bru_x + no_type + alu_x + src_x + src_
         ("b"+ j_type).U -> imm_j
     ))
 
+    io.out.ctrl_sig.is_ebreak:=  decode_info(EBREAK_OP_LSB, EBREAK_OP_MSB)
     io.out.ctrl_sig.mem_wen  :=  decode_info(MEM_W_OP_MSB, MEM_W_OP_LSB)
     io.out.ctrl_sig.reg_wen  :=  decode_info(REG_W_OP_MSB, REG_W_OP_LSB)
     io.out.ctrl_sig.src2_op  :=  decode_info(SRC2_MSB, SRC2_LSB)
