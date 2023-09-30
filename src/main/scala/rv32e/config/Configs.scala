@@ -9,7 +9,6 @@ object Configs {
 
     // for regs and imm
     val DATA_WIDTH      =   32
-
     val INST_WIDTH      =   32
     val INST_BYTE_WIDTH =   4
 
@@ -31,21 +30,21 @@ object Configs {
   * inst_type, alu_op, src1, src2, reg_wen, mem_wen, ctrl_br, ctrl_jmp
   */
 object Dec_Info {
-//     /* is branch inst ?*/
-//     val CTRL_JMP_WIDTH = 1
-//     val CTRL_JMP_LSB = 0
-//     val CTRL_JMP_MSB = CTRL_JMP_LSB + CTRL_JMP_WIDTH - 1
-//     val ctrl_jmp_yes = "1"
-//     val ctrl_jmp_no  = "0"
-// 
-//     /* is branch inst ? */
-//     val CTRL_BR_WIDTH = 1
-//     val CTRL_BR_LSB   = CTRL_JMP_MSB + 1
-//     val CTRL_BR_MSB   = CTRL_BR_LSB + CTRL_BR_WIDTH - 1
-//     val ctrl_br_yes = "1"
-//     val ctrl_br_no  = "0"
+    val MDUOP_WIDTH = 4
+    val MDUOP_LSB = 0
+    val MDUOP_MSB = MDUOP_LSB + MDUOP_WIDTH - 1
+    val mdu_x     = "0000"
+    val mdu_mul   = "0001"
+    val mdu_mulh  = "0010"
+    val mdu_mulhsu= "0011"
+    val mdu_mulhu = "0100"
+    val mdu_div   = "0101"
+    val mdu_divu  = "0110"
+    val mdu_rem   = "0111"
+    val mdu_remu  = "1000"
+
     val CSROP_WIDTH = 3
-    val CSROP_LSB = 0
+    val CSROP_LSB = MDUOP_MSB + 1
     val CSROP_MSB = CSROP_LSB + CSROP_WIDTH - 1
     val csr_x     = "000"
     val csr_ecall = "001"
@@ -160,9 +159,12 @@ object Dec_Info {
     val FU_TYPEOP_WIDTH = 3
     val FU_TYPEOP_LSB = LSUOP_MSB + 1
     val FU_TYPEOP_MSB = FU_TYPEOP_LSB + FU_TYPEOP_WIDTH - 1
-    val fu_alu = "000"
-
-    // val DECODE_INFO_WIDTH = TYPEOP_MSB + 1
+    val fu_x   = "000"
+    val fu_alu = "001"
+    val fu_mdu = "010"
+    val fu_bru = "011"
+    val fu_lsu = "100"
+    val fu_csr = "101"
 }
 
 object CSR_INFO {

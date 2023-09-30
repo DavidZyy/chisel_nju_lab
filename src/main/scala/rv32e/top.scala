@@ -9,6 +9,8 @@ import rv32e.config.Dec_Info._
 import rv32e.config.Inst._
 import empty.alu
 import rv32e.fu.CSR
+import rv32e.fu.Mdu
+import java.awt.MouseInfo
 
 class CSRs extends Bundle {
   val mcause  = Output(UInt(DATA_WIDTH.W))
@@ -39,6 +41,7 @@ class top extends Module {
     val ebreak_moudle_i     = Module(new ebreak_moudle())
     val not_impl_moudle_i   = Module(new not_impl_moudle())
     val csr_i               = Module(new CSR())
+    val Mdu_i               = Module(new Mdu())
 
     // pc
     PCReg_i.io.in.ctrl_br      := Bru_i.io.bru_out.ctrl_br
@@ -80,9 +83,11 @@ class top extends Module {
         RegFile_i.io.in.wdata := PCReg_i.io.out.cur_pc + ADDR_BYTE_WIDTH.U
     } .elsewhen(wcsr) {
         RegFile_i.io.in.wdata := csr_i.io.out.r_csr
+    } .elsewhen(Decoder_i.io.out.ctrl_sig.fu_op === ("b"+fu_mdu).U) {
+        RegFile_i.io.in.wdata := Mdu_i.io.out.mdu_result
     } .otherwise {
         RegFile_i.io.in.wdata := Alu_i.io.alu_out.alu_result
-    }
+    } 
 
     // alu
     Alu_i.io.alu_in.alu_op := Decoder_i.io.out.ctrl_sig.alu_op
@@ -102,6 +107,11 @@ class top extends Module {
     } .otherwise {
         Alu_i.io.alu_in.src2 := 0.U
     }
+
+    // mdu
+    Mdu_i.io.in.mdu_op := Decoder_i.io.out.ctrl_sig.mdu_op
+    Mdu_i.io.in.src1   := RegFile_i.io.out.rdata1
+    Mdu_i.io.in.src2   := RegFile_i.io.out.rdata2
 
     // bru
     Bru_i.io.bru_in.bru_op := Decoder_i.io.out.ctrl_sig.bru_op

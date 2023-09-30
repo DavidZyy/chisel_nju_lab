@@ -8,7 +8,7 @@ sbt "runMain rv32e.top_main"
 file_name="generated/cpu/top.v"
 
 # Define the comments to add
-comments="/* verilator lint_off DECLFILENAME */\n/* verilator lint_off UNUSEDSIGNAL */\n/* verilator lint_off UNDRIVEN */\n/* verilator lint_off UNOPTFLAT */"
+comments="/* verilator lint_off DECLFILENAME */\n/* verilator lint_off UNUSEDSIGNAL */\n/* verilator lint_off UNDRIVEN */\n/* verilator lint_off UNOPTFLAT */\n/* verilator lint_off WIDTHEXPAND */"
 
 # Check if the file exists
 if [ -e "$file_name" ]; then
