@@ -3,9 +3,11 @@ package rv32e.config
 import chisel3._
 
 object Configs {
+    // for addr
     val ADDR_WIDTH      =   32
     val ADDR_BYTE_WIDTH =   4
 
+    // for regs and imm
     val DATA_WIDTH      =   32
 
     val INST_WIDTH      =   32
@@ -42,10 +44,24 @@ object Dec_Info {
 //     val CTRL_BR_MSB   = CTRL_BR_LSB + CTRL_BR_WIDTH - 1
 //     val ctrl_br_yes = "1"
 //     val ctrl_br_no  = "0"
+    val CSROP_WIDTH = 3
+    val CSROP_LSB = 0
+    val CSROP_MSB = CSROP_LSB + CSROP_WIDTH - 1
+    val csr_x     = "000"
+    val csr_ecall = "001"
+    val csr_mret  = "010"
+    val csr_csrrw = "011"
+    val csr_csrrs = "100"
+
+    val NotImpl_OP_WIDTH = 1
+    val NotImpl_OP_LSB = CSROP_MSB + 1
+    val NotImpl_OP_MSB = NotImpl_OP_LSB + NotImpl_OP_WIDTH - 1
+    val not_impl_yes = "1"
+    val not_impl_no = "0"
 
     /* ebreak inst */
     val EBREAK_OP_WIDTH = 1
-    val EBREAK_OP_LSB = 0
+    val EBREAK_OP_LSB = NotImpl_OP_MSB + 1
     val EBREAK_OP_MSB = EBREAK_OP_LSB + EBREAK_OP_WIDTH - 1
     val ebreak_yes = "1"
     val ebreak_no  = "0"
@@ -147,4 +163,77 @@ object Dec_Info {
     val fu_alu = "000"
 
     // val DECODE_INFO_WIDTH = TYPEOP_MSB + 1
+}
+
+object CSR_INFO {
+    val mcause_id   = 0x342.U
+    val mepc_id     = 0x341.U
+    val mstatus_id  = 0x300.U
+    val mtvec_id    = 0x305.U
+
+    // for mstatus rv32
+    val uie_W   = 1 // User mode interrupt enable
+    val sie_W   = 1 // Supervisor mode interrupt enable
+    val wpri1_W = 1 // Reserved (write-preserved) bit 1
+    val mie_W   = 1 // Machine mode interrupt enable
+    val upie_W  = 1 // User mode previous interrupt enable
+    val spie_W  = 1 // Supervisor mode previous interrupt enable
+    val wpri2_W = 1 // Reserved (write-preserved) bit 2
+    val mpie_W  = 1 // Machine mode previous interrupt enable
+    val spp_W   = 1 // Supervisor Previous Privilege mode
+    val wpri3_W = 2 // Reserved (write-preserved) bits 3-4
+    val mpp_W   = 2 // Machine Previous Privilege mode
+    val fs_W    = 2 // Machine mode FPU state
+    val xs_W    = 2 // Machine mode extension state
+    val mprv_W  = 1 // Modify privilege level when accessing CSRs
+    val sum_W   = 1 // Supervisor User Memory Access (S/U)
+    val mxr_W   = 1 // Execute-only memory in user mode (X)
+    val tvm_W   = 1 // Trap Virtual Memory (TVM)
+    val tw_W    = 1 // Timeout Wait
+    val tsr_W   = 1 // Trap SRET
+    val wpri4_W = 8 // Reserved (write-preserved) bits 5-12
+    val sd_W    = 1 // Your custom field
+
+    val uie_LSB     = 0
+    val uie_MSB     = uie_LSB + uie_W - 1
+    val sie_LSB     = uie_MSB + 1
+    val sie_MSB     = sie_LSB + sie_W - 1
+    val wpri1_LSB   = sie_MSB + 1
+    val wpri1_MSB   = wpri1_LSB + wpri1_W - 1
+    val mie_LSB     = wpri1_MSB + 1
+    val mie_MSB     = mie_LSB + mie_W - 1
+    val upie_LSB    = mie_MSB + 1
+    val upie_MSB    = upie_LSB + upie_W - 1
+    val spie_LSB    = upie_MSB + 1
+    val spie_MSB    = spie_LSB + spie_W - 1
+    val wpri2_LSB   = spie_MSB + 1
+    val wpri2_MSB   = wpri2_LSB + wpri2_W - 1
+    val mpie_LSB    = wpri2_MSB + 1
+    val mpie_MSB    = mpie_LSB + mpie_W - 1
+    val spp_LSB     = mpie_MSB + 1
+    val spp_MSB     = spp_LSB + spp_W - 1
+    val wpri3_LSB   = spp_MSB + 1
+    val wpri3_MSB   = wpri3_LSB + wpri3_W - 1
+    val mpp_LSB     = wpri3_MSB + 1
+    val mpp_MSB     = mpp_LSB + mpp_W - 1
+    val fs_LSB      = mpp_MSB + 1
+    val fs_MSB      = fs_LSB + fs_W - 1
+    val xs_LSB      = fs_MSB + 1
+    val xs_MSB      = xs_LSB + xs_W - 1
+    val mprv_LSB    = xs_MSB + 1
+    val mprv_MSB    = mprv_LSB + mprv_W - 1
+    val sum_LSB     = mprv_MSB + 1
+    val sum_MSB     = sum_LSB + sum_W - 1
+    val mxr_LSB     = sum_MSB + 1
+    val mxr_MSB     = mxr_LSB + mxr_W - 1
+    val tvm_LSB     = mxr_MSB + 1
+    val tvm_MSB     = tvm_LSB + tvm_W - 1
+    val tw_LSB      = tvm_MSB + 1
+    val tw_MSB      = tw_LSB + tw_W - 1
+    val tsr_LSB     = tw_MSB + 1
+    val tsr_MSB     = tsr_LSB + tsr_W - 1
+    val wpri4_LSB   = tsr_MSB + 1
+    val wpri4_MSB   = wpri4_LSB + wpri4_W - 1
+    val sd_LSB      = wpri4_MSB + 1
+    val sd_MSB      = sd_LSB + sd_W - 1
 }

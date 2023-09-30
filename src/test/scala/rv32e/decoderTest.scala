@@ -6,6 +6,7 @@ import chisel3.util._
 import org.scalatest.flatspec.AnyFlatSpec
 import rv32e.config.Configs._
 import rv32e.config.Dec_Info._
+import rv32e.config.CSR_INFO._
 
 trait decodeTestFunc {
     
@@ -72,24 +73,19 @@ trait decodeTestFunc {
 
     def testFn(dut: Decoder): Unit = {
 
-        val inst = 0x800007b7L
+        // val inst = 0x800007b7L
+// 
+//         dut.io.inst.poke(inst.U)
+//         dut.io.out.imm.expect(imm_u(inst).U)
+//         dut.io.out.ctrl_sig.alu_op.expect(("b" + alu_add).U)
+//         dut.io.out.ctrl_sig.reg_wen.expect(1.U)
+//         dut.io.out.ctrl_sig.mem_wen.expect(0.U)
+        val inst = 0x30571073L
 
         dut.io.inst.poke(inst.U)
-        // dut.inst_type.expect(j_type.U)
-        dut.io.out.imm.expect(imm_u(inst).U)
-        dut.io.out.ctrl_sig.alu_op.expect(("b" + alu_add).U)
-        dut.io.out.ctrl_sig.reg_wen.expect(1.U)
-        dut.io.out.ctrl_sig.mem_wen.expect(0.U)
-        // dut.inst_type.expect(i_type.U)
-        // dut.io.out.expect(imm_i)
-
-        // dut.input.poke(5.U)
-        // dut.output.expect(1.U)
-
-        // dut.input.poke(7.U)
-        // dut.output.expect(1.U)
-
-        // dut.input.poke(1.U)
+        dut.io.out.ctrl_sig.csr_op.expect(("b"+csr_csrrw).U)
+        dut.io.out.imm.expect(mtvec_id)
+        print(dut.decode_info)
     }
 }
 

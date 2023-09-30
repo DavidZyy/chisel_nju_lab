@@ -6,6 +6,7 @@ import chisel3.util._
 import org.scalatest.flatspec.AnyFlatSpec
 import rv32e.config.Configs._
 import rv32e.config.Dec_Info._
+// import fu.AluTestFunc
 
 
 trait AluTestFunc {
