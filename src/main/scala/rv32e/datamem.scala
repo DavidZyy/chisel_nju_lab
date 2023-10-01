@@ -10,7 +10,8 @@ import rv32e.config.Inst._
 import empty.alu
 
 class ram_in_class extends Bundle {
-    val mem_ren =   Input(Bool())
+    // val mem_ren =   Input(Bool())
+    val valid   =   Input(Bool())
     val mem_wen =   Input(Bool())
     val addr    =   Input(UInt(ADDR_WIDTH.W))
     val wdata   =   Input(UInt(DATA_WIDTH.W))
@@ -28,7 +29,6 @@ class RamBB extends BlackBox with HasBlackBoxResource {
         val wdata = Input(UInt(DATA_WIDTH.W))
         val mem_wen = Input(Bool())
         val valid   = Input(Bool())
-        // val mem_ren = Input(Bool())
         val rdata = Output(UInt(DATA_WIDTH.W))
         val rdata_4_w = Output(UInt(DATA_WIDTH.W))
     })
@@ -46,7 +46,7 @@ class Ram extends Module {
 
     val addr_low_2 = true_addr(1, 0) 
 
-    val valid = io.in.mem_ren | io.in.mem_wen
+    val valid = io.in.valid
 
     val RamBB_i1 = Module(new RamBB())
 

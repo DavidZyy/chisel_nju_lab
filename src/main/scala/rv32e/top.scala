@@ -22,7 +22,7 @@ class CSRs extends Bundle {
 class out_class extends Bundle {
     val  inst     = Output(UInt(INST_WIDTH.W))
     val  pc       = Output(UInt(DATA_WIDTH.W))
-    val  is_load  = Output(Bool())
+    // val  is_load  = Output(Bool())
     val  difftest = new CSRs
 }
 
@@ -50,63 +50,34 @@ class top extends Module {
     PCReg_i.io.in.excpt_addr   := csr_i.io.out.csr_pc
     
     // rom
-    Rom_i.io.addr := PCReg_i.io.out.cur_pc
+    Rom_i.io.addr     := PCReg_i.io.out.cur_pc
 
     // decoder
     Decoder_i.io.inst := Rom_i.io.inst
 
     // reg file
-    RegFile_i.io.in.rd  := Decoder_i.io.out.rd
-    RegFile_i.io.in.rs1 := Decoder_i.io.out.rs1
-    RegFile_i.io.in.rs2 := Decoder_i.io.out.rs2
+    RegFile_i.io.in.rd      := Decoder_i.io.out.rd
+    RegFile_i.io.in.rs1     := Decoder_i.io.out.rs1
+    RegFile_i.io.in.rs2     := Decoder_i.io.out.rs2
     RegFile_i.io.in.reg_wen := Decoder_i.io.out.ctrl_sig.reg_wen
-
-    val is_load = 
-        Decoder_i.io.out.ctrl_sig.lsu_op === ("b"+lsu_lb).U |
-        Decoder_i.io.out.ctrl_sig.lsu_op === ("b"+lsu_lbu).U |
-        Decoder_i.io.out.ctrl_sig.lsu_op === ("b"+lsu_lh).U |
-        Decoder_i.io.out.ctrl_sig.lsu_op === ("b"+lsu_lhu).U |
-        Decoder_i.io.out.ctrl_sig.lsu_op === ("b"+lsu_lw).U 
-
-    val is_jump =
-        Decoder_i.io.out.ctrl_sig.bru_op === ("b"+bru_jal).U |
-        Decoder_i.io.out.ctrl_sig.bru_op === ("b"+bru_jalr).U
-    
-    val wcsr    =
-        Decoder_i.io.out.ctrl_sig.csr_op === ("b"+csr_csrrs).U |
-        Decoder_i.io.out.ctrl_sig.csr_op === ("b"+csr_csrrw).U
-
-    // fu_type can be used here to determine which outcome of the fu should be written to regfile
-    when(is_load) {
-        RegFile_i.io.in.wdata := Ram_i.io.out.rdata
-    } .elsewhen(is_jump) {
-        RegFile_i.io.in.wdata := PCReg_i.io.out.cur_pc + ADDR_BYTE_WIDTH.U
-    } .elsewhen(wcsr) {
-        RegFile_i.io.in.wdata := csr_i.io.out.r_csr
-    } .elsewhen(Decoder_i.io.out.ctrl_sig.fu_op === ("b"+fu_mdu).U) {
-        RegFile_i.io.in.wdata := Mdu_i.io.out.mdu_result
-    } .otherwise {
-        RegFile_i.io.in.wdata := Alu_i.io.alu_out.alu_result
-    } 
+    RegFile_i.io.in.wdata   := MuxLookup(Decoder_i.io.out.ctrl_sig.fu_op, 0.U, Array(
+        ("b"+fu_alu).U  ->  Alu_i.io.alu_out.alu_result,
+        ("b"+fu_lsu).U  ->  Ram_i.io.out.rdata,
+        ("b"+fu_bru).U  ->  (PCReg_i.io.out.cur_pc + ADDR_BYTE_WIDTH.U),
+        ("b"+fu_csr).U  ->  csr_i.io.out.r_csr,
+        ("b"+fu_mdu).U  ->  Mdu_i.io.out.mdu_result,
+    ))
 
     // alu
     Alu_i.io.alu_in.alu_op := Decoder_i.io.out.ctrl_sig.alu_op
-
-    when(Decoder_i.io.out.ctrl_sig.src1_op === ("b"+src_rf).U){
-        Alu_i.io.alu_in.src1 := RegFile_i.io.out.rdata1
-    } .elsewhen(Decoder_i.io.out.ctrl_sig.src1_op === ("b"+src_pc).U) {
-        Alu_i.io.alu_in.src1 := PCReg_i.io.out.cur_pc
-    } .otherwise {
-        Alu_i.io.alu_in.src1 := 0.U
-    }
-
-    when(Decoder_i.io.out.ctrl_sig.src2_op === ("b"+src_rf).U){
-        Alu_i.io.alu_in.src2 := RegFile_i.io.out.rdata2
-    } .elsewhen(Decoder_i.io.out.ctrl_sig.src2_op === ("b"+src_imm).U) {
-        Alu_i.io.alu_in.src2 := Decoder_i.io.out.imm
-    } .otherwise {
-        Alu_i.io.alu_in.src2 := 0.U
-    }
+    Alu_i.io.alu_in.src1   := MuxLookup(Decoder_i.io.out.ctrl_sig.src1_op, 0.U, Array(
+        ("b"+src_rf).U  ->  RegFile_i.io.out.rdata1,
+        ("b"+src_pc).U  ->  PCReg_i.io.out.cur_pc,
+    ))
+    Alu_i.io.alu_in.src2   := MuxLookup(Decoder_i.io.out.ctrl_sig.src2_op, 0.U, Array(
+        ("b"+src_rf).U  ->  RegFile_i.io.out.rdata2,
+        ("b"+src_imm).U  ->  Decoder_i.io.out.imm,
+    ))
 
     // mdu
     Mdu_i.io.in.mdu_op := Decoder_i.io.out.ctrl_sig.mdu_op
@@ -123,7 +94,7 @@ class top extends Module {
     Ram_i.io.in.wdata   := RegFile_i.io.out.rdata2
     Ram_i.io.in.mem_wen := Decoder_i.io.out.ctrl_sig.mem_wen
     Ram_i.io.in.lsu_op  := Decoder_i.io.out.ctrl_sig.lsu_op
-    Ram_i.io.in.mem_ren := is_load
+    Ram_i.io.in.valid   := Decoder_i.io.out.ctrl_sig.fu_op === ("b"+fu_lsu).U
 
     // csr
     csr_i.io.in.csr_op  :=  Decoder_i.io.out.ctrl_sig.csr_op
@@ -139,7 +110,6 @@ class top extends Module {
 
     io.out.inst    := Rom_i.io.inst
     io.out.pc      := PCReg_i.io.out.cur_pc
-    io.out.is_load := is_load
 
     io.out.difftest.mcause  := csr_i.io.out.difftest.mcause  
     io.out.difftest.mepc    := csr_i.io.out.difftest.mepc    
