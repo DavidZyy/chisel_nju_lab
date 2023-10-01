@@ -8,9 +8,11 @@ import rv32e.config.Configs._
 import rv32e.config.Dec_Info._
 import rv32e.config.Inst._
 import empty.alu
-import rv32e.fu.CSR
-import rv32e.fu.Mdu
 import java.awt.MouseInfo
+import rv32e.EXU.Alu
+import rv32e.EXU.Bru
+import rv32e.EXU.CSR
+import rv32e.EXU.Mdu
 
 class CSRs extends Bundle {
   val mcause  = Output(UInt(DATA_WIDTH.W))
@@ -75,7 +77,7 @@ class top extends Module {
         ("b"+src_pc).U  ->  PCReg_i.io.out.cur_pc,
     ))
     Alu_i.io.alu_in.src2   := MuxLookup(Decoder_i.io.out.ctrl_sig.src2_op, 0.U, Array(
-        ("b"+src_rf).U  ->  RegFile_i.io.out.rdata2,
+        ("b"+src_rf).U   ->  RegFile_i.io.out.rdata2,
         ("b"+src_imm).U  ->  Decoder_i.io.out.imm,
     ))
 
@@ -103,7 +105,7 @@ class top extends Module {
     csr_i.io.in.wdata   :=  RegFile_i.io.out.rdata1
 
     // ebreak
-    ebreak_moudle_i.is_ebreak := Decoder_i.io.out.ctrl_sig.is_ebreak
+    ebreak_moudle_i.is_ebreak  := Decoder_i.io.out.ctrl_sig.is_ebreak
     
     // not implemented
     not_impl_moudle_i.not_impl := Decoder_i.io.out.ctrl_sig.not_impl

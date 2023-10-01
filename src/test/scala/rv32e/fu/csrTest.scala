@@ -7,6 +7,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import rv32e.config.Configs._
 import rv32e.config.Dec_Info._
 import rv32e.config.CSR_INFO._
+import rv32e.EXU.CSR
 
 
 trait CSRTestFunc {
