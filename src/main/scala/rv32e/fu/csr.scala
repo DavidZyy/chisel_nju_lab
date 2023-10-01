@@ -95,7 +95,7 @@ class CSR extends Module {
     ("b" + csr_mret  ).U  ->    Cat( reg_mstatus(sd_MSB, fs_LSB),
                                      0.U,
                                      reg_mstatus(wpri3_MSB, spp_LSB),
-                                     0.U,
+                                     1.U,
                                      reg_mstatus(wpri2_MSB, upie_LSB),
                                      reg_mstatus(mpie_MSB, mpie_LSB),
                                      reg_mstatus(wpri1_MSB, uie_LSB)),
