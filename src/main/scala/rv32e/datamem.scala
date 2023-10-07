@@ -7,7 +7,6 @@ import chisel3.util.experimental.decode._
 import rv32e.config.Configs._
 import rv32e.config.Dec_Info._
 import rv32e.config.Inst._
-import empty.alu
 
 class ram_in_class extends Bundle {
     // val mem_ren =   Input(Bool())

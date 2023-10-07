@@ -7,7 +7,6 @@ import chisel3.util.experimental.decode._
 import rv32e.config.Configs._
 import rv32e.config.Dec_Info._
 import rv32e.config.Inst._
-import empty.alu
 
 class bru_in_class extends Bundle {
     val src1    =   Input(UInt(DATA_WIDTH.W))
