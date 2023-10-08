@@ -35,7 +35,7 @@ class decoder_out extends Bundle {
 /* decode info:
     inst_type, alu_op, src1, src2, reg_wen, mem_wen,
  */
-class Decoder extends Module {
+class IDU extends Module {
     val io = IO(new Bundle {
         val inst    =   Input(UInt(INST_WIDTH.W))
         val out     =   new decoder_out
@@ -152,6 +152,6 @@ MRET    ->  BitPat("b" + fu_csr + lsu_x + bru_x + i_type  + alu_x + src_x + src_
 }
 
 object decoder_main extends App {
-    emitVerilog(new Decoder(), Array("--target-dir", "generated"))
+    emitVerilog(new IDU(), Array("--target-dir", "generated"))
     // emitVerilog(new WriteSmem(), Array("--target-dir", "generated"))
 }

@@ -7,7 +7,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import rv32e.config.Configs._
 import rv32e.config.Dec_Info._
 import rv32e.config.CSR_INFO._
-import Decoder
+import rv32e.IDU
 
 trait decodeTestFunc {
     
@@ -72,7 +72,7 @@ trait decodeTestFunc {
         }
     }
 
-    def testFn(dut: Decoder): Unit = {
+    def testFn(dut: IDU): Unit = {
 
         // val inst = 0x800007b7L
 // 
@@ -105,7 +105,7 @@ trait decodeTestFunc {
 
 class decodeTest extends AnyFlatSpec with ChiselScalatestTester with decodeTestFunc {
     "decode" should "pass" in {
-        test(new Decoder) { dut =>
+        test(new IDU) { dut =>
             testFn(dut)
         }
     }

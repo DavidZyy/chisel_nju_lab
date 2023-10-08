@@ -9,6 +9,7 @@ import java.io.PrintWriter
 import java.io.File
 
 import rv32e.config.Configs._
+import IFU
 
 trait MemInstTestFunc {
     // 生成MEM_INST_SIZE条随机指令进行测试
@@ -28,7 +29,7 @@ trait MemInstTestFunc {
         println(inst_list)
     }
 
-    def testFn(dut: Rom): Unit = {
+    def testFn(dut: IFU): Unit = {
         // 依次读取所有的指令，与inst_list进行匹配
         for (i <- 0 to MEM_INST_SIZE - 1) {
             dut.io.addr.poke((i * INST_BYTE_WIDTH).U)   // 作为地址，应该左移两位，即乘以4
@@ -41,7 +42,7 @@ class MemInstTest extends AnyFlatSpec with ChiselScalatestTester with MemInstTes
     "MemInst" should "pass" in {
         // 先生成随机hex文件，再进行测试
         genMemInstHex()
-        test(new Rom) { dut =>
+        test(new IFU) { dut =>
             testFn(dut)
         }
     }
