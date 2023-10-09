@@ -7,45 +7,64 @@ import chisel3.util.experimental.decode._
 import rv32e.config.Configs._
 import rv32e.config.Dec_Info._
 import rv32e.config.Inst._
+import rv32e.bus.IFU2IDU_bus
+import rv32e.bus.IDU2ISU_bus
 
-/* contrl signals */
-class contrl_signals extends Bundle {
-    val mem_wen   = Output(Bool())
-    val reg_wen   = Output(Bool())
-    val is_ebreak = Output(Bool())
-    val not_impl  = Output(Bool())
-    val src1_op   = Output(UInt(SRCOP_WIDTH.W))
-    val src2_op   = Output(UInt(SRCOP_WIDTH.W))
-    val alu_op    = Output(UInt(ALUOP_WIDTH.W))
-    val fu_op     = Output(UInt(FU_TYPEOP_WIDTH.W))
-    val lsu_op    = Output(UInt(LSUOP_WIDTH.W))
-    val bru_op    = Output(UInt(BRUOP_WIDTH.W))
-    val csr_op    = Output(UInt(CSROP_WIDTH.W))
-    val mdu_op    = Output(UInt(MDUOP_WIDTH.W))
-}
+// /* contrl signals */
+// class contrl_signals extends Bundle {
+//     val mem_wen   = Output(Bool())
+//     val reg_wen   = Output(Bool())
+//     val is_ebreak = Output(Bool())
+//     val not_impl  = Output(Bool())
+//     val src1_op   = Output(UInt(SRCOP_WIDTH.W))
+//     val src2_op   = Output(UInt(SRCOP_WIDTH.W))
+//     val alu_op    = Output(UInt(ALUOP_WIDTH.W))
+//     val fu_op     = Output(UInt(FU_TYPEOP_WIDTH.W))
+//     val lsu_op    = Output(UInt(LSUOP_WIDTH.W))
+//     val bru_op    = Output(UInt(BRUOP_WIDTH.W))
+//     val csr_op    = Output(UInt(CSROP_WIDTH.W))
+//     val mdu_op    = Output(UInt(MDUOP_WIDTH.W))
+// }
+// 
+// class decoder_out extends Bundle {
+//     val imm      = Output(UInt(DATA_WIDTH.W))
+//     val rs1      = Output(UInt(REG_OP_WIDTH.W))
+//     val rs2      = Output(UInt(REG_OP_WIDTH.W))
+//     val rd       = Output(UInt(REG_OP_WIDTH.W))
+//     val ctrl_sig = new contrl_signals
+// }
 
-class decoder_out extends Bundle {
-    val imm      = Output(UInt(DATA_WIDTH.W))
-    val rs1      = Output(UInt(REG_OP_WIDTH.W))
-    val rs2      = Output(UInt(REG_OP_WIDTH.W))
-    val rd       = Output(UInt(REG_OP_WIDTH.W))
-    val ctrl_sig = new contrl_signals
-}
+// class IDU_IFU_bus extends Bundle {
+//     val inst            =   Input(UInt(ADDR_WIDTH.W)) 
+// }
 
 /* decode info:
     inst_type, alu_op, src1, src2, reg_wen, mem_wen,
  */
 class IDU extends Module {
-    val io = IO(new Bundle {
-        val inst    =   Input(UInt(INST_WIDTH.W))
-        val out     =   new decoder_out
-    })
+    // val io = IO(new Bundle {
+    //     // val inst    =   Input(UInt(INST_WIDTH.W))
+    //     val out     =   new decoder_out
+    // })
+    val from_IFU  = IO(Flipped(Decoupled(new IFU2IDU_bus))) // only to IFU signal
+    val to_ISU    = IO(Decoupled(new IDU2ISU_bus))
 
-    val imm_i   =   Cat(Fill(20, io.inst(31)), io.inst(31, 20))
-    val imm_s   =   Cat(Fill(20, io.inst(31)), io.inst(31, 25), io.inst(11, 7))
-    val imm_b   =   Cat(Fill(20, io.inst(31)), io.inst(7), io.inst(30, 25), io.inst(11, 8), 0.U(1.W))
-    val imm_u   =   Cat(io.inst(31, 12), Fill(12, 0.U))
-    val imm_j   =   Cat(Fill(12, io.inst(31)), io.inst(31), io.inst(19, 12), io.inst(20), io.inst(30, 21), Fill(1, 0.U))
+    val s_idle :: s_busy :: Nil = Enum(2)
+    val state = RegInit(s_idle)
+    state := MuxLookup(state, s_idle, List(
+        s_idle  -> Mux(from_IFU.valid, s_busy, s_idle),
+        s_busy  -> s_idle
+    ))
+    from_IFU.ready  :=  MuxLookup(state, false.B, List(
+        s_idle  ->  true.B,
+        s_busy  ->  false.B
+    ))
+
+    val imm_i   =   Cat(Fill(20, from_IFU.bits.inst(31)), from_IFU.bits.inst(31, 20))
+    val imm_s   =   Cat(Fill(20, from_IFU.bits.inst(31)), from_IFU.bits.inst(31, 25), from_IFU.bits.inst(11, 7))
+    val imm_b   =   Cat(Fill(20, from_IFU.bits.inst(31)), from_IFU.bits.inst(7), from_IFU.bits.inst(30, 25), from_IFU.bits.inst(11, 8), 0.U(1.W))
+    val imm_u   =   Cat(from_IFU.bits.inst(31, 12), Fill(12, 0.U))
+    val imm_j   =   Cat(Fill(12, from_IFU.bits.inst(31)), from_IFU.bits.inst(31), from_IFU.bits.inst(19, 12), from_IFU.bits.inst(20), from_IFU.bits.inst(30, 21), Fill(1, 0.U))
 
     val table = TruthTable(
         Map(
@@ -120,10 +139,10 @@ MRET    ->  BitPat("b" + fu_csr + lsu_x + bru_x + i_type  + alu_x + src_x + src_
             BitPat("b" + fu_x   + lsu_x + bru_x + no_type + alu_x + src_x + src_x + reg_w_no  + mem_w_no + ebreak_no  + not_impl_yes+ csr_x    + mdu_x)
     )
 
-    val decode_info =   decoder(io.inst, table)
+    val decode_info =   decoder(from_IFU.bits.inst, table)
 
     val inst_type   =   decode_info(INST_TYPEOP_MSB, INST_TYPEOP_LSB)
-    io.out.imm := MuxLookup(inst_type, 0.U, Array(
+    to_ISU.bits.imm := MuxLookup(inst_type, 0.U, Array(
         ("b"+ i_type).U -> imm_i,
         ("b"+ s_type).U -> imm_s,
         ("b"+ b_type).U -> imm_b,
@@ -132,26 +151,26 @@ MRET    ->  BitPat("b" + fu_csr + lsu_x + bru_x + i_type  + alu_x + src_x + src_
     ))
 
     // from MSB to LSB
-    io.out.ctrl_sig.mdu_op   :=  decode_info(MDUOP_MSB, MDUOP_LSB)
-    io.out.ctrl_sig.csr_op   :=  decode_info(CSROP_MSB, CSROP_LSB)
-    io.out.ctrl_sig.not_impl :=  decode_info(NotImpl_OP_MSB, NotImpl_OP_LSB)
-    io.out.ctrl_sig.is_ebreak:=  decode_info(EBREAK_OP_MSB, EBREAK_OP_LSB)
-    io.out.ctrl_sig.mem_wen  :=  decode_info(MEM_W_OP_MSB, MEM_W_OP_LSB)
-    io.out.ctrl_sig.reg_wen  :=  decode_info(REG_W_OP_MSB, REG_W_OP_LSB)
-    io.out.ctrl_sig.src2_op  :=  decode_info(SRC2_MSB, SRC2_LSB)
-    io.out.ctrl_sig.src1_op  :=  decode_info(SRC1_MSB, SRC1_LSB)
-    io.out.ctrl_sig.alu_op   :=  decode_info(ALUOP_MSB, ALUOP_LSB)
-    io.out.ctrl_sig.bru_op   :=  decode_info(BRUOP_MSB, BRUOP_LSB)
-    io.out.ctrl_sig.lsu_op   :=  decode_info(LSUOP_MSB, LSUOP_LSB)
-    io.out.ctrl_sig.fu_op    :=  decode_info(FU_TYPEOP_MSB, FU_TYPEOP_LSB)
+    to_ISU.bits.ctrl_sig.mdu_op   :=  decode_info(MDUOP_MSB, MDUOP_LSB)
+    to_ISU.bits.ctrl_sig.csr_op   :=  decode_info(CSROP_MSB, CSROP_LSB)
+    to_ISU.bits.ctrl_sig.not_impl :=  decode_info(NotImpl_OP_MSB, NotImpl_OP_LSB)
+    to_ISU.bits.ctrl_sig.is_ebreak:=  decode_info(EBREAK_OP_MSB, EBREAK_OP_LSB)
+    to_ISU.bits.ctrl_sig.mem_wen  :=  decode_info(MEM_W_OP_MSB, MEM_W_OP_LSB)
+    to_ISU.bits.ctrl_sig.reg_wen  :=  decode_info(REG_W_OP_MSB, REG_W_OP_LSB)
+    to_ISU.bits.ctrl_sig.src2_op  :=  decode_info(SRC2_MSB, SRC2_LSB)
+    to_ISU.bits.ctrl_sig.src1_op  :=  decode_info(SRC1_MSB, SRC1_LSB)
+    to_ISU.bits.ctrl_sig.alu_op   :=  decode_info(ALUOP_MSB, ALUOP_LSB)
+    to_ISU.bits.ctrl_sig.bru_op   :=  decode_info(BRUOP_MSB, BRUOP_LSB)
+    to_ISU.bits.ctrl_sig.lsu_op   :=  decode_info(LSUOP_MSB, LSUOP_LSB)
+    to_ISU.bits.ctrl_sig.fu_op    :=  decode_info(FU_TYPEOP_MSB, FU_TYPEOP_LSB)
+        ////
 
-
-    io.out.rs1 := io.inst(19, 15)
-    io.out.rs2 := io.inst(24, 20)
-    io.out.rd  := io.inst(11, 7)
+    to_ISU.bits.rs1 := from_IFU.bits.inst(19, 15)
+    to_ISU.bits.rs2 := from_IFU.bits.inst(24, 20)
+    to_ISU.bits.rd  := from_IFU.bits.inst(11, 7)
 }
 
-object decoder_main extends App {
+object IDU_main extends App {
     emitVerilog(new IDU(), Array("--target-dir", "generated"))
     // emitVerilog(new WriteSmem(), Array("--target-dir", "generated"))
 }

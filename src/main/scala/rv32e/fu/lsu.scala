@@ -1,4 +1,4 @@
-package rv32e
+package rv32e.fu
 
 import chisel3._
 import chisel3.util._
@@ -34,7 +34,7 @@ class RamBB extends BlackBox with HasBlackBoxResource {
     addResource("/RamBB.v")
 }
 
-class Ram extends Module {
+class Lsu extends Module {
     val io = IO(new Bundle {
         val in  = (new ram_in_class )
         val out = (new ram_out_class)

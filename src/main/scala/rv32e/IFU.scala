@@ -4,6 +4,8 @@ import chisel3._
 import chisel3.util._
 
 import rv32e.config.Configs._
+import rv32e.config.Inst._
+import rv32e.bus.IFU2IDU_bus
 
 import chisel3.util.experimental.loadMemoryFromFile
 import firrtl.annotations.MemoryLoadFileType
@@ -25,7 +27,6 @@ class IFU_in_class extends Bundle {
 }
 
 class IFU_out_class extends Bundle {
-    val inst            =   Output(UInt(ADDR_WIDTH.W)) 
     val cur_pc          =   Output(UInt(ADDR_WIDTH.W))
 }
 
@@ -35,21 +36,38 @@ class IFUIO extends Bundle {
 }
 
 class IFU extends Module {
-    val io = IO(new IFUIO())
+    val io      = IO(new IFUIO())
+    val to_IDU  = IO(Decoupled(new IFU2IDU_bus)) // only to IDU signal
 
     val RomBB_i1 = Module(new RomBB())
 
-    val reg_PC = RegInit(UInt(ADDR_WIDTH.W), START_ADDR.U)
+    val reg_PC  = RegInit(UInt(ADDR_WIDTH.W), START_ADDR.U)
+    val next_PC = Wire(UInt(ADDR_WIDTH.W))
     when (io.in.ctrl_br) {
-        reg_PC := io.in.addr_target
+        next_PC := io.in.addr_target
     } .elsewhen (io.in.ctrl_csr) {
-        reg_PC := io.in.excpt_addr
+        next_PC := io.in.excpt_addr
     } .otherwise {
-        reg_PC := reg_PC + ADDR_BYTE_WIDTH.U
+        next_PC := reg_PC + ADDR_BYTE_WIDTH.U
     }
 
-    RomBB_i1.io.addr := reg_PC
+    reg_PC := Mux(to_IDU.fire, next_PC, reg_PC)
+    // reg_PC := next_PC
 
-    io.out.inst   := RomBB_i1.io.inst
-    io.out.cur_pc := reg_PC
+    RomBB_i1.io.addr    := reg_PC
+    io.out.cur_pc       := reg_PC
+
+    // if not ready, transfer nop inst
+    to_IDU.bits.inst    := Mux(to_IDU.fire, RomBB_i1.io.inst, NOP.U)
+
+    val s_idle :: s_wait_ready :: Nil = Enum(2)
+    val state = RegInit(s_idle)
+    state := MuxLookup(state, s_idle, List(
+        s_idle          -> s_wait_ready,
+        s_wait_ready    -> Mux(to_IDU.ready, s_idle, s_wait_ready)
+    ))
+    to_IDU.valid    :=  MuxLookup(state, false.B, List(
+        s_idle       -> false.B,
+        s_wait_ready -> true.B
+    ))
 }
