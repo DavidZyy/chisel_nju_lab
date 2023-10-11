@@ -14,7 +14,7 @@ class ram_in_class extends Bundle {
     val mem_wen =   Input(Bool())
     val addr    =   Input(UInt(ADDR_WIDTH.W))
     val wdata   =   Input(UInt(DATA_WIDTH.W))
-    val lsu_op  =   Input(UInt(LSUOP_WIDTH.W))
+    val op      =   Input(UInt(LSUOP_WIDTH.W))
 }
 
 class ram_out_class extends Bundle {
@@ -40,7 +40,7 @@ class Lsu extends Module {
         val out = (new ram_out_class)
     })
 
-    val lsu_op = io.in.lsu_op
+    val lsu_op = io.in.op
     val true_addr = io.in.addr
 
     val addr_low_2 = true_addr(1, 0) 

@@ -1,4 +1,4 @@
-package rv32e
+package rv32e.utils
 
 import chisel3._
 import chisel3.util._

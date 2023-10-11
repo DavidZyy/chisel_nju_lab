@@ -11,7 +11,7 @@ import rv32e.config.Inst._
 class bru_in_class extends Bundle {
     val src1    =   Input(UInt(DATA_WIDTH.W))
     val src2    =   Input(UInt(DATA_WIDTH.W))
-    val bru_op  =   Input(UInt(BRUOP_WIDTH.W))
+    val op  =   Input(UInt(BRUOP_WIDTH.W))
 }
 
 
@@ -21,15 +21,15 @@ class bru_out_class extends Bundle {
 
 class Bru extends Module {
     val io = IO(new Bundle {
-        val bru_in  =   (new bru_in_class)
-        val bru_out =   (new bru_out_class) 
+        val in  =   (new bru_in_class)
+        val out =   (new bru_out_class) 
     })
 
-    val bru_op      =   io.bru_in.bru_op
-    val operand1    =   io.bru_in.src1 
-    val operand2    =   io.bru_in.src2
+    val op          =   io.in.op
+    val operand1    =   io.in.src1 
+    val operand2    =   io.in.src2
 
-    io.bru_out.ctrl_br  :=   MuxLookup(bru_op, 0.U, Array(
+    io.out.ctrl_br  :=   MuxLookup(op, 0.U, Array(
         ("b" + bru_jal ).U  ->   true.B,
         ("b" + bru_jalr).U  ->   true.B,
         ("b" + bru_beq ).U  ->   (operand1 === operand2),

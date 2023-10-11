@@ -15,24 +15,24 @@ trait AluTestFunc {
         val src1 = 0x80000000L
         val src2 = 0x80000001L
 
-        dut.io.alu_in.src1.poke(src1.U)
-//         dut.io.alu_in.src2.poke(src2.U)
-//         dut.io.alu_in.alu_op.poke(("b" + alu_sltu).U)
+        dut.io.in.src1.poke(src1.U)
+//         dut.io.in.src2.poke(src2.U)
+//         dut.io.in.alu_op.poke(("b" + alu_sltu).U)
 // 
 //         dut.io.alu_out.alu_result.expect(1.U)
 // 
-//         dut.io.alu_in.alu_op.poke(("b" + alu_slt).U)
+//         dut.io.in.alu_op.poke(("b" + alu_slt).U)
 // 
 //         dut.io.alu_out.alu_result.expect(0.U)
 
-        dut.io.alu_in.alu_op.poke(("b" + alu_srl).U)
-        dut.io.alu_in.src2.poke(1.U)
+        dut.io.in.alu_op.poke(("b" + alu_srl).U)
+        dut.io.in.src2.poke(1.U)
 
         dut.io.alu_out.alu_result.expect(0x40000000L.U)
 
 
-        dut.io.alu_in.alu_op.poke(("b" + alu_sra).U)
-        dut.io.alu_in.src2.poke(1.U)
+        dut.io.in.alu_op.poke(("b" + alu_sra).U)
+        dut.io.in.src2.poke(1.U)
 
         dut.io.alu_out.alu_result.expect(0xC0000000L.U)
     }

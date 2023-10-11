@@ -10,44 +10,11 @@ import rv32e.config.Inst._
 import rv32e.bus.IFU2IDU_bus
 import rv32e.bus.IDU2ISU_bus
 
-// /* contrl signals */
-// class contrl_signals extends Bundle {
-//     val mem_wen   = Output(Bool())
-//     val reg_wen   = Output(Bool())
-//     val is_ebreak = Output(Bool())
-//     val not_impl  = Output(Bool())
-//     val src1_op   = Output(UInt(SRCOP_WIDTH.W))
-//     val src2_op   = Output(UInt(SRCOP_WIDTH.W))
-//     val alu_op    = Output(UInt(ALUOP_WIDTH.W))
-//     val fu_op     = Output(UInt(FU_TYPEOP_WIDTH.W))
-//     val lsu_op    = Output(UInt(LSUOP_WIDTH.W))
-//     val bru_op    = Output(UInt(BRUOP_WIDTH.W))
-//     val csr_op    = Output(UInt(CSROP_WIDTH.W))
-//     val mdu_op    = Output(UInt(MDUOP_WIDTH.W))
-// }
-// 
-// class decoder_out extends Bundle {
-//     val imm      = Output(UInt(DATA_WIDTH.W))
-//     val rs1      = Output(UInt(REG_OP_WIDTH.W))
-//     val rs2      = Output(UInt(REG_OP_WIDTH.W))
-//     val rd       = Output(UInt(REG_OP_WIDTH.W))
-//     val ctrl_sig = new contrl_signals
-// }
-
-// class IDU_IFU_bus extends Bundle {
-//     val inst            =   Input(UInt(ADDR_WIDTH.W)) 
-// }
-
-/* decode info:
-    inst_type, alu_op, src1, src2, reg_wen, mem_wen,
- */
 class IDU extends Module {
-    // val io = IO(new Bundle {
-    //     // val inst    =   Input(UInt(INST_WIDTH.W))
-    //     val out     =   new decoder_out
-    // })
     val from_IFU  = IO(Flipped(Decoupled(new IFU2IDU_bus))) // only to IFU signal
     val to_ISU    = IO(Decoupled(new IDU2ISU_bus))
+    from_IFU.ready := true.B
+    to_ISU.valid   := true.B
 
     val s_idle :: s_busy :: Nil = Enum(2)
     val state = RegInit(s_idle)
@@ -149,6 +116,10 @@ MRET    ->  BitPat("b" + fu_csr + lsu_x + bru_x + i_type  + alu_x + src_x + src_
         ("b"+ u_type).U -> imm_u,
         ("b"+ j_type).U -> imm_j
     ))
+    to_ISU.bits.rs1 := from_IFU.bits.inst(19, 15)
+    to_ISU.bits.rs2 := from_IFU.bits.inst(24, 20)
+    to_ISU.bits.rd  := from_IFU.bits.inst(11, 7)
+    to_ISU.bits.pc  := from_IFU.bits.pc
 
     // from MSB to LSB
     to_ISU.bits.ctrl_sig.mdu_op   :=  decode_info(MDUOP_MSB, MDUOP_LSB)
@@ -163,11 +134,6 @@ MRET    ->  BitPat("b" + fu_csr + lsu_x + bru_x + i_type  + alu_x + src_x + src_
     to_ISU.bits.ctrl_sig.bru_op   :=  decode_info(BRUOP_MSB, BRUOP_LSB)
     to_ISU.bits.ctrl_sig.lsu_op   :=  decode_info(LSUOP_MSB, LSUOP_LSB)
     to_ISU.bits.ctrl_sig.fu_op    :=  decode_info(FU_TYPEOP_MSB, FU_TYPEOP_LSB)
-        ////
-
-    to_ISU.bits.rs1 := from_IFU.bits.inst(19, 15)
-    to_ISU.bits.rs2 := from_IFU.bits.inst(24, 20)
-    to_ISU.bits.rd  := from_IFU.bits.inst(11, 7)
 }
 
 object IDU_main extends App {

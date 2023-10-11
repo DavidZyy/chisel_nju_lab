@@ -1,4 +1,4 @@
-package rv32e
+package rv32e.dev
 
 // the codes here modified according to  
 // https://ysyx.oscc.cc/slides/2205/18.html#/axi-lite%E6%8E%A5%E5%8F%A3%E7%9A%84rom
