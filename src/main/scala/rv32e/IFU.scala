@@ -4,9 +4,10 @@ import chisel3._
 import chisel3.util._
 
 import rv32e.config.Configs._
-import rv32e.config.Inst._
-import rv32e.bus.IFU2IDU_bus
-import rv32e.bus.EXU2IFU_bus
+import rv32e.define.Inst._
+// import rv32e.bus.IFU2IDU_bus
+// import rv32e.bus.EXU2IFU_bus
+import rv32e.bus._
 
 import chisel3.util.experimental.loadMemoryFromFile
 import firrtl.annotations.MemoryLoadFileType

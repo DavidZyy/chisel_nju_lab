@@ -2,11 +2,9 @@ package rv32e
 
 import chisel3._
 import chisel3.util._
-import rv32e.bus.IDU2ISU_bus
-import rv32e.bus.WBU2ISU_bus
-import rv32e.bus.ISU2EXU_bus
+import rv32e.bus._
 import rv32e.utils.RegFile
-import rv32e.config.Dec_Info._
+import rv32e.define.Dec_Info._
 
 // instruction issue unit, put register file in this unit
 // reg file in here !

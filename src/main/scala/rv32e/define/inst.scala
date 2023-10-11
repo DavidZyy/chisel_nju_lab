@@ -1,4 +1,5 @@
-package rv32e.config
+package rv32e.define
+import chisel3._
 import chisel3.util._
 
 object Inst {

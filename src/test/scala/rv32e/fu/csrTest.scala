@@ -5,8 +5,8 @@ import chiseltest._
 import chisel3.util._
 import org.scalatest.flatspec.AnyFlatSpec
 import rv32e.config.Configs._
-import rv32e.config.Dec_Info._
-import rv32e.config.CSR_INFO._
+import rv32e.define.Dec_Info._
+import rv32e.define.CSR_INFO._
 
 
 trait CSRTestFunc {

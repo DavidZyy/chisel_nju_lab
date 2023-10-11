@@ -3,9 +3,8 @@ package rv32e
 // reg file put in here temporaly, no very smart, but trade-off for now
 import chisel3._
 import chisel3.util._
-import rv32e.bus.EXU2WBU_bus
-import rv32e.bus.WBU2ISU_bus
-import rv32e.config.Dec_Info._
+import rv32e.bus._
+import rv32e.define.Dec_Info._
 import rv32e.config.Configs._
 
 class WBU extends Module {

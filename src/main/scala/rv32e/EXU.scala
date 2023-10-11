@@ -2,18 +2,9 @@ package rv32e
 
 import chisel3._
 import chisel3.util._
-// import rv32e.bus.EXU2WBU_bus
-import rv32e.config.Dec_Info._
-import rv32e.fu.Alu
-import rv32e.fu.Bru
-import rv32e.fu.Lsu
-import rv32e.fu.Csr
-import rv32e.fu.Mdu
-import rv32e.fu.ebreak_moudle
-import rv32e.fu.not_impl_moudle
-import rv32e.bus.ISU2EXU_bus
-import rv32e.bus.EXU2WBU_bus
-import rv32e.bus.EXU2IFU_bus
+import rv32e.define.Dec_Info._
+import rv32e.fu._
+import rv32e.bus._
 import rv32e.utils.DiffCsr
 
 class EXU extends Module {

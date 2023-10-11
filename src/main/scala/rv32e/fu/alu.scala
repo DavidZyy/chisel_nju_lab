@@ -5,8 +5,8 @@ import chisel3.util._
 import chisel3.util.BitPat
 import chisel3.util.experimental.decode._
 import rv32e.config.Configs._
-import rv32e.config.Dec_Info._
-import rv32e.config.Inst._
+import rv32e.define.Dec_Info._
+import rv32e.define.Inst._
 
 class alu_in_class extends Bundle {
     val src1    =   Input(UInt(DATA_WIDTH.W))

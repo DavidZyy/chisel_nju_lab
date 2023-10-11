@@ -5,8 +5,6 @@ import chisel3.util._
 import chisel3.util.BitPat
 import chisel3.util.experimental.decode._
 import rv32e.config.Configs._
-import rv32e.config.Dec_Info._
-import rv32e.config.Inst._
 import rv32e.utils.DiffCsr
 import java.awt.MouseInfo
 import rv32e.utils.StageConnect
