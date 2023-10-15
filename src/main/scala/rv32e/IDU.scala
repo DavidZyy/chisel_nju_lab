@@ -16,16 +16,16 @@ class IDU extends Module {
     from_IFU.ready := true.B
     to_ISU.valid   := true.B
 
-    val s_idle :: s_busy :: Nil = Enum(2)
-    val state = RegInit(s_idle)
-    state := MuxLookup(state, s_idle, List(
-        s_idle  -> Mux(from_IFU.valid, s_busy, s_idle),
-        s_busy  -> s_idle
-    ))
-    from_IFU.ready  :=  MuxLookup(state, false.B, List(
-        s_idle  ->  true.B,
-        s_busy  ->  false.B
-    ))
+    // val s_idle :: s_busy :: Nil = Enum(2)
+    // val state = RegInit(s_idle)
+    // state := MuxLookup(state, s_idle, List(
+    //     s_idle  -> Mux(from_IFU.valid, s_busy, s_idle),
+    //     s_busy  -> s_idle
+    // ))
+    // from_IFU.ready  :=  MuxLookup(state, false.B, List(
+    //     s_idle  ->  true.B,
+    //     s_busy  ->  false.B
+    // ))
 
     val imm_i   =   Cat(Fill(20, from_IFU.bits.inst(31)), from_IFU.bits.inst(31, 20))
     val imm_s   =   Cat(Fill(20, from_IFU.bits.inst(31)), from_IFU.bits.inst(31, 25), from_IFU.bits.inst(11, 7))

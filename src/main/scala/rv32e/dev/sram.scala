@@ -12,10 +12,73 @@ import chisel3.util.experimental.decode._
 import rv32e.config.Configs._
 import rv32e.define.Dec_Info._
 import rv32e.define.Inst._
-import rv32e.bus.AXILiteIO
+import rv32e.bus.AXILiteIO_slave
+import rv32e.utils.LFSR
+
+class RomBB extends BlackBox with HasBlackBoxResource {
+    val io = IO(new Bundle {
+        val addr = Input(UInt(ADDR_WIDTH.W))
+        val inst = Output(UInt(ADDR_WIDTH.W))
+    })
+
+    addResource("/RomBB.v")
+}
 
 class SRAM extends Module {
-    val io = new AXILiteIO
+    val axi = IO(new AXILiteIO_slave)
 
-    io.ar.fire
+    val s_idle :: s_delay :: s_busy :: Nil = Enum(3)
+    val state = RegInit(s_idle)
+    // state := MuxLookup(state, s_idle, List(
+    //     s_idle      ->  Mux(axi.ar.valid, s_busy, s_idle), //set delay = 10
+    //     s_busy      ->  Mux(axi.r.ready, s_idle, s_busy) //delay == 0, transe
+    // ))
+    axi.ar.ready := MuxLookup(state, false.B, List(
+        s_idle  ->  true.B,
+        s_busy  ->  false.B
+    ))
+    axi.r.valid  := MuxLookup(state, false.B, List(
+        s_idle  ->  false.B,
+        s_busy  ->  true.B
+    ))
+
+    val lfsr = Module(new LFSR())
+
+    val delay = RegInit(0.U)
+    // axi.r.valid  := false.B
+    // axi.ar.ready := true.B
+    switch (state) {
+        is  (s_idle) {
+            when (axi.ar.valid) {
+                state   :=  s_delay
+                delay   :=  lfsr.io.out
+                // delay   :=  0.U
+                // axi.r.valid  := true.B
+                // axi.ar.ready := false.B
+            } .otherwise {
+                state   :=  s_idle
+            }
+        }
+        is (s_delay) {
+            when (delay === 0.U) {
+                state := s_busy
+            } .otherwise {
+                delay := delay - 1.U
+            }
+        }
+        is (s_busy) {
+            when (axi.r.ready) {
+                state   :=  s_idle
+                // axi.r.valid  := false.B
+                // axi.ar.ready := true.B
+            } .otherwise {
+                state   :=  s_busy
+            }
+        }
+    }
+
+    val RomBB_i1 = Module(new RomBB())
+
+    RomBB_i1.io.addr := axi.ar.bits.addr
+    axi.r.bits.data := RomBB_i1.io.inst
 }

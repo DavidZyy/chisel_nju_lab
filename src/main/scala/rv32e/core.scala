@@ -9,6 +9,7 @@ import rv32e.utils.DiffCsr
 import java.awt.MouseInfo
 import rv32e.utils.StageConnect
 import utils.RegFile
+import rv32e.dev.SRAM
 
 class out_class extends Bundle {
     val inst     = Output(UInt(INST_WIDTH.W))
@@ -26,6 +27,10 @@ class top extends Module {
     val ISU_i   =   Module(new ISU())
     val EXU_i   =   Module(new EXU()) 
     val WBU_i   =   Module(new WBU())
+
+    val sram_i  =   Module(new SRAM())
+    StageConnect(IFU_i.axi.ar, sram_i.axi.ar)
+    StageConnect(sram_i.axi.r, IFU_i.axi.r)
 
     StageConnect(EXU_i.to_IFU, IFU_i.from_EXU)
     StageConnect(IFU_i.to_IDU, IDU_i.from_IFU)

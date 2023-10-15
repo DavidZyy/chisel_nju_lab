@@ -10,6 +10,7 @@ import rv32e.config.Configs._
 class WBU extends Module {
     val from_EXU = IO(Flipped(Decoupled(new EXU2WBU_bus)))
     val to_ISU   = IO(Decoupled(new WBU2ISU_bus))
+    // val to_IFU   =  fetch next inst, indicate the inst finishment
     from_EXU.ready := true.B
     to_ISU.valid   := true.B
 
