@@ -66,3 +66,7 @@ class WBU2ISU_bus extends Bundle {
     val reg_wen   = Output(Bool())
     val wdata     = Output(UInt(DATA_WIDTH.W))
 }
+
+class WBU2IFU_bus extends Bundle {
+
+}

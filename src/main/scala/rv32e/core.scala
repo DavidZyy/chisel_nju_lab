@@ -38,6 +38,7 @@ class top extends Module {
     StageConnect(ISU_i.to_EXU, EXU_i.from_ISU)
     StageConnect(EXU_i.to_WBU, WBU_i.from_EXU)
     StageConnect(WBU_i.to_ISU, ISU_i.from_WBU)
+    StageConnect(WBU_i.to_IFU, IFU_i.from_WBU)
 
     io.out.inst    := IFU_i.to_IDU.bits.inst
     io.out.pc      := IFU_i.to_IDU.bits.pc

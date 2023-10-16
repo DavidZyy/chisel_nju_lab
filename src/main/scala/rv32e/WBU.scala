@@ -10,9 +10,10 @@ import rv32e.config.Configs._
 class WBU extends Module {
     val from_EXU = IO(Flipped(Decoupled(new EXU2WBU_bus)))
     val to_ISU   = IO(Decoupled(new WBU2ISU_bus))
-    // val to_IFU   =  fetch next inst, indicate the inst finishment
+    val to_IFU   = IO(Decoupled(new WBU2IFU_bus))
     from_EXU.ready := true.B
     to_ISU.valid   := true.B
+    to_IFU.valid   := true.B
 
     to_ISU.bits.reg_wen := from_EXU.bits.reg_wen
     to_ISU.bits.wdata   := MuxLookup(from_EXU.bits.fu_op, 0.U, Array(

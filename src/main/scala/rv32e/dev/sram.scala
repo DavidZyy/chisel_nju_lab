@@ -33,14 +33,8 @@ class SRAM extends Module {
     //     s_idle      ->  Mux(axi.ar.valid, s_busy, s_idle), //set delay = 10
     //     s_busy      ->  Mux(axi.r.ready, s_idle, s_busy) //delay == 0, transe
     // ))
-    axi.ar.ready := MuxLookup(state, false.B, List(
-        s_idle  ->  true.B,
-        s_busy  ->  false.B
-    ))
-    axi.r.valid  := MuxLookup(state, false.B, List(
-        s_idle  ->  false.B,
-        s_busy  ->  true.B
-    ))
+    axi.ar.ready := MuxLookup(state, false.B, List( s_idle  ->  true.B))
+    axi.r.valid  := MuxLookup(state, false.B, List( s_busy  ->  true.B))
 
     val lfsr = Module(new LFSR())
 
@@ -51,8 +45,8 @@ class SRAM extends Module {
         is  (s_idle) {
             when (axi.ar.valid) {
                 state   :=  s_delay
-                delay   :=  lfsr.io.out
-                // delay   :=  0.U
+                // delay   :=  lfsr.io.out
+                delay   :=  0.U
                 // axi.r.valid  := true.B
                 // axi.ar.ready := false.B
             } .otherwise {
