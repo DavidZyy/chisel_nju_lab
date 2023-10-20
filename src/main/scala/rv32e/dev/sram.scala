@@ -93,4 +93,50 @@ class SRAM extends Module {
 
 class SRAM_lsu extends Module {
     val axi = IO(new AXILiteIO_slave_lsu)
+
+    val s_idle :: s_read_delay :: s_read_end :: s_write_delay :: s_write_end :: Nil = Enum(5)
+    val state = RegInit(s_idle)
+
+    axi.ar.ready := MuxLookup(state, false.B, List( s_idle      ->  true.B))
+    axi.r.valid  := MuxLookup(state, false.B, List( s_read_end  ->  true.B))
+
+    val lfsr = Module(new LFSR())
+    val delay = RegInit(0.U)
+
+    switch (state) {
+        is (s_idle) {
+            delay := 0.U
+            when (axi.ar.fire) {
+                state := s_read_delay
+            } .otherwise {
+                state := s_idle
+            }
+        }
+        is (s_read_delay) {
+            when (delay === 0.U) {
+                state := s_read_end
+            } .otherwise {
+                delay := delay - 1.U
+            }
+        }
+        is (s_read_end) {
+            state := Mux(axi.r.fire, s_idle, s_read_end)
+        }
+    }
+
+    val RamBB_i1 = Module(new RamBB())
+
+    RamBB_i1.io.clock   := clock
+    RamBB_i1.io.addr    := axi.ar.bits.addr
+    RamBB_i1.io.mem_wen := MuxLookup(state, false.B, List(
+        s_write_end -> true.B
+    ))
+    RamBB_i1.io.valid   := MuxLookup(state, false.B, List(
+        s_read_end  -> true.B,
+        s_write_end -> true.B
+    ))
+    RamBB_i1.io.wdata   :=  0.U
+    RamBB_i1.io.wmask   :=  0.U
+
+    axi.r.bits.data := RamBB_i1.io.rdata
 }

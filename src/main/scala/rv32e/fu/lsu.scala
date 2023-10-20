@@ -41,7 +41,7 @@ class Lsu extends Module {
         val in  = (new ram_in_class )
         val out = (new ram_out_class)
     })
-    // val axi = IO(new AXILiteIO_master_lsu)
+    val axi = IO(new AXILiteIO_master_lsu)
 
     val s_idle :: s_read_request :: s_read_wait :: s_write_request :: s_write_wait :: s_end :: Nil = Enum(6)
     val state = RegInit(s_idle)
@@ -62,8 +62,8 @@ class Lsu extends Module {
             state := s_read_wait
         }
         is (s_read_wait) {
-            // state := Mux(axi.r.fire, s_end, s_read_wait)
-            state := s_end
+            state := Mux(axi.r.fire, s_end, s_read_wait)
+            // state := s_end
         }
         is (s_write_request) {
             state := s_write_wait
@@ -79,8 +79,8 @@ class Lsu extends Module {
     io.out.idle  := MuxLookup(state, false.B, List(s_idle -> true.B))
     io.out.end   := MuxLookup(state, false.B, List(s_end  -> true.B))
 
-    // axi.ar.valid := MuxLookup(state, false.B, List(s_read_request -> true.B))
-    // axi.ar.ready := MuxLookup(state, false.B, List(s_read_wait -> true.B))
+    axi.ar.valid := MuxLookup(state, false.B, List(s_read_request -> true.B))
+    axi.r.ready  := MuxLookup(state, false.B, List(s_read_wait -> true.B))
 
     // io.out.idle := true.B
     // io.out.end  := true.B
@@ -98,8 +98,10 @@ class Lsu extends Module {
     RamBB_i1.io.addr    := io.in.addr
     RamBB_i1.io.mem_wen := io.in.mem_wen
     RamBB_i1.io.valid   := valid
-    val rdata_align_4 = RamBB_i1.io.rdata
-    // val rdata_align_4 = 
+
+    val rdata_align_4 = Wire(UInt(DATA_WIDTH.W))
+    rdata_align_4 := axi.r.bits.data
+    axi.ar.bits.addr := io.in.addr
 
 
     val lb_rdata  = Wire(UInt(DATA_WIDTH.W))
