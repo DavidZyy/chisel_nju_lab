@@ -19,7 +19,8 @@ class ram_in_class extends Bundle {
 
 class ram_out_class extends Bundle {
     val rdata   =   Output(UInt(DATA_WIDTH.W))
-    val finish  =   Output(Bool())
+    val end     =   Output(Bool())
+    val idle    =   Output(Bool())
 }
 
 class RamBB extends BlackBox with HasBlackBoxResource {
@@ -41,7 +42,37 @@ class Lsu extends Module {
         val out = (new ram_out_class)
     })
 
-    io.out.finish := true.B
+    val s_idle :: s_read :: s_write :: s_end :: Nil = Enum(4)
+    val state = RegInit(s_idle)
+
+    switch (state) {
+        is (s_idle) {
+            when (io.in.valid) {
+                when (io.in.mem_wen) {
+                    state := s_write
+                } .otherwise {
+                    state := s_read
+                }
+            } .otherwise {
+                state := s_idle
+            }
+        }
+        is (s_read) {
+            state := s_end
+        }
+        is (s_write) {
+            state := s_end
+        }
+        is (s_end) {
+            state := s_idle
+        }
+    }
+
+    io.out.idle := MuxLookup(state, false.B, List(s_idle -> true.B))
+    io.out.end  := MuxLookup(state, false.B, List(s_end  -> true.B))
+
+    // io.out.idle := true.B
+    // io.out.end  := true.B
 
     val lsu_op = io.in.op
     val true_addr = io.in.addr

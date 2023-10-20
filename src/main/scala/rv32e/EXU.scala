@@ -27,15 +27,22 @@ class EXU extends Module {
     // to_IFU.valid   := true.B
 
     // wait result now only wait lsu!!, for it's the slowest
-    val s_idle  :: s_wait_lsu_result :: s_end :: Nil = Enum(3)
+    val s_idle  :: s_begin :: s_wait_lsu :: s_end :: Nil = Enum(4)
     val state = RegInit(s_idle)
     switch (state) {
         is (s_idle) {
-            when (from_ISU.fire) {
-                state := s_end
+            state := Mux(from_ISU.fire, s_begin, s_idle)
+            // state := Mux(from_ISU.fire, s_end, s_idle)
+        }
+        is (s_begin) {
+            when (from_ISU.bits.ctrl_sig.fu_op === ("b"+fu_lsu).U ) {
+                state := Mux(Lsu_i.io.out.idle, s_wait_lsu, s_begin)
             } .otherwise {
-                state := s_idle
+                state := s_end
             }
+        }
+        is (s_wait_lsu) {
+            state := Mux(Lsu_i.io.out.end, s_end, s_wait_lsu)
         }
         is (s_end) {
             state := s_idle
@@ -66,7 +73,8 @@ class EXU extends Module {
     Lsu_i.io.in.wdata   := from_ISU.bits.rdata2
     Lsu_i.io.in.mem_wen := from_ISU.bits.ctrl_sig.mem_wen
     Lsu_i.io.in.op      := from_ISU.bits.ctrl_sig.lsu_op
-    Lsu_i.io.in.valid   := from_ISU.bits.ctrl_sig.fu_op === ("b"+fu_lsu).U
+    // Lsu_i.io.in.valid   := (from_ISU.bits.ctrl_sig.fu_op === ("b"+fu_lsu).U) && (state === s_end)
+    Lsu_i.io.in.valid   := MuxLookup(state, false.B, List(s_wait_lsu -> true.B))
 
     // bru
     Bru_i.io.in.op     := from_ISU.bits.ctrl_sig.bru_op
