@@ -6,6 +6,8 @@ import rv32e.define.Dec_Info._
 import rv32e.fu._
 import rv32e.bus._
 import rv32e.utils.DiffCsr
+import rv32e.dev.SRAM_lsu
+import rv32e.utils.StageConnect
 
 class EXU extends Module {
     val from_ISU = IO(Flipped(Decoupled(new ISU2EXU_bus)))
@@ -106,4 +108,11 @@ class EXU extends Module {
     to_IFU.bits.csr_addr        := Csr_i.io.out.csr_addr
 
     difftest <> Csr_i.io.out.difftest
+
+    // val sram_i = Module(new SRAM_lsu())
+    // StageConnect(Lsu_i.axi.ar, sram_i.axi.ar)
+    // StageConnect(sram_i.axi.r, Lsu_i.axi.r)
+    // StageConnect(Lsu_i.axi.aw, sram_i.axi.aw)
+    // StageConnect(Lsu_i.axi.w,  sram_i.axi.w)
+    // StageConnect(sram_i.axi.b, Lsu_i.axi.b)
 }

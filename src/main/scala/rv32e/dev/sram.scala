@@ -13,6 +13,7 @@ import rv32e.config.Configs._
 import rv32e.define.Dec_Info._
 import rv32e.define.Inst._
 import rv32e.bus.AXILiteIO_slave
+import rv32e.bus.AXILiteIO_slave_lsu
 import rv32e.utils.LFSR
 
 class RomBB extends BlackBox with HasBlackBoxResource {
@@ -22,6 +23,19 @@ class RomBB extends BlackBox with HasBlackBoxResource {
     })
 
     addResource("/RomBB.v")
+}
+
+class RamBB extends BlackBox with HasBlackBoxResource {
+    val io = IO(new Bundle {
+        val clock   = Input(Clock())
+        val addr    = Input(UInt(DATA_WIDTH.W))
+        val mem_wen = Input(Bool())
+        val valid   = Input(Bool())
+        val wdata   = Input(UInt(DATA_WIDTH.W))
+        val wmask   = Input(UInt((DATA_WIDTH/BYTE_WIDTH).W))
+        val rdata   = Output(UInt(DATA_WIDTH.W))
+    })
+    addResource("/RamBB.v")
 }
 
 class SRAM extends Module {
@@ -75,4 +89,8 @@ class SRAM extends Module {
 
     RomBB_i1.io.addr := axi.ar.bits.addr
     axi.r.bits.data := RomBB_i1.io.inst
+}
+
+class SRAM_lsu extends Module {
+    val axi = IO(new AXILiteIO_slave_lsu)
 }
