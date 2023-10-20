@@ -53,7 +53,13 @@ class IFU extends Module {
     axi.ar.bits.addr := reg_PC
 
     // if not ready, transfer nop inst
-    to_IDU.bits.inst    := Mux(from_WBU.fire, axi.r.bits.data, NOP.U)
+    to_IDU.bits.inst    := Mux(to_IDU.fire, axi.r.bits.data, NOP.U)
+    // to_IDU.bits.inst    := MuxLookup(state, NOP.U, List( s_wait_WB  ->  axi.r.bits.data))
+    // when (state === s_wait_WB) {
+    //     to_IDU.bits.inst := axi.r.bits.data
+    // } .otherwise {
+    //     to_IDU.bits.inst := NOP.U
+    // }
     // to_IDU.bits.inst    := RomBB_i1.io.inst
     to_IDU.bits.pc      := reg_PC
 

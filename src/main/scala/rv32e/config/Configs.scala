@@ -9,6 +9,7 @@ object Configs {
 
     // for regs and imm
     val DATA_WIDTH      =   32
+    val BYTE_WIDTH      =   8
     val INST_WIDTH      =   32
     val INST_BYTE_WIDTH =   4
 

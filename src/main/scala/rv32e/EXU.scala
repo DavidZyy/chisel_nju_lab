@@ -13,10 +13,6 @@ class EXU extends Module {
     val to_IFU   = IO(Decoupled(new EXU2IFU_bus))
     val difftest = IO(new DiffCsr)
 
-    from_ISU.ready := true.B
-    to_WBU.valid   := true.B
-    to_IFU.valid   := true.B
-
     val Alu_i               = Module(new Alu())
     val Mdu_i               = Module(new Mdu())
     val Bru_i               = Module(new Bru())
@@ -24,6 +20,30 @@ class EXU extends Module {
     val Csr_i               = Module(new Csr())
     val ebreak_moudle_i     = Module(new ebreak_moudle())
     val not_impl_moudle_i   = Module(new not_impl_moudle())
+
+    // !!!!! to core change StageConnect !!!!!!!!!
+    // from_ISU.ready := true.B
+    // to_WBU.valid   := from_ISU.valid
+    // to_IFU.valid   := true.B
+
+    // wait result now only wait lsu!!, for it's the slowest
+    val s_idle  :: s_wait_lsu_result :: s_end :: Nil = Enum(3)
+    val state = RegInit(s_idle)
+    switch (state) {
+        is (s_idle) {
+            when (from_ISU.fire) {
+                state := s_end
+            } .otherwise {
+                state := s_idle
+            }
+        }
+        is (s_end) {
+            state := s_idle
+        }
+    }
+    from_ISU.ready := MuxLookup(state, false.B, List(s_idle -> true.B))
+    to_WBU.valid   := MuxLookup(state, false.B, List(s_end  -> true.B))
+    to_IFU.valid   := MuxLookup(state, false.B, List(s_end  -> true.B))
 
     // alu
     Alu_i.io.in.op := from_ISU.bits.ctrl_sig.alu_op

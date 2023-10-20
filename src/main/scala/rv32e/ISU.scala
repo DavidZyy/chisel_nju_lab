@@ -15,7 +15,7 @@ class ISU extends Module {
 
     from_IDU.ready := true.B
     from_WBU.ready := true.B
-    to_EXU.valid   := true.B
+    to_EXU.valid   := from_IDU.valid
 
     val RegFile_i           = Module(new RegFile())
 

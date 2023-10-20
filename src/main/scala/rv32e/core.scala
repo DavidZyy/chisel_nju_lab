@@ -8,6 +8,7 @@ import rv32e.config.Configs._
 import rv32e.utils.DiffCsr
 import java.awt.MouseInfo
 import rv32e.utils.StageConnect
+import rv32e.utils.StageConnect_reg
 import utils.RegFile
 import rv32e.dev.SRAM
 
@@ -15,6 +16,7 @@ class out_class extends Bundle {
     val inst     = Output(UInt(INST_WIDTH.W))
     val pc       = Output(UInt(DATA_WIDTH.W))
     val difftest = new DiffCsr
+    val wb       = Output(Bool())
 }
 
 class top extends Module {
@@ -35,13 +37,15 @@ class top extends Module {
     StageConnect(EXU_i.to_IFU, IFU_i.from_EXU)
     StageConnect(IFU_i.to_IDU, IDU_i.from_IFU)
     StageConnect(IDU_i.to_ISU, ISU_i.from_IDU)
-    StageConnect(ISU_i.to_EXU, EXU_i.from_ISU)
+    StageConnect_reg(ISU_i.to_EXU, EXU_i.from_ISU)
+    // StageConnect(ISU_i.to_EXU, EXU_i.from_ISU)
     StageConnect(EXU_i.to_WBU, WBU_i.from_EXU)
     StageConnect(WBU_i.to_ISU, ISU_i.from_WBU)
     StageConnect(WBU_i.to_IFU, IFU_i.from_WBU)
 
     io.out.inst    := IFU_i.to_IDU.bits.inst
     io.out.pc      := IFU_i.to_IDU.bits.pc
+    io.out.wb      := WBU_i.to_IFU.valid
 
     io.out.difftest <> EXU_i.difftest
 }

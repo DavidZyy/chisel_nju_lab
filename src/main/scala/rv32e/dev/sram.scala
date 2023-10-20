@@ -43,10 +43,10 @@ class SRAM extends Module {
     // axi.ar.ready := true.B
     switch (state) {
         is  (s_idle) {
+            delay   :=  0.U
             when (axi.ar.valid) {
                 state   :=  s_delay
                 // delay   :=  lfsr.io.out
-                delay   :=  0.U
                 // axi.r.valid  := true.B
                 // axi.ar.ready := false.B
             } .otherwise {

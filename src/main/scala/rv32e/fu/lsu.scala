@@ -19,17 +19,18 @@ class ram_in_class extends Bundle {
 
 class ram_out_class extends Bundle {
     val rdata   =   Output(UInt(DATA_WIDTH.W))
+    val finish  =   Output(Bool())
 }
 
 class RamBB extends BlackBox with HasBlackBoxResource {
     val io = IO(new Bundle {
-        val clock = Input(Clock())
-        val addr  = Input(UInt(DATA_WIDTH.W))
-        val wdata = Input(UInt(DATA_WIDTH.W))
+        val clock   = Input(Clock())
+        val addr    = Input(UInt(DATA_WIDTH.W))
         val mem_wen = Input(Bool())
         val valid   = Input(Bool())
-        val rdata = Output(UInt(DATA_WIDTH.W))
-        val rdata_4_w = Output(UInt(DATA_WIDTH.W))
+        val wdata   = Input(UInt(DATA_WIDTH.W))
+        val wmask   = Input(UInt((DATA_WIDTH/BYTE_WIDTH).W))
+        val rdata   = Output(UInt(DATA_WIDTH.W))
     })
     addResource("/RamBB.v")
 }
@@ -39,6 +40,8 @@ class Lsu extends Module {
         val in  = (new ram_in_class )
         val out = (new ram_out_class)
     })
+
+    io.out.finish := true.B
 
     val lsu_op = io.in.op
     val true_addr = io.in.addr
@@ -50,12 +53,13 @@ class Lsu extends Module {
     val RamBB_i1 = Module(new RamBB())
 
     RamBB_i1.io.clock   := clock
-    RamBB_i1.io.addr    := (io.in.addr >> 2) << 2 // align to 4
+    // RamBB_i1.io.addr    := (io.in.addr >> 2) << 2 // align to 4
+    RamBB_i1.io.addr    := io.in.addr
     RamBB_i1.io.mem_wen := io.in.mem_wen
     RamBB_i1.io.valid   := valid
     // RamBB_i1.io.wdata   := wdata_align_4
     val rdata_align_4 = RamBB_i1.io.rdata
-    val rdata_4_w     = RamBB_i1.io.rdata_4_w
+    // val rdata_4_w     = RamBB_i1.io.rdata_4_w
     // val mem = Mem(MEM_INST_SIZE, UInt(DATA_WIDTH.W))
 
     // val rdata_align_4 = mem.read(true_addr >> 2)
@@ -101,23 +105,23 @@ class Lsu extends Module {
         ("b" + lsu_lw ).U -> lw_rdata,
     ))
 
-    val sb_wmask = Wire(UInt(DATA_WIDTH.W))
-    val sh_wmask = Wire(UInt(DATA_WIDTH.W))
-    val sw_wmask = Wire(UInt(DATA_WIDTH.W))
+    val sb_wmask = Wire(UInt((DATA_WIDTH/BYTE_WIDTH).W))
+    val sh_wmask = Wire(UInt((DATA_WIDTH/BYTE_WIDTH).W))
+    val sw_wmask = Wire(UInt((DATA_WIDTH/BYTE_WIDTH).W))
 
     sb_wmask    :=  MuxLookup(addr_low_2, 0.U, Array(
-        0.U -> 0x000000ffL.U,
-        1.U -> 0x0000ff00L.U,
-        2.U -> 0x00ff0000L.U,
-        3.U -> 0xff000000L.U,
+        0.U -> "b0001".U,
+        1.U -> "b0010".U,
+        2.U -> "b0100".U,
+        3.U -> "b1000".U,
     ))
 
     sh_wmask    :=  MuxLookup(addr_low_2, 0.U, Array(
-        0.U -> 0x0000ffffL.U,
-        2.U -> 0xffff0000L.U,
+        0.U -> "b0011".U,
+        2.U -> "b1100".U,
     ))
 
-    sw_wmask    :=  0xffffffffL.U
+    sw_wmask    :=  "b1111".U
 
     val wmask   =  MuxLookup(lsu_op, 0.U, Array(
         ("b" + lsu_sb).U -> sb_wmask,
@@ -125,12 +129,13 @@ class Lsu extends Module {
         ("b" + lsu_sw).U -> sw_wmask,
     ))
 
-    val wdata_align_4 = 
+    // val wdata_align_4 = 
         // 0.U
         // (((io.in.wdata << (8.U * addr_low_2)) & wmask) | (rdata_align_4))
-        (((io.in.wdata << (8.U * addr_low_2)) & wmask) | (rdata_4_w & ~wmask))
+        // (((io.in.wdata << (8.U * addr_low_2)) & wmask) | (rdata_4_w & ~wmask))
 
-    RamBB_i1.io.wdata   := wdata_align_4
+    RamBB_i1.io.wdata   :=  io.in.wdata
+    RamBB_i1.io.wmask   :=  wmask 
 
     // when (io.in.mem_wen) {
     //     mem.write(true_addr >> 2.U, 

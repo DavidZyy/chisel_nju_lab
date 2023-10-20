@@ -14,7 +14,7 @@ class IDU extends Module {
     val from_IFU  = IO(Flipped(Decoupled(new IFU2IDU_bus))) // only to IFU signal
     val to_ISU    = IO(Decoupled(new IDU2ISU_bus))
     from_IFU.ready := true.B
-    to_ISU.valid   := true.B
+    to_ISU.valid   := from_IFU.valid
 
     // val s_idle :: s_busy :: Nil = Enum(2)
     // val state = RegInit(s_idle)
