@@ -7,7 +7,7 @@ import chisel3.util.experimental.decode._
 import rv32e.config.Configs._
 import rv32e.define.Dec_Info._
 import rv32e.define.Inst._
-import rv32e.bus.AXILiteIO_master_lsu
+import rv32e.bus.AXILiteIO_master
 
 class ram_in_class extends Bundle {
     val valid   =   Input(Bool())
@@ -41,7 +41,7 @@ class Lsu extends Module {
         val in  = (new ram_in_class )
         val out = (new ram_out_class)
     })
-    val axi = IO(new AXILiteIO_master_lsu)
+    val axi = IO(new AXILiteIO_master)
 
     val s_idle :: s_read_request :: s_read_wait :: s_write_request :: s_write_wait :: s_end :: Nil = Enum(6)
     val state = RegInit(s_idle)

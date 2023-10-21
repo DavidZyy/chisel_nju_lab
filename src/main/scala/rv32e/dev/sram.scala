@@ -13,7 +13,6 @@ import rv32e.config.Configs._
 import rv32e.define.Dec_Info._
 import rv32e.define.Inst._
 import rv32e.bus.AXILiteIO_slave
-import rv32e.bus.AXILiteIO_slave_lsu
 import rv32e.utils.LFSR
 
 class RomBB extends BlackBox with HasBlackBoxResource {
@@ -39,7 +38,7 @@ class RamBB extends BlackBox with HasBlackBoxResource {
 }
 
 class SRAM extends Module {
-    val axi = IO(new AXILiteIO_slave_lsu)
+    val axi = IO(new AXILiteIO_slave)
 
     val s_idle :: s_read_delay :: s_read_end :: s_write_delay :: s_write_end :: Nil = Enum(5)
     val state = RegInit(s_idle)
@@ -57,6 +56,7 @@ class SRAM extends Module {
     switch (state) {
         is (s_idle) {
             delay := 0.U
+            // delay := lfsr.io.out;
             when (axi.ar.fire) {
                 state := s_read_delay
             } 
