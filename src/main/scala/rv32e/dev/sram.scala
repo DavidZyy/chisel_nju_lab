@@ -86,7 +86,10 @@ class SRAM extends Module {
     val RamBB_i1 = Module(new RamBB())
 
     RamBB_i1.io.clock   := clock
-    RamBB_i1.io.addr    := axi.ar.bits.addr
+    RamBB_i1.io.addr    := MuxLookup(state, 0.U, List(
+        s_read_end  -> axi.ar.bits.addr,
+        s_write_end -> axi.aw.bits.addr,
+    ))
     RamBB_i1.io.mem_wen := MuxLookup(state, false.B, List(
         s_write_end -> true.B
     ))
