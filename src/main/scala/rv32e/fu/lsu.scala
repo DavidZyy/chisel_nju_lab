@@ -59,14 +59,16 @@ class Lsu extends Module {
             }
         }
         is (s_read_request) {
-            state := s_read_wait
+            // state := s_read_wait
+            state := Mux(axi.ar.fire, s_read_wait, s_read_request)
         }
         is (s_read_wait) {
             state := Mux(axi.r.fire, s_end, s_read_wait)
             // state := s_end
         }
         is (s_write_request) {
-            state := s_write_wait
+            // state := s_write_wait
+            state := Mux(axi.aw.fire && axi.w.fire, s_write_wait, s_write_request)
         }
         is (s_write_wait) {
             state := Mux(axi.b.fire, s_end, s_write_wait)
