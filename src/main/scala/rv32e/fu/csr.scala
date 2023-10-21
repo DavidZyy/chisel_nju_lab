@@ -1,41 +1,33 @@
-package rv32e.EXU
+package rv32e.fu
 
 import chisel3._
 import chisel3.util._
 import rv32e.config.Configs._
-import rv32e.config.Dec_Info._
-import rv32e.config.Inst._
-import rv32e.config.CSR_INFO._
+import rv32e.define.Dec_Info._
+import rv32e.define.Inst._
+import rv32e.define.CSR_Info._
+import rv32e.utils.DiffCsr
 
 class csr_in_class extends Bundle {
-  val csr_op  = Input(UInt(CSROP_WIDTH.W))
+  val op      = Input(UInt(CSROP_WIDTH.W))
   val cur_pc  = Input(UInt(ADDR_WIDTH.W))
   // the immediate field of I-type inst.
   val csr_id  = Input(UInt(DATA_WIDTH.W))
   val wdata   = Input(UInt(DATA_WIDTH.W))
 }
 
-class Regs extends Bundle {
-  val mcause  = Output(UInt(DATA_WIDTH.W))
-  val mepc    = Output(UInt(DATA_WIDTH.W))
-  val mstatus = Output(UInt(DATA_WIDTH.W))
-  val mtvec   = Output(UInt(DATA_WIDTH.W))
-}
-
 class csr_out_class extends Bundle {
-  val ctrl_csr = Output(Bool()) // if jmp
-  val csr_pc   = Output(UInt(ADDR_WIDTH.W)) // jmp addr
+  val csr_br   = Output(Bool()) // if jmp
+  val csr_addr = Output(UInt(ADDR_WIDTH.W)) // jmp addr
   val r_csr    = Output(UInt(DATA_WIDTH.W))
-  val difftest = new Regs
+  val difftest = new DiffCsr
 }
 
-class CSR extends Module {
+class Csr extends Module {
   val io = IO(new Bundle {
     val in  = (new csr_in_class)
     val out = (new csr_out_class)
   })
-
-  // val clk = Clock()
 
   val reg_mepc    = RegInit(0.U(DATA_WIDTH.W))
   val reg_mcause  = RegInit(0.U(DATA_WIDTH.W))
@@ -58,7 +50,7 @@ class CSR extends Module {
   reg_mcause_csrrs := MuxLookup(io.in.csr_id, reg_mcause, Array(
     mcause_id  -> (io.in.wdata | reg_mcause),
   ))
-  reg_mcause := MuxLookup(io.in.csr_op, reg_mcause, Array(
+  reg_mcause := MuxLookup(io.in.op, reg_mcause, Array(
     ("b" + csr_ecall ).U  ->   0xb.U,
     ("b" + csr_csrrw ).U  ->   reg_mcause_csrrw,
     ("b" + csr_csrrs ).U  ->   reg_mcause_csrrs,
@@ -70,7 +62,7 @@ class CSR extends Module {
   reg_mepc_csrrs := MuxLookup(io.in.csr_id, reg_mepc, Array(
     mepc_id  -> (io.in.wdata | reg_mepc),
   ))
-  reg_mepc := MuxLookup(io.in.csr_op, reg_mepc, Array(
+  reg_mepc := MuxLookup(io.in.op, reg_mepc, Array(
     ("b" + csr_ecall ).U  ->   io.in.cur_pc,
     ("b" + csr_csrrw ).U  ->   reg_mepc_csrrw,
     ("b" + csr_csrrs ).U  ->   reg_mepc_csrrs,
@@ -82,7 +74,7 @@ class CSR extends Module {
   reg_mstatus_csrrs := MuxLookup(io.in.csr_id, reg_mstatus, Array(
     mstatus_id  -> (io.in.wdata | reg_mstatus),
   ))
-  reg_mstatus := MuxLookup(io.in.csr_op, reg_mstatus, Array(
+  reg_mstatus := MuxLookup(io.in.op, reg_mstatus, Array(
     ("b" + csr_ecall ).U  ->   Cat( reg_mstatus(sd_MSB, fs_LSB),
                                     "b11".U,
                                     reg_mstatus(wpri3_MSB, spp_LSB),
@@ -107,17 +99,17 @@ class CSR extends Module {
   reg_mtvec_csrrs := MuxLookup(io.in.csr_id, reg_mtvec, Array(
     mtvec_id  -> (io.in.wdata | reg_mtvec),
   ))
-  reg_mtvec := MuxLookup(io.in.csr_op, reg_mtvec, Array(
+  reg_mtvec := MuxLookup(io.in.op, reg_mtvec, Array(
     ("b" + csr_csrrw ).U  ->   reg_mtvec_csrrw,
     ("b" + csr_csrrs ).U  ->   reg_mtvec_csrrs,
   ))
 
-  io.out.ctrl_csr := MuxLookup(io.in.csr_op, false.B, Array(
+  io.out.csr_br := MuxLookup(io.in.op, false.B, Array(
     ("b" + csr_ecall ).U  ->   true.B,
     ("b" + csr_mret  ).U  ->   true.B,
   ))
 
-  io.out.csr_pc :=  MuxLookup(io.in.csr_op, 0.U, Array(
+  io.out.csr_addr :=  MuxLookup(io.in.op, 0.U, Array(
     ("b" + csr_ecall ).U  ->   reg_mtvec,
     ("b" + csr_mret  ).U  ->   reg_mepc,
   ))
