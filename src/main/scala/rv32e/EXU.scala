@@ -6,7 +6,7 @@ import rv32e.define.Dec_Info._
 import rv32e.fu._
 import rv32e.bus._
 import rv32e.utils.DiffCsr
-import rv32e.dev.SRAM_lsu
+import rv32e.dev.SRAM
 import rv32e.utils.StageConnect
 
 class EXU extends Module {
@@ -109,7 +109,7 @@ class EXU extends Module {
 
     difftest <> Csr_i.io.out.difftest
 
-    val sram_i = Module(new SRAM_lsu())
+    val sram_i = Module(new SRAM())
     StageConnect(Lsu_i.axi.ar, sram_i.axi.ar)
     StageConnect(sram_i.axi.r, Lsu_i.axi.r)
     StageConnect(Lsu_i.axi.aw, sram_i.axi.aw)

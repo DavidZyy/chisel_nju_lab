@@ -23,18 +23,18 @@ class ram_out_class extends Bundle {
     val idle    =   Output(Bool())
 }
 
-class RamBB extends BlackBox with HasBlackBoxResource {
-    val io = IO(new Bundle {
-        val clock   = Input(Clock())
-        val addr    = Input(UInt(DATA_WIDTH.W))
-        val mem_wen = Input(Bool())
-        val valid   = Input(Bool())
-        val wdata   = Input(UInt(DATA_WIDTH.W))
-        val wmask   = Input(UInt((DATA_WIDTH/BYTE_WIDTH).W))
-        val rdata   = Output(UInt(DATA_WIDTH.W))
-    })
-    addResource("/RamBB.v")
-}
+// class RamBB extends BlackBox with HasBlackBoxResource {
+//     val io = IO(new Bundle {
+//         val clock   = Input(Clock())
+//         val addr    = Input(UInt(DATA_WIDTH.W))
+//         val mem_wen = Input(Bool())
+//         val valid   = Input(Bool())
+//         val wdata   = Input(UInt(DATA_WIDTH.W))
+//         val wmask   = Input(UInt((DATA_WIDTH/BYTE_WIDTH).W))
+//         val rdata   = Output(UInt(DATA_WIDTH.W))
+//     })
+//     addResource("/RamBB.v")
+// }
 
 class Lsu extends Module {
     val io = IO(new Bundle {

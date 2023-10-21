@@ -33,6 +33,9 @@ class top extends Module {
     val sram_i  =   Module(new SRAM())
     StageConnect(IFU_i.axi.ar, sram_i.axi.ar)
     StageConnect(sram_i.axi.r, IFU_i.axi.r)
+    StageConnect(IFU_i.axi.aw, sram_i.axi.aw)
+    StageConnect(IFU_i.axi.w,  sram_i.axi.w)
+    StageConnect(sram_i.axi.b, IFU_i.axi.b)
 
     StageConnect(EXU_i.to_IFU, IFU_i.from_EXU)
     StageConnect(IFU_i.to_IDU, IDU_i.from_IFU)
