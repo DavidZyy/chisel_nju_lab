@@ -1,6 +1,8 @@
 package rv32e.utils
 import chisel3._
 import chisel3.util._
+import rv32e.bus.AXILiteIO_master
+import rv32e.bus.AXILiteIO_slave
 
 // left -> right
 object StageConnect {
@@ -11,7 +13,7 @@ object StageConnect {
         right.bits   :=  left.bits
         right.valid  :=  left.valid
         left.ready   :=  right.ready
-    } 
+    }
 }
 
 object StageConnect_reg {
@@ -22,5 +24,16 @@ object StageConnect_reg {
         right.bits   :=  RegEnable(left.bits, left.valid && right.ready)
         right.valid  :=  left.valid
         left.ready   :=  right.ready
-    } 
+    }
+}
+
+object AxiConnect {
+    def apply(master: AXILiteIO_master, slave: AXILiteIO_slave) {
+        StageConnect(master.ar, slave.ar)
+        StageConnect(slave.r, master.r)
+
+        StageConnect(master.aw, slave.aw)
+        StageConnect(master.w, slave.w)
+        StageConnect(slave.b, master.b)
+    }
 }

@@ -11,6 +11,8 @@ import rv32e.utils.StageConnect
 import rv32e.utils.StageConnect_reg
 import utils.RegFile
 import rv32e.dev.SRAM
+import rv32e.bus.Arbiter
+import rv32e.utils.AxiConnect
 
 class out_class extends Bundle {
     val inst     = Output(UInt(INST_WIDTH.W))
@@ -31,11 +33,10 @@ class top extends Module {
     val WBU_i   =   Module(new WBU())
 
     val sram_i  =   Module(new SRAM())
-    StageConnect(IFU_i.axi.ar, sram_i.axi.ar)
-    StageConnect(sram_i.axi.r, IFU_i.axi.r)
-    StageConnect(IFU_i.axi.aw, sram_i.axi.aw)
-    StageConnect(IFU_i.axi.w,  sram_i.axi.w)
-    StageConnect(sram_i.axi.b, IFU_i.axi.b)
+    // val arbiter_i = Module(new Arbiter())
+
+    AxiConnect(IFU_i.axi, sram_i.axi)
+
 
     StageConnect(EXU_i.to_IFU, IFU_i.from_EXU)
     StageConnect(IFU_i.to_IDU, IDU_i.from_IFU)
