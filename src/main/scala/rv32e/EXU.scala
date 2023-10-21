@@ -112,7 +112,7 @@ class EXU extends Module {
     val sram_i = Module(new SRAM_lsu())
     StageConnect(Lsu_i.axi.ar, sram_i.axi.ar)
     StageConnect(sram_i.axi.r, Lsu_i.axi.r)
-    // StageConnect(Lsu_i.axi.aw, sram_i.axi.aw)
-    // StageConnect(Lsu_i.axi.w,  sram_i.axi.w)
-    // StageConnect(sram_i.axi.b, Lsu_i.axi.b)
+    StageConnect(Lsu_i.axi.aw, sram_i.axi.aw)
+    StageConnect(Lsu_i.axi.w,  sram_i.axi.w)
+    StageConnect(sram_i.axi.b, Lsu_i.axi.b)
 }

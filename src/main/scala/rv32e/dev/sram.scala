@@ -100,6 +100,10 @@ class SRAM_lsu extends Module {
     axi.ar.ready := MuxLookup(state, false.B, List( s_idle      ->  true.B))
     axi.r.valid  := MuxLookup(state, false.B, List( s_read_end  ->  true.B))
 
+    axi.aw.ready := MuxLookup(state, false.B, List( s_idle      ->  true.B))
+    axi.w.ready  := MuxLookup(state, false.B, List( s_idle      ->  true.B))
+    axi.b.valid  := MuxLookup(state, false.B, List( s_write_end  ->  true.B))
+
     val lfsr = Module(new LFSR())
     val delay = RegInit(0.U)
 
@@ -108,19 +112,27 @@ class SRAM_lsu extends Module {
             delay := 0.U
             when (axi.ar.fire) {
                 state := s_read_delay
-            } .otherwise {
+            } 
+            .elsewhen (axi.aw.fire && axi.w.fire) {
+                state := s_write_delay
+            }
+            .otherwise {
                 state := s_idle
             }
         }
         is (s_read_delay) {
-            when (delay === 0.U) {
-                state := s_read_end
-            } .otherwise {
-                delay := delay - 1.U
-            }
+            state := Mux(delay === 0.U, s_read_end, s_read_delay)
+            delay := delay - 1.U
         }
         is (s_read_end) {
             state := Mux(axi.r.fire, s_idle, s_read_end)
+        }
+        is (s_write_delay) {
+            state := Mux(delay === 0.U, s_write_end, s_write_delay)
+            delay := delay - 1.U
+        }
+        is (s_write_end) {
+            state := Mux(axi.b.fire, s_idle, s_write_end)
         }
     }
 
@@ -137,6 +149,8 @@ class SRAM_lsu extends Module {
     ))
     RamBB_i1.io.wdata   :=  0.U
     RamBB_i1.io.wmask   :=  0.U
+    RamBB_i1.io.wdata   :=  axi.w.bits.data
+    RamBB_i1.io.wmask   :=  axi.w.bits.strb
 
     axi.r.bits.data := RamBB_i1.io.rdata
 }

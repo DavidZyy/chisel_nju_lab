@@ -69,7 +69,7 @@ class Lsu extends Module {
             state := s_write_wait
         }
         is (s_write_wait) {
-            state := s_end
+            state := Mux(axi.b.fire, s_end, s_write_wait)
         }
         is (s_end) {
             state := s_idle
@@ -79,11 +79,16 @@ class Lsu extends Module {
     io.out.idle  := MuxLookup(state, false.B, List(s_idle -> true.B))
     io.out.end   := MuxLookup(state, false.B, List(s_end  -> true.B))
 
-    axi.ar.valid := MuxLookup(state, false.B, List(s_read_request -> true.B))
-    axi.r.ready  := MuxLookup(state, false.B, List(s_read_wait -> true.B))
+    axi.ar.valid := MuxLookup(state, false.B, List(s_read_request  -> true.B))
+    axi.r.ready  := MuxLookup(state, false.B, List(s_read_wait     -> true.B))
 
-    // io.out.idle := true.B
-    // io.out.end  := true.B
+    axi.aw.valid := MuxLookup(state, false.B, List(s_write_request -> true.B))
+    axi.w.valid  := MuxLookup(state, false.B, List(s_write_request -> true.B))
+    axi.b.ready  := MuxLookup(state, false.B, List(s_write_wait    -> true.B))
+
+    axi.ar.bits.addr := io.in.addr
+    axi.aw.bits.addr := io.in.addr
+    axi.w.bits.data  := io.in.wdata
 
     val lsu_op = io.in.op
     val true_addr = io.in.addr
@@ -92,16 +97,15 @@ class Lsu extends Module {
 
     val valid = io.in.valid
 
-    val RamBB_i1 = Module(new RamBB())
-
-    RamBB_i1.io.clock   := clock
-    RamBB_i1.io.addr    := io.in.addr
-    RamBB_i1.io.mem_wen := io.in.mem_wen
-    RamBB_i1.io.valid   := valid
+//     val RamBB_i1 = Module(new RamBB())
+// 
+//     RamBB_i1.io.clock   := clock
+//     RamBB_i1.io.addr    := io.in.addr
+//     RamBB_i1.io.mem_wen := io.in.mem_wen
+//     RamBB_i1.io.valid   := valid
 
     val rdata_align_4 = Wire(UInt(DATA_WIDTH.W))
     rdata_align_4 := axi.r.bits.data
-    axi.ar.bits.addr := io.in.addr
 
 
     val lb_rdata  = Wire(UInt(DATA_WIDTH.W))
@@ -169,8 +173,10 @@ class Lsu extends Module {
         ("b" + lsu_sw).U -> sw_wmask,
     ))
 
-    RamBB_i1.io.wdata   :=  io.in.wdata
-    RamBB_i1.io.wmask   :=  wmask 
+    axi.w.bits.strb  := wmask
+
+    // RamBB_i1.io.wdata   :=  io.in.wdata
+    // RamBB_i1.io.wmask   :=  wmask 
 }
 
 
