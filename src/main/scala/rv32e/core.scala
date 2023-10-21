@@ -33,9 +33,12 @@ class top extends Module {
     val WBU_i   =   Module(new WBU())
 
     val sram_i  =   Module(new SRAM())
-    // val arbiter_i = Module(new Arbiter())
 
-    AxiConnect(IFU_i.axi, sram_i.axi)
+    // AxiConnect(IFU_i.axi, sram_i.axi)
+
+    val arbiter_i = Module(new Arbiter())
+    AxiConnect(IFU_i.axi, arbiter_i.from_master1)
+    AxiConnect(arbiter_i.to_slave, sram_i.axi)
 
 
     StageConnect(EXU_i.to_IFU, IFU_i.from_EXU)
