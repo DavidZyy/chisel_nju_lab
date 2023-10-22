@@ -10,12 +10,15 @@ import rv32e.dev.SRAM
 import rv32e.utils.StageConnect
 import rv32e.utils.AxiConnect
 import rv32e.bus.Arbiter
+import rv32e.bus.AXILiteIO_master
+import rv32e.bus.AXILiteIO_slave
 
 class EXU extends Module {
     val from_ISU = IO(Flipped(Decoupled(new ISU2EXU_bus)))
     val to_WBU   = IO(Decoupled(new EXU2WBU_bus))
     val to_IFU   = IO(Decoupled(new EXU2IFU_bus))
     val difftest = IO(new DiffCsr)
+    val lsu_axi_master = IO(new AXILiteIO_master)
 
     val Alu_i               = Module(new Alu())
     val Mdu_i               = Module(new Mdu())
@@ -103,6 +106,7 @@ class EXU extends Module {
     to_WBU.bits.pc         := from_ISU.bits.pc
     to_WBU.bits.reg_wen    := from_ISU.bits.ctrl_sig.reg_wen
     to_WBU.bits.fu_op      := from_ISU.bits.ctrl_sig.fu_op
+    to_WBU.bits.rd         := from_ISU.bits.rd
 
     to_IFU.bits.bru_ctrl_br     := Bru_i.io.out.ctrl_br
     to_IFU.bits.bru_addr        := Alu_i.io.out.result
@@ -110,12 +114,5 @@ class EXU extends Module {
     to_IFU.bits.csr_addr        := Csr_i.io.out.csr_addr
 
     difftest <> Csr_i.io.out.difftest
-
-    val sram_i = Module(new SRAM())
-
-    // AxiConnect(Lsu_i.axi, sram_i.axi)
-
-    val arbiter_i = Module(new Arbiter())
-    AxiConnect(Lsu_i.axi, arbiter_i.from_master2)
-    AxiConnect(arbiter_i.to_slave, sram_i.axi)
+    lsu_axi_master <> Lsu_i.axi
 }

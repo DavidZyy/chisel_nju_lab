@@ -17,6 +17,7 @@ class WBU extends Module {
 
     // if not valid, don't reg_wen !!
     to_ISU.bits.reg_wen := Mux(from_EXU.fire, from_EXU.bits.reg_wen, false.B)
+    to_ISU.bits.rd      := from_EXU.bits.rd
 
     to_ISU.bits.wdata   := MuxLookup(from_EXU.bits.fu_op, 0.U, Array(
         ("b"+fu_alu).U  ->  from_EXU.bits.alu_result,

@@ -20,7 +20,7 @@ class ISU extends Module {
     val RegFile_i           = Module(new RegFile())
 
     // from IDU
-    RegFile_i.io.in.rd      := from_IDU.bits.rd
+    RegFile_i.io.in.rd      := from_WBU.bits.rd
     RegFile_i.io.in.rs1     := from_IDU.bits.rs1
     RegFile_i.io.in.rs2     := from_IDU.bits.rs2
 
@@ -32,6 +32,7 @@ class ISU extends Module {
     to_EXU.bits.ctrl_sig <> from_IDU.bits.ctrl_sig
     to_EXU.bits.imm      := from_IDU.bits.imm
     to_EXU.bits.pc       := from_IDU.bits.pc
+    to_EXU.bits.rd       := from_IDU.bits.rd
     to_EXU.bits.rdata1   := RegFile_i.io.out.rdata1
     to_EXU.bits.rdata2   := RegFile_i.io.out.rdata2
 }
