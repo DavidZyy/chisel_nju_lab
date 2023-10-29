@@ -10,19 +10,31 @@ import java.util.Random
 class booth1Test extends AnyFlatSpec with ChiselScalatestTester {
     val bitWidth = 4
     "booth1" should "pass" in {
+        for(i <- 0 until 100) {
         test(new booth1bit(bitWidth)) { dut =>
-            dut.io.operandA.poke(5.U)
-            dut.io.operandB.poke(5.U)
+            val A = BigInt(bitWidth, new Random) - (BigInt(1) << (bitWidth - 1))
+            val B = BigInt(bitWidth, new Random) - (BigInt(1) << (bitWidth - 1))
+            // val A = BigInt(-2) //-2 
+            // val B = BigInt(3)
+            val product = A*B // should be the complete of -6
+            // val product = BigInt(-6)
+
+            println("A:", A)
+            println("B:", B)
+            println("product: ", product)
+
+            dut.io.operandA.poke(A.S)
+            dut.io.operandB.poke(B.S)
 
             dut.reset.poke(true.B) // Assert reset
             dut.clock.step(1)
             dut.reset.poke(false.B) // Deassert reset
             
-            dut.clock.step(1)
-            dut.clock.step(1)
-            dut.clock.step(1)
-            dut.clock.step(1)
-            dut.io.product.expect(25.U)
+            dut.clock.step(bitWidth)
+
+            dut.io.product.expect(product.S)
+
+        }
         }
     }
 }

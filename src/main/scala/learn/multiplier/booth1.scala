@@ -9,9 +9,9 @@ import chisel3.util._
 // serial mutiplier use booth 1 bit algorithm
 class booth1bit(bitWidth: Int) extends Module {
   val io = IO(new Bundle {
-    val operandA = Input(UInt(bitWidth.W))
-    val operandB = Input(UInt(bitWidth.W))
-    val product = Output(UInt((2 * bitWidth).W))
+    val operandA = Input(SInt(bitWidth.W))
+    val operandB = Input(SInt(bitWidth.W))
+    val product = Output(SInt((2 * bitWidth).W))
   })
 
   val x = io.operandA
@@ -42,10 +42,10 @@ class booth1bit(bitWidth: Int) extends Module {
   // }
 
 
-  io.product := product
+  io.product := product.asSInt()
 }
 
 object booth1bit extends App {
   val path = "/home/zhuyangyang/project/nju_digital_design_chisel/all/booth1bit/vsrc"
-  emitVerilog(new booth1bit(bitWidth=8), Array("--target-dir", path))
+  emitVerilog(new booth1bit(bitWidth=4), Array("--target-dir", path))
 }
