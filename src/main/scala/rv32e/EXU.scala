@@ -92,6 +92,7 @@ class EXU extends Module {
     Csr_i.io.in.op      :=  from_ISU.bits.ctrl_sig.csr_op
     Csr_i.io.in.cur_pc  :=  from_ISU.bits.pc
     Csr_i.io.in.csr_id  :=  from_ISU.bits.imm
+    // Csr_i.io.in.addr    :=  from_ISU.bits.imm
     Csr_i.io.in.wdata   :=  from_ISU.bits.rdata1
 
     // ebreak
@@ -103,6 +104,7 @@ class EXU extends Module {
     to_WBU.bits.mdu_result := Mdu_i.io.out.result
     to_WBU.bits.lsu_rdata  := Lsu_i.io.out.rdata
     to_WBU.bits.csr_rdata  := Csr_i.io.out.r_csr
+    // to_WBU.bits.csr_rdata  := Csr_i.io.out.rdata
     to_WBU.bits.pc         := from_ISU.bits.pc
     to_WBU.bits.reg_wen    := from_ISU.bits.ctrl_sig.reg_wen
     to_WBU.bits.fu_op      := from_ISU.bits.ctrl_sig.fu_op
