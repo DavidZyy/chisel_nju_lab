@@ -31,10 +31,11 @@ class IFU extends Module {
     val from_EXU = IO(Flipped(Decoupled(new EXU2IFU_bus)))
     val from_WBU = IO(Flipped(Decoupled(new WBU2IFU_bus)))
     val axi      = IO(new AXILiteIO_master)
+    // val to_Cache = IO(Decoupled(new IFU2Cache_bus))
+    // val from_Cache = IO(Flipped(Decoupled(new Cache2IFU_bus)))
 
     val reg_PC  = RegInit(UInt(ADDR_WIDTH.W), START_ADDR.U)
     val next_PC = Wire(UInt(ADDR_WIDTH.W))
-
 
     when (from_EXU.bits.bru_ctrl_br) {
         next_PC := from_EXU.bits.bru_addr
@@ -47,12 +48,7 @@ class IFU extends Module {
     // in some cycle, it has some instruction issue
     reg_PC := Mux(from_WBU.fire, next_PC, reg_PC)
 
-    axi.ar.bits.addr := reg_PC
-
-    // if not ready, transfer nop inst
-    to_IDU.bits.inst    := Mux(to_IDU.fire, axi.r.bits.data, NOP.U)
-    to_IDU.bits.pc      := reg_PC
-
+    // state machine
     val s_idle :: s_wait_data :: s_wait_WB :: Nil = Enum(3)
     val state = RegInit(s_idle)
     state := MuxLookup(state, s_idle, List(
@@ -61,17 +57,25 @@ class IFU extends Module {
         s_wait_WB   ->  Mux(from_WBU.fire, s_idle,         s_wait_WB)
     ))
 
-    axi.ar.valid    := MuxLookup(state, false.B, List( s_idle      ->  true.B))
-    axi.r.ready     := MuxLookup(state, false.B, List( s_wait_data ->  true.B))
-    axi.aw.valid    := false.B
-    axi.w.valid     := false.B
-    axi.b.ready     := false.B
+    // axi master signals
+    axi.ar.valid     := MuxLookup(state, false.B, List( s_idle      ->  true.B))
+    axi.ar.bits.addr := reg_PC
+    axi.r.ready      := MuxLookup(state, false.B, List( s_wait_data ->  true.B))
+    axi.aw.valid     := false.B
     axi.aw.bits.addr := 0.U
+    axi.w.valid      := false.B
     axi.w.bits.data  := 0.U
     axi.w.bits.strb  := 0.U
+    axi.b.ready      := false.B
 
-    to_IDU.valid    := MuxLookup(state, false.B, List( s_wait_WB   ->  true.B))
+    // to IDU signals
+    to_IDU.valid     := MuxLookup(state, false.B, List( s_wait_WB   ->  true.B))
+    to_IDU.bits.inst := Mux(to_IDU.fire, axi.r.bits.data, NOP.U) // if not ready, transfer nop inst
+    to_IDU.bits.pc   := reg_PC
+
+    // from EXU signals
     from_EXU.ready  := MuxLookup(state, false.B, List( s_wait_WB   ->  true.B))
-    from_WBU.ready  := MuxLookup(state, false.B, List( s_wait_WB   ->  true.B))
 
+    // from WBU signals
+    from_WBU.ready  := MuxLookup(state, false.B, List( s_wait_WB   ->  true.B))
 }

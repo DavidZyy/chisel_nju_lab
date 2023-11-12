@@ -73,3 +73,11 @@ class WBU2ISU_bus extends Bundle {
 class WBU2IFU_bus extends Bundle {
 
 }
+
+class IFU2Cache_bus extends Bundle {
+    val addr = Output(UInt(ADDR_WIDTH.W))
+}
+
+class Cache2IFU_bus extends Bundle {
+    val data = Output(UInt(DATA_WIDTH.W))
+}

@@ -40,19 +40,12 @@ class RamBB extends BlackBox with HasBlackBoxResource {
 class SRAM extends Module {
     val axi = IO(new AXILiteIO_slave)
 
-    val s_idle :: s_read_delay :: s_read_end :: s_write_delay :: s_write_end :: Nil = Enum(5)
-    val state = RegInit(s_idle)
-
-    axi.ar.ready := MuxLookup(state, false.B, List( s_idle      ->  true.B))
-    axi.r.valid  := MuxLookup(state, false.B, List( s_read_end  ->  true.B))
-
-    axi.aw.ready := MuxLookup(state, false.B, List( s_idle      ->  true.B))
-    axi.w.ready  := MuxLookup(state, false.B, List( s_idle      ->  true.B))
-    axi.b.valid  := MuxLookup(state, false.B, List( s_write_end  ->  true.B))
-
     val lfsr = Module(new LFSR())
     val delay = RegInit(0.U)
 
+    // state machine
+    val s_idle :: s_read_delay :: s_read_end :: s_write_delay :: s_write_end :: Nil = Enum(5)
+    val state = RegInit(s_idle)
     switch (state) {
         is (s_idle) {
             delay := 0.U
@@ -84,7 +77,6 @@ class SRAM extends Module {
     }
 
     val RamBB_i1 = Module(new RamBB())
-
     RamBB_i1.io.clock   := clock
     RamBB_i1.io.addr    := MuxLookup(state, 0.U, List(
         s_read_end  -> axi.ar.bits.addr,
@@ -102,5 +94,11 @@ class SRAM extends Module {
     RamBB_i1.io.wdata   :=  axi.w.bits.data
     RamBB_i1.io.wmask   :=  axi.w.bits.strb
 
+    // axi slave signals
+    axi.ar.ready    := MuxLookup(state, false.B, List( s_idle      ->  true.B))
     axi.r.bits.data := RamBB_i1.io.rdata
+    axi.r.valid     := MuxLookup(state, false.B, List( s_read_end  ->  true.B))
+    axi.aw.ready    := MuxLookup(state, false.B, List( s_idle      ->  true.B))
+    axi.w.ready     := MuxLookup(state, false.B, List( s_idle      ->  true.B))
+    axi.b.valid     := MuxLookup(state, false.B, List( s_write_end  ->  true.B))
 }

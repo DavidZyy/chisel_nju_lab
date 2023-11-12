@@ -22,3 +22,22 @@ object Configs {
     val REG_OP_WIDTH = 5
 }
 
+object Cache_Configs {
+  val offWidth    = 5
+  val idxWidth    = 5
+  val tagWidth    = Configs.ADDR_WIDTH-offWidth-idxWidth
+
+//   val blkWidth    = (1<<offWidth)*Configs.BYTE_WIDTH
+
+  val off_LSB     = 0
+  val off_MSB     = off_LSB + offWidth - 1
+  val idx_LSB     = off_MSB + 1
+  val idx_MSB     = idx_LSB + idxWidth - 1
+  val tag_LSB     = idx_MSB + 1
+  val tag_MSB     = tag_LSB + tagWidth - 1
+
+  val numSetsWidth = 1
+  val numSets      = 1<<numSetsWidth
+  val numCacheLine = 1<<idxWidth // each set of cache has cache lines
+  val numEnts      = 1<<offWidth // each cache line has entrys
+}
