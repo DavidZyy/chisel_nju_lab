@@ -20,9 +20,6 @@ class I_Cache extends Module {
     val CacheLineId = from_IFU.bits.addr(idx_MSB, idx_LSB)
     val tagId       = from_IFU.bits.addr(tag_MSB, tag_LSB)
 
-    val s_idle :: s_read_valid :: s_read_sram :: s_wait :: s_end :: Nil = Enum(5)
-    val state = RegInit(s_idle)
-
     // as ramdom number when evict cache line
     val SetId = RegInit(0.U(numSetsWidth.W))
     SetId := SetId+1.U
@@ -43,6 +40,8 @@ class I_Cache extends Module {
     val hit  = from_IFU.fire && _hit
     val miss = from_IFU.fire && ~hit
 
+    val s_idle :: s_read_valid :: s_read_sram :: s_wait :: s_end :: Nil = Enum(5)
+    val state = RegInit(s_idle)
     switch (state) {
         is (s_idle) {
             when (hit) {
@@ -76,5 +75,4 @@ class I_Cache extends Module {
 
     // to_IFU.bits.data := DontCare
     // to_IFU.bits.data := Mux(NOP, rr)
-
 }

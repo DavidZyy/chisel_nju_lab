@@ -96,9 +96,11 @@ class SRAM extends Module {
 
     // axi slave signals
     axi.ar.ready    := MuxLookup(state, false.B, List( s_idle      ->  true.B))
-    axi.r.bits.data := RamBB_i1.io.rdata
     axi.r.valid     := MuxLookup(state, false.B, List( s_read_end  ->  true.B))
+    axi.r.bits.data := RamBB_i1.io.rdata
+    axi.r.bits.resp := 0.U
     axi.aw.ready    := MuxLookup(state, false.B, List( s_idle      ->  true.B))
     axi.w.ready     := MuxLookup(state, false.B, List( s_idle      ->  true.B))
     axi.b.valid     := MuxLookup(state, false.B, List( s_write_end  ->  true.B))
+    axi.b.bits.resp := 0.U
 }

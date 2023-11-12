@@ -41,3 +41,10 @@ object Cache_Configs {
   val numCacheLine = 1<<idxWidth // each set of cache has cache lines
   val numEnts      = 1<<offWidth // each cache line has entrys
 }
+
+object Axi_Configs {
+  val BRESP_WIDTH = 2
+  val RRESP_WIDTH = 2
+  val WSTRB_WIDTH = Configs.DATA_WIDTH / Configs.BYTE_WIDTH
+
+}
