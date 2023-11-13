@@ -23,19 +23,6 @@ class ram_out_class extends Bundle {
     val idle    =   Output(Bool())
 }
 
-// class RamBB extends BlackBox with HasBlackBoxResource {
-//     val io = IO(new Bundle {
-//         val clock   = Input(Clock())
-//         val addr    = Input(UInt(DATA_WIDTH.W))
-//         val mem_wen = Input(Bool())
-//         val valid   = Input(Bool())
-//         val wdata   = Input(UInt(DATA_WIDTH.W))
-//         val wmask   = Input(UInt((DATA_WIDTH/BYTE_WIDTH).W))
-//         val rdata   = Output(UInt(DATA_WIDTH.W))
-//     })
-//     addResource("/RamBB.v")
-// }
-
 class Lsu extends Module {
     val io = IO(new Bundle {
         val in  = (new ram_in_class )
@@ -168,6 +155,15 @@ class Lsu extends Module {
     axi.b.ready      := MuxLookup(state, false.B, List(s_write_wait    -> true.B))
 }
 
+// lsu with axi interface
+class Lsu_axi extends Module {
+
+}
+
+// ifu connects to icache
+class Lsu_cache extends Module {
+
+}
 
 // object decoder_main extends App {
 //     emitVerilog(new Ram(), Array("--target-dir", "generated"))

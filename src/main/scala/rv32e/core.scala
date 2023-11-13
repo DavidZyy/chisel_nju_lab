@@ -13,6 +13,9 @@ import utils.RegFile
 import rv32e.dev.SRAM
 import rv32e.bus.Arbiter
 import rv32e.utils.AxiConnect
+import rv32e.utils.AxiLiteConnect
+import rv32e.dev.SRAM_axi
+import rv32e.cache.I_Cache
 
 class out_class extends Bundle {
     val inst     = Output(UInt(INST_WIDTH.W))
@@ -26,22 +29,39 @@ class top extends Module {
         val out = (new out_class)
     })
 
-    val IFU_i   =   Module(new IFU())
     val IDU_i   =   Module(new IDU())
     val ISU_i   =   Module(new ISU())
     val EXU_i   =   Module(new EXU()) 
     val WBU_i   =   Module(new WBU())
 
-    val sram_i  =   Module(new SRAM())
+    /* ifu connect to sram with axi-lite*/
+    // val IFU_i   =   Module(new IFU())
+    // val sram_i  =   Module(new SRAM())
+    // AxiLiteConnect(IFU_i.axi, sram_i.axi)
+
+    /* ifu connect to sram with axi*/
+    // val IFU_i   =   Module(new IFU_axi())
+    // val sram_i  =   Module(new SRAM_axi())
+    // AxiConnect(IFU_i.axi, sram_i.axi)
+
+    /* ifu connect to cache */
+    val IFU_i   =   Module(new IFU_cache())
+    val icache  =   Module(new I_Cache())
+    val sram_i  =   Module(new SRAM_axi())
+    StageConnect(IFU_i.to_cache, icache.from_IFU)
+    StageConnect(icache.to_IFU, IFU_i.from_cache)
+    AxiConnect(icache.to_sram, sram_i.axi)
+    
+
+
     val sram_i2 =   Module(new SRAM())
-    AxiConnect(IFU_i.axi, sram_i.axi)
-    AxiConnect(EXU_i.lsu_axi_master, sram_i2.axi)
+    AxiLiteConnect(EXU_i.lsu_axi_master, sram_i2.axi)
 
     // val sram_i  =   Module(new SRAM())
     // val arbiter_i = Module(new Arbiter())
-    // AxiConnect(IFU_i.axi, arbiter_i.from_master1)
-    // AxiConnect(EXU_i.lsu_axi_master, arbiter_i.from_master2)
-    // AxiConnect(arbiter_i.to_slave, sram_i.axi)
+    // AxiLiteConnect(IFU_i.axi, arbiter_i.from_master1)
+    // AxiLiteConnect(EXU_i.lsu_axi_master, arbiter_i.from_master2)
+    // AxiLiteConnect(arbiter_i.to_slave, sram_i.axi)
 
     StageConnect(EXU_i.to_IFU, IFU_i.from_EXU)
     StageConnect(IFU_i.to_IDU, IDU_i.from_IFU)

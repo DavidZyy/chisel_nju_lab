@@ -4,75 +4,104 @@ import chisel3._
 import chisel3.util._
 import rv32e.config.Configs._
 import rv32e.config.Cache_Configs._
+import rv32e.config.Axi_Configs._
 import rv32e.define.Dec_Info._
 import rv32e.define.Inst._
 import rv32e.define.CSR_Info._
 import rv32e.utils.DiffCsr
 import rv32e.bus._
+import _root_.dataclass.data
 
 class I_Cache extends Module {
     val from_IFU = IO(Flipped(Decoupled(new IFU2Cache_bus)))
     val to_IFU   = IO(Decoupled(new Cache2IFU_bus))
     // val to_Arb   = IO(new AXILiteIO_master) // to Arbiter
-    val to_sram  = IO(new AXILiteIO_master) // to Arbiter
+    val to_sram  = IO(new AXIIO_master) // to Arbiter
 
-    val EntId       = from_IFU.bits.addr(off_MSB, off_LSB)
+    val replace_set = RegInit(0.U)
+    val EntId       = from_IFU.bits.addr(off_MSB, off_LSB)/DATA_BYTE.U
     val CacheLineId = from_IFU.bits.addr(idx_MSB, idx_LSB)
-    val tagId       = from_IFU.bits.addr(tag_MSB, tag_LSB)
+    val tag       = from_IFU.bits.addr(tag_MSB, tag_LSB)
 
     // as ramdom number when evict cache line
-    val SetId = RegInit(0.U(numSetsWidth.W))
-    SetId := SetId+1.U
+    val random_num = RegInit(0.U(numSetsWidth.W))
+    random_num := random_num+1.U
 
     val dataArray  = SyncReadMem(numSets, Vec(numCacheLine, Vec(numEnts, UInt(DATA_WIDTH.W))))
     val tagArray   = RegInit(VecInit(Seq.fill(numSets)(VecInit(Seq.fill(numCacheLine)(0.U(tagWidth.W))))))
-    val validArray = RegInit(VecInit(Seq.fill(numSets)(VecInit(Seq.fill(numCacheLine)(0.U(Bool()))))))
-    val dirtyArray = RegInit(VecInit(Seq.fill(numSets)(VecInit(Seq.fill(numCacheLine)(0.U(Bool()))))))
+    val validArray = RegInit(VecInit(Seq.fill(numSets)(VecInit(Seq.fill(numCacheLine)(false.B)))))
+    // val dirtyArray = RegInit(VecInit(Seq.fill(numSets)(VecInit(Seq.fill(numCacheLine)(0.U(Bool()))))))
 
-    val hit_set = MuxLookup(tagId, 0.U, List(
-        tagArray(0)(numCacheLine) -> 0.U,        
-        tagArray(1)(numCacheLine) -> 1.U,
+    val hit = (Mux(tag === tagArray(0)(CacheLineId), true.B, false.B) && validArray(0)(CacheLineId)) |
+               (Mux(tag === tagArray(1)(CacheLineId), true.B, false.B) && validArray(1)(CacheLineId))
+
+    val SetId = MuxLookup(tag, 0.U, List(
+        // tagArray(0)(CacheLineId) -> 0.U,
+        tagArray(1)(CacheLineId) -> 1.U,
     ))
 
-    val _hit = (Mux(tagId === tagArray(0)(numCacheLine), true.B, false.B) && validArray(0)(numCacheLine)) |
-               (Mux(tagId === tagArray(1)(numCacheLine), true.B, false.B) && validArray(1)(numCacheLine))
+    val off   = RegInit(0.U((offWidth-2).W))
 
-    val hit  = from_IFU.fire && _hit
-    val miss = from_IFU.fire && ~hit
-
-    val s_idle :: s_read_valid :: s_read_sram :: s_wait :: s_end :: Nil = Enum(5)
-    val state = RegInit(s_idle)
-    switch (state) {
+    val s_idle :: s_read_valid :: s_rq :: s_reading :: s_end :: Nil = Enum(5)
+    val state_cache = RegInit(s_idle)
+    switch (state_cache) {
         is (s_idle) {
-            when (hit) {
-                state := s_read_valid
-            }.elsewhen(miss) {
-                state := s_read_sram
-            }.otherwise {
-                state := s_idle
+            when (from_IFU.fire) {
+                state_cache := Mux(hit, s_read_valid, s_rq)
+            } .otherwise {
+                state_cache := s_idle
             }
         }
         is (s_read_valid) {
-            state := s_idle
+            state_cache := s_idle
         }
-        // issue request
-        is (s_read_sram) {
-            state := s_wait 
+        // read request
+        is (s_rq) {
+            state_cache := Mux(to_sram.ar.fire, s_reading, s_rq)
+            off   := 0.U
+            replace_set := random_num
         }
         // wait for data transfer
-        is (s_wait) {
-            // state := Mux(to_sram.r.bits.last, s_read_valid, s_wait)
-
-            // state := Mux(to_sram.r.bits.last, s_end, s_wait)
+        is (s_reading) {
+            state_cache := Mux(to_sram.r.bits.last, s_end, s_reading)
+            off         := Mux(to_sram.r.fire, off+1.U, off)
         }
-        // end, maybe can be ignore, wait ot read valid directly
+        // for the last data in one cache line write into it, we can not read and write one entry 
+        // simultaneously, and in s_read_valid, we read it.
         is (s_end) {
-            state := s_read_valid
+            state_cache := s_read_valid
         }
     }
 
-    from_IFU.ready := MuxLookup(state, false.B, List(s_idle -> true.B))
+    val cachedata = dataArray(SetId)(CacheLineId)(EntId)
+    when ((state_cache === s_reading) && to_sram.r.fire) {
+        dataArray(replace_set)(CacheLineId)(off) := to_sram.r.bits.data
+        when(to_sram.r.bits.last) {
+            validArray(replace_set)(CacheLineId) := true.B
+            tagArray(replace_set)(CacheLineId)   := tag
+        }
+    }
+
+    from_IFU.ready := MuxLookup(state_cache, false.B, List(s_idle -> true.B))
+
+    to_sram.ar.valid      := MuxLookup(state_cache, false.B, List(s_rq -> true.B))
+    to_sram.ar.bits.addr  := MuxLookup(state_cache, 0.U, List(s_rq -> ((from_IFU.bits.addr>>offWidth.U)<<offWidth.U)))
+    to_sram.ar.bits.size  := MuxLookup(state_cache, 0.U, List(s_rq -> DATA_WIDTH.U))
+    to_sram.ar.bits.len   := MuxLookup(state_cache, 0.U, List(s_rq -> (numEnts-1).U)) //transfer anlen+1 items
+    to_sram.ar.bits.burst := INCR.U
+    to_sram.r.ready       := MuxLookup(state_cache, false.B, List(s_reading ->  true.B))
+    to_sram.aw.valid      := false.B
+    to_sram.aw.bits.addr  := 0.U
+    to_sram.aw.bits.size  := 0.U
+    to_sram.aw.bits.len   := 0.U
+    to_sram.aw.bits.burst := 0.U
+    to_sram.w.valid       := false.B
+    to_sram.w.bits.data   := 0.U
+    to_sram.w.bits.strb   := 0.U
+    to_sram.w.bits.last   := false.B
+    to_sram.b.ready       := false.B
 
     // to_IFU.bits.data := DontCare
-    // to_IFU.bits.data := Mux(NOP, rr)
+    to_IFU.bits.data := Mux(hit, cachedata, NOP.U)
+    to_IFU.valid     := MuxLookup(state_cache, false.B, List(s_read_valid -> true.B))
 }
