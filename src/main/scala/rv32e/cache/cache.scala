@@ -32,15 +32,17 @@ class I_Cache extends Module {
     val validArray = RegInit(VecInit(Seq.fill(numSets)(VecInit(Seq.fill(numCacheLine)(false.B)))))
     // val dirtyArray = RegInit(VecInit(Seq.fill(numSets)(VecInit(Seq.fill(numCacheLine)(0.U(Bool()))))))
 
-    val hit = (Mux(tag === tagArray(0)(CacheLineId), true.B, false.B) && validArray(0)(CacheLineId)) |
-               (Mux(tag === tagArray(1)(CacheLineId), true.B, false.B) && validArray(1)(CacheLineId))
+    val hitArray = for (i <- 0 until numSets) yield {
+        (tag === tagArray(i)(CacheLineId)) && validArray(i)(CacheLineId)
+    }
+    val hit = hitArray.reduce(_ | _) // use or on all elem in hitArray
 
-    val SetId = MuxLookup(tag, 0.U, List(
-        // tagArray(0)(CacheLineId) -> 0.U,
-        tagArray(1)(CacheLineId) -> 1.U,
-    ))
+    val tagSeq = for (i <- 0 until numSets) yield {
+        tagArray(i)(CacheLineId) -> i.U
+    }
+    val SetId = MuxLookup(tag, 0.U, tagSeq)
 
-    val off   = RegInit(0.U((offWidth-2).W))
+    val off   = RegInit(0.U((offWidth-DATA_BYTE_WIDTH).W))
 
     val s_idle :: s_read_valid :: s_rq :: s_reading :: s_end :: Nil = Enum(5)
     val state_cache = RegInit(s_idle)
@@ -58,7 +60,7 @@ class I_Cache extends Module {
         // read request
         is (s_rq) {
             state_cache := Mux(to_sram.ar.fire, s_reading, s_rq)
-            off   := 0.U
+            off         := 0.U
             replace_set := random_num
         }
         // wait for data transfer
@@ -74,6 +76,7 @@ class I_Cache extends Module {
     }
 
     val cachedata = dataArray(SetId)(CacheLineId)(EntId)
+    // can move the following codes to "is (s_reading)" state 
     when ((state_cache === s_reading) && to_sram.r.fire) {
         dataArray(replace_set)(CacheLineId)(off) := to_sram.r.bits.data
         when(to_sram.r.bits.last) {

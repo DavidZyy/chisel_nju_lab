@@ -1,22 +1,20 @@
 package rv32e.config
 
 import chisel3._
+import scala.math._
 
 object Configs {
     val BYTE_WIDTH      =   8
 
-    // for addr
     val ADDR_WIDTH      =   32
-    val ADDR_BYTE       =   ADDR_WIDTH / BYTE_WIDTH
-
-    // for regs and imm
     val DATA_WIDTH      =   32
-    val DATA_BYTE       =   DATA_WIDTH / BYTE_WIDTH
     val INST_WIDTH      =   32
+
+    val ADDR_BYTE       =   ADDR_WIDTH / BYTE_WIDTH
+    val DATA_BYTE       =   DATA_WIDTH / BYTE_WIDTH
     val INST_BYTE       =   INST_WIDTH / BYTE_WIDTH
 
-    val MEM_INST_SIZE   =   1024
-    val MEM_DATA_SIZE   =   2048 
+    val DATA_BYTE_WIDTH = (log(DATA_BYTE) / log(2)).toInt
 
     val START_ADDR: Long =  0x80000000L
 
@@ -25,8 +23,8 @@ object Configs {
 }
 
 object Cache_Configs {
-  val offWidth    = 4
-  val idxWidth    = 4
+  val offWidth    = 6
+  val idxWidth    = 6
   val tagWidth    = Configs.ADDR_WIDTH-offWidth-idxWidth
 
 //   val blkWidth    = (1<<offWidth)*Configs.BYTE_WIDTH
@@ -38,7 +36,7 @@ object Cache_Configs {
   val tag_LSB     = idx_MSB + 1
   val tag_MSB     = tag_LSB + tagWidth - 1
 
-  val numSetsWidth = 1
+  val numSetsWidth = 2
   val numSets      = 1<<numSetsWidth
   val numCacheLine = 1<<idxWidth // each set of cache has cache lines
   val numEnts      = (1<<offWidth)/Configs.DATA_BYTE // each cache line has entrys
