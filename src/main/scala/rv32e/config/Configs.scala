@@ -23,8 +23,8 @@ object Configs {
 }
 
 object Cache_Configs {
-  val offWidth    = 6
-  val idxWidth    = 6
+  val offWidth    = 4
+  val idxWidth    = 4
   val tagWidth    = Configs.ADDR_WIDTH-offWidth-idxWidth
 
 //   val blkWidth    = (1<<offWidth)*Configs.BYTE_WIDTH
@@ -36,7 +36,7 @@ object Cache_Configs {
   val tag_LSB     = idx_MSB + 1
   val tag_MSB     = tag_LSB + tagWidth - 1
 
-  val numSetsWidth = 2
+  val numSetsWidth = 1
   val numSets      = 1<<numSetsWidth
   val numCacheLine = 1<<idxWidth // each set of cache has cache lines
   val numEnts      = (1<<offWidth)/Configs.DATA_BYTE // each cache line has entrys

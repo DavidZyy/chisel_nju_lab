@@ -15,6 +15,7 @@ import rv32e.bus.Arbiter
 import rv32e.utils.AxiConnect
 import rv32e.utils.AxiLiteConnect
 import rv32e.dev.SRAM_axi
+import rv32e.dev.sram_axi_rw
 import rv32e.cache.I_Cache
 
 class out_class extends Bundle {
@@ -47,15 +48,15 @@ class top extends Module {
     /* ifu connect to cache */
     val IFU_i   =   Module(new IFU_cache())
     val icache  =   Module(new I_Cache())
-    val sram_i  =   Module(new SRAM_axi())
+    val sram_i  =   Module(new sram_axi_rw())
     StageConnect(IFU_i.to_cache, icache.from_IFU)
     StageConnect(icache.to_IFU, IFU_i.from_cache)
     AxiConnect(icache.to_sram, sram_i.axi)
     
 
 
-    val sram_i2 =   Module(new SRAM())
-    AxiLiteConnect(EXU_i.lsu_axi_master, sram_i2.axi)
+    val sram_i2 =   Module(new sram_axi_rw())
+    AxiConnect(EXU_i.lsu_axi_master, sram_i2.axi)
 
     // val sram_i  =   Module(new SRAM())
     // val arbiter_i = Module(new Arbiter())

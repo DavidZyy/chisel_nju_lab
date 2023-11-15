@@ -69,7 +69,7 @@ class I_Cache extends Module {
             off         := Mux(to_sram.r.fire, off+1.U, off)
         }
         // for the last data in one cache line write into it, we can not read and write one entry 
-        // simultaneously, and in s_read_valid, we read it.
+        // simultaneously, and in s_read_valid, we read it. in end state, we write the last entry into cache line
         is (s_end) {
             state_cache := s_read_valid
         }

@@ -87,8 +87,6 @@ class SRAM extends Module {
         s_read_end  -> true.B,
         s_write_end -> true.B
     ))
-    RamBB_i1.io.wdata   :=  0.U
-    RamBB_i1.io.wmask   :=  0.U
     RamBB_i1.io.wdata   :=  axi.w.bits.data
     RamBB_i1.io.wmask   :=  axi.w.bits.strb
 

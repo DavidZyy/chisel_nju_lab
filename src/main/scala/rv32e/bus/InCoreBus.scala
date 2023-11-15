@@ -81,3 +81,11 @@ class IFU2Cache_bus extends Bundle {
 class Cache2IFU_bus extends Bundle {
     val data = Output(UInt(DATA_WIDTH.W))
 }
+
+class LSU2Cache_bus extends Bundle {
+
+}
+
+class Cache2LSU_bus extends Bundle {
+
+}

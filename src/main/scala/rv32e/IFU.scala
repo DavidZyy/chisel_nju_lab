@@ -111,7 +111,7 @@ class IFU_axi extends Module {
     axi.ar.valid      := MuxLookup(state_ifu, false.B, List(s_rq -> true.B))
     axi.ar.bits.addr  := reg_PC
     axi.ar.bits.size  := MuxLookup(state_ifu , 0.U, List(s_rq -> DATA_WIDTH.U))
-    axi.ar.bits.len   := MuxLookup(state_ifu , 0.U, List(s_rq -> 0.U))
+    axi.ar.bits.len   := 0.U
     axi.ar.bits.burst := INCR.U
     axi.r.ready       := MuxLookup(state_ifu, false.B, List(s_wait_data ->  true.B))
     axi.aw.valid      := false.B

@@ -8,6 +8,8 @@ import rv32e.config.Configs._
 import rv32e.define.Dec_Info._
 import rv32e.define.Inst._
 import rv32e.bus.AXILiteIO_master
+import rv32e.bus.AXIIO_master
+import rv32e.config.Axi_Configs._
 
 class ram_in_class extends Bundle {
     val valid   =   Input(Bool())
@@ -30,38 +32,35 @@ class Lsu extends Module {
     })
     val axi = IO(new AXILiteIO_master)
 
-    // state machine
+    // state_lsu machine
     val s_idle :: s_read_request :: s_read_wait :: s_write_request :: s_write_wait :: s_end :: Nil = Enum(6)
-    val state = RegInit(s_idle)
-    switch (state) {
+    val state_lsu = RegInit(s_idle)
+    switch (state_lsu) {
         is (s_idle) {
             when (io.in.valid) {
                 when (io.in.mem_wen) {
-                    state := s_write_request
+                    state_lsu := s_write_request
                 } .otherwise {
-                    state := s_read_request
+                    state_lsu := s_read_request
                 }
             } .otherwise {
-                state := s_idle
+                state_lsu := s_idle
             }
         }
         is (s_read_request) {
-            // state := s_read_wait
-            state := Mux(axi.ar.fire, s_read_wait, s_read_request)
+            state_lsu := Mux(axi.ar.fire, s_read_wait, s_read_request)
         }
         is (s_read_wait) {
-            state := Mux(axi.r.fire, s_end, s_read_wait)
-            // state := s_end
+            state_lsu := Mux(axi.r.fire, s_end, s_read_wait)
         }
         is (s_write_request) {
-            // state := s_write_wait
-            state := Mux(axi.aw.fire && axi.w.fire, s_write_wait, s_write_request)
+            state_lsu := Mux(axi.aw.fire && axi.w.fire, s_write_wait, s_write_request)
         }
         is (s_write_wait) {
-            state := Mux(axi.b.fire, s_end, s_write_wait)
+            state_lsu := Mux(axi.b.fire, s_end, s_write_wait)
         }
         is (s_end) {
-            state := s_idle
+            state_lsu := s_idle
         }
     }
 
@@ -132,8 +131,8 @@ class Lsu extends Module {
         ("b" + lsu_sw).U -> sw_wmask,
     ))
 
-    io.out.idle  := MuxLookup(state, false.B, List(s_idle -> true.B))
-    io.out.end   := MuxLookup(state, false.B, List(s_end  -> true.B))
+    io.out.idle  := MuxLookup(state_lsu, false.B, List(s_idle -> true.B))
+    io.out.end   := MuxLookup(state_lsu, false.B, List(s_end  -> true.B))
     io.out.rdata    :=  MuxLookup(lsu_op, 0.U, Array(
         ("b" + lsu_x  ).U -> 0.U,
         ("b" + lsu_lb ).U -> lb_rdata,
@@ -144,20 +143,152 @@ class Lsu extends Module {
     ))
 
     // axi master signals
-    axi.ar.valid     := MuxLookup(state, false.B, List(s_read_request  -> true.B))
+    axi.ar.valid     := MuxLookup(state_lsu, false.B, List(s_read_request  -> true.B))
     axi.ar.bits.addr := io.in.addr
-    axi.r.ready      := MuxLookup(state, false.B, List(s_read_wait     -> true.B))
-    axi.aw.valid     := MuxLookup(state, false.B, List(s_write_request -> true.B))
+    axi.r.ready      := MuxLookup(state_lsu, false.B, List(s_read_wait     -> true.B))
+    axi.aw.valid     := MuxLookup(state_lsu, false.B, List(s_write_request -> true.B))
     axi.aw.bits.addr := io.in.addr
-    axi.w.valid      := MuxLookup(state, false.B, List(s_write_request -> true.B))
+    axi.w.valid      := MuxLookup(state_lsu, false.B, List(s_write_request -> true.B))
     axi.w.bits.data  := io.in.wdata
     axi.w.bits.strb  := wmask
-    axi.b.ready      := MuxLookup(state, false.B, List(s_write_wait    -> true.B))
+    axi.b.ready      := MuxLookup(state_lsu, false.B, List(s_write_wait    -> true.B))
 }
 
-// lsu with axi interface
+// lsu with axi interface, not needed.
 class Lsu_axi extends Module {
+    val io = IO(new Bundle {
+        val in  = (new ram_in_class )
+        val out = (new ram_out_class)
+    })
+    val axi = IO(new AXIIO_master)
 
+    // state_lsu machine, issue aw signals in write_request, issue w signals in write_wait
+    val s_idle :: s_read_request :: s_read_wait :: s_write_request :: s_write_wait :: s_end :: Nil = Enum(6)
+    val state_lsu = RegInit(s_idle)
+    switch (state_lsu) {
+        is (s_idle) {
+            when (io.in.valid) {
+                when (io.in.mem_wen) {
+                    state_lsu := s_write_request
+                } .otherwise {
+                    state_lsu := s_read_request
+                }
+            } .otherwise {
+                state_lsu := s_idle
+            }
+        }
+        is (s_read_request) {
+            state_lsu := Mux(axi.ar.fire, s_read_wait, s_read_request)
+        }
+        is (s_read_wait) {
+            state_lsu := Mux(axi.r.fire, s_end, s_read_wait)
+        }
+        is (s_write_request) {
+            state_lsu := Mux(axi.aw.fire, s_write_wait, s_write_request)
+        }
+        is (s_write_wait) {
+            state_lsu := Mux(axi.b.fire, s_end, s_write_wait)
+        }
+        is (s_end) {
+            state_lsu := s_idle
+        }
+    }
+
+    val lsu_op = io.in.op
+    val true_addr = io.in.addr
+
+    val addr_low_2 = true_addr(1, 0)
+
+    val valid = io.in.valid
+
+    val rdata_align_4 = Wire(UInt(DATA_WIDTH.W))
+    rdata_align_4 := axi.r.bits.data
+
+    val lb_rdata  = Wire(UInt(DATA_WIDTH.W))
+    val lbu_rdata = Wire(UInt(DATA_WIDTH.W))
+    val lh_rdata  = Wire(UInt(DATA_WIDTH.W))
+    val lhu_rdata = Wire(UInt(DATA_WIDTH.W))
+    val lw_rdata  = Wire(UInt(DATA_WIDTH.W))
+
+    lb_rdata := MuxLookup(addr_low_2, 0.U, Array(
+        0.U -> Cat(Fill(24, rdata_align_4(7 )), rdata_align_4(7, 0)),
+        1.U -> Cat(Fill(24, rdata_align_4(15)), rdata_align_4(15, 8)),
+        2.U -> Cat(Fill(24, rdata_align_4(23)), rdata_align_4(23, 16)),
+        3.U -> Cat(Fill(24, rdata_align_4(31)), rdata_align_4(31, 24)),
+    ))
+
+    lbu_rdata := MuxLookup(addr_low_2, 0.U, Array(
+        0.U -> Cat(Fill(24, 0.U), rdata_align_4(7, 0)),
+        1.U -> Cat(Fill(24, 0.U), rdata_align_4(15, 8)),
+        2.U -> Cat(Fill(24, 0.U), rdata_align_4(23, 16)),
+        3.U -> Cat(Fill(24, 0.U), rdata_align_4(31, 24)),
+    ))
+
+    lh_rdata := MuxLookup(addr_low_2, 0.U, Array(
+        0.U -> Cat(Fill(16, rdata_align_4(15)), rdata_align_4(15, 0 )),
+        2.U -> Cat(Fill(16, rdata_align_4(31)), rdata_align_4(31, 16)),
+    ))
+
+    lhu_rdata := MuxLookup(addr_low_2, 0.U, Array(
+        0.U -> Cat(Fill(16, 0.U), rdata_align_4(15, 0 )),
+        2.U -> Cat(Fill(16, 0.U), rdata_align_4(31, 16)),
+    ))
+
+    lw_rdata := rdata_align_4
+
+    // store inst
+    val sb_wmask = Wire(UInt((DATA_WIDTH/BYTE_WIDTH).W))
+    val sh_wmask = Wire(UInt((DATA_WIDTH/BYTE_WIDTH).W))
+    val sw_wmask = Wire(UInt((DATA_WIDTH/BYTE_WIDTH).W))
+
+    sb_wmask    :=  MuxLookup(addr_low_2, 0.U, Array(
+        0.U -> "b0001".U,
+        1.U -> "b0010".U,
+        2.U -> "b0100".U,
+        3.U -> "b1000".U,
+    ))
+
+    sh_wmask    :=  MuxLookup(addr_low_2, 0.U, Array(
+        0.U -> "b0011".U,
+        2.U -> "b1100".U,
+    ))
+
+    sw_wmask    :=  "b1111".U
+
+    val wmask   =  MuxLookup(lsu_op, 0.U, Array(
+        ("b" + lsu_sb).U -> sb_wmask,
+        ("b" + lsu_sh).U -> sh_wmask,
+        ("b" + lsu_sw).U -> sw_wmask,
+    ))
+
+    io.out.idle  := MuxLookup(state_lsu, false.B, List(s_idle -> true.B))
+    io.out.end   := MuxLookup(state_lsu, false.B, List(s_end  -> true.B))
+    io.out.rdata    :=  MuxLookup(lsu_op, 0.U, Array(
+        ("b" + lsu_x  ).U -> 0.U,
+        ("b" + lsu_lb ).U -> lb_rdata,
+        ("b" + lsu_lbu).U -> lbu_rdata,
+        ("b" + lsu_lh ).U -> lh_rdata,
+        ("b" + lsu_lhu).U -> lhu_rdata,
+        ("b" + lsu_lw ).U -> lw_rdata,
+    ))
+
+    // axi master signals
+    axi.ar.valid      := MuxLookup(state_lsu, false.B, List(s_read_request  -> true.B))
+    axi.ar.bits.addr  := io.in.addr
+    axi.ar.bits.size  := MuxLookup(state_lsu , 0.U, List(s_read_request -> DATA_WIDTH.U))
+    axi.ar.bits.len   := 0.U
+    axi.ar.bits.burst := INCR.U
+    axi.r.ready       := MuxLookup(state_lsu, false.B, List(s_read_wait     -> true.B))
+    axi.aw.valid      := MuxLookup(state_lsu, false.B, List(s_write_request -> true.B))
+    axi.aw.bits.addr  := io.in.addr
+    axi.aw.bits.size  := 0.U
+    axi.aw.bits.len   := 0.U
+    axi.aw.bits.burst := 0.U
+    axi.w.valid       := MuxLookup(state_lsu, false.B, List(s_write_wait -> true.B))
+    axi.w.bits.data   := io.in.wdata
+    axi.w.bits.strb   := wmask
+    axi.w.bits.last   := true.B
+    axi.b.ready       := MuxLookup(state_lsu, false.B, List(s_write_wait -> true.B))
 }
 
 // ifu connects to icache
