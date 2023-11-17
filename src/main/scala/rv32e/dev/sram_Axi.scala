@@ -93,8 +93,9 @@ class sram_axi_rw extends Module {
     val reg_addr  = RegInit(0.U)
     val reg_burst = RegInit(3.U)
 
-    // state machine
-    val s_idle :: s_read_delay :: s_read_mid :: s_read_end :: s_write_delay :: s_write_mid :: s_write_end :: Nil = Enum(7)
+    // state machine s_fill : sram wait a cycle to wait dcahe fill pipeline, for it read data need two cycles
+    //  0         1               2             3             4                5         6              7
+    val s_idle :: s_read_delay :: s_read_mid :: s_read_end :: s_write_delay :: s_fill :: s_write_mid :: s_write_end :: Nil = Enum(8)
     val state_sram = RegInit(s_idle)
     switch (state_sram) {
         is (s_idle) {
@@ -134,14 +135,19 @@ class sram_axi_rw extends Module {
         }
         is (s_write_delay) {
             when (delay === 0.U) {
-                state_sram := Mux(reg_AxLen === 0.U, s_write_end, s_write_mid)
+                // state_sram := Mux(reg_AxLen === 0.U, s_write_end, s_write_mid)
+                state_sram := s_fill
             } otherwise {
                 state_sram := s_write_delay
             }
             delay := delay - 1.U
         }
+        is (s_fill) {
+            state_sram  := Mux(reg_AxLen === 0.U, s_write_end, s_write_mid)
+        }
         is (s_write_mid) {
             state_sram  := Mux(reg_AxLen === 1.U, s_write_end, s_write_mid)
+            // state_sram  := Mux(axi.w.bits.last, s_write_end, s_write_mid)
             reg_AxLen   := Mux(axi.w.fire, reg_AxLen-1.U, reg_AxLen)
             reg_addr    := MuxLookup(reg_burst, reg_addr, List(
                 INCR.U -> Mux(axi.w.fire, (reg_addr + ADDR_BYTE.U), reg_addr)
@@ -176,7 +182,7 @@ class sram_axi_rw extends Module {
     axi.r.bits.last := Mux(state_sram === s_read_end, true.B, false.B)
     axi.r.bits.resp := 0.U
     axi.aw.ready    := MuxLookup(state_sram, false.B, List( s_idle  ->  true.B))
-    axi.w.ready     := MuxLookup(state_sram, false.B, List( s_write_mid -> true.B, s_write_end -> true.B))
+    axi.w.ready     := MuxLookup(state_sram, false.B, List( s_fill -> true.B, s_write_mid -> true.B, s_write_end -> true.B))
     axi.b.valid     := MuxLookup(state_sram, false.B, List( s_write_end -> true.B))
     axi.b.bits.resp := 0.U
 }

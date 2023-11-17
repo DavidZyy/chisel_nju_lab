@@ -38,9 +38,9 @@ class top extends Module {
     val WBU_i   =   Module(new WBU())
 
     /* ifu connect to sram with axi-lite */
-    // val IFU_i   =   Module(new IFU())
-    // val sram_i  =   Module(new SRAM())
-    // AxiLiteConnect(IFU_i.axi, sram_i.axi)
+    val IFU_i   =   Module(new IFU())
+    val sram_i  =   Module(new SRAM())
+    AxiLiteConnect(IFU_i.axi, sram_i.axi)
 
     /* ifu connect to sram with axi */
     // val IFU_i   =   Module(new IFU_axi())
@@ -48,23 +48,23 @@ class top extends Module {
     // AxiConnect(IFU_i.axi, sram_i.axi)
 
     /* ifu connect to cache */
-    val IFU_i   =   Module(new IFU_cache())
-    val icache  =   Module(new iCacheV2())
-    val sram_i  =   Module(new sram_axi_rw())
-    StageConnect(IFU_i.to_cache, icache.from_IFU)
-    StageConnect(icache.to_IFU, IFU_i.from_cache)
-    AxiConnect(icache.to_sram, sram_i.axi)
+    // val IFU_i   =   Module(new IFU_cache())
+    // val icache  =   Module(new iCacheV2())
+    // val sram_i  =   Module(new sram_axi_rw())
+    // StageConnect(IFU_i.to_cache, icache.from_IFU)
+    // StageConnect(icache.to_IFU, IFU_i.from_cache)
+    // AxiConnect(icache.to_sram, sram_i.axi)
     
     /* lsu connect to mem with axi */
-    val sram_i2 =   Module(new sram_axi_rw())
-    AxiConnect(EXU_i.lsu_axi_master, sram_i2.axi)
+    // val sram_i2 =   Module(new sram_axi_rw())
+    // AxiConnect(EXU_i.lsu_axi_master, sram_i2.axi)
 
     /* lsu connect to cache */
-    // val dcache  =   Module(new D_Cache())
-    // val sram_i2 =   Module(new sram_axi_rw())
-    // StageConnect(EXU_i.lsu_to_cache, dcache.from_LSU)
-    // StageConnect(dcache.to_LSU, EXU_i.lsu_from_cache)
-    // AxiConnect(dcache.to_sram, sram_i2.axi)
+    val dcache  =   Module(new D_Cache())
+    val sram_i2 =   Module(new sram_axi_rw())
+    StageConnect(EXU_i.lsu_to_cache, dcache.from_LSU)
+    StageConnect(dcache.to_LSU, EXU_i.lsu_from_cache)
+    AxiConnect(dcache.to_sram, sram_i2.axi)
 
     // val sram_i  =   Module(new SRAM())
     // val arbiter_i = Module(new Arbiter())

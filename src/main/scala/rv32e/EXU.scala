@@ -17,15 +17,15 @@ class EXU extends Module {
     val to_WBU   = IO(Decoupled(new EXU2WBU_bus))
     val to_IFU   = IO(Decoupled(new EXU2IFU_bus))
     val difftest = IO(new DiffCsr)
-    val lsu_axi_master = IO(new AXIIO_master)
-    // val lsu_to_cache   = IO(Decoupled(new LSU2Cache_bus))
-    // val lsu_from_cache = IO(Flipped(Decoupled(new Cache2LSU_bus)))
+    // val lsu_axi_master = IO(new AXIIO_master)
+    val lsu_to_cache   = IO(Decoupled(new LSU2Cache_bus))
+    val lsu_from_cache = IO(Flipped(Decoupled(new Cache2LSU_bus)))
 
     val Alu_i             = Module(new Alu())
     val Mdu_i             = Module(new Mdu())
     val Bru_i             = Module(new Bru())
-    val Lsu_i             = Module(new Lsu_axi())
-    // val Lsu_i             = Module(new Lsu_cache())
+    // val Lsu_i             = Module(new Lsu_axi())
+    val Lsu_i             = Module(new Lsu_cache())
     val Csr_i             = Module(new Csr())
     val ebreak_moudle_i   = Module(new ebreak_moudle())
     val not_impl_moudle_i = Module(new not_impl_moudle())
@@ -118,7 +118,7 @@ class EXU extends Module {
     to_IFU.bits.csr_addr    := Csr_i.io.out.csr_addr
 
     difftest <> Csr_i.io.out.difftest
-    lsu_axi_master <> Lsu_i.axi
-    // lsu_to_cache   <> Lsu_i.to_cache
-    // lsu_from_cache <> Lsu_i.from_cache
+    // lsu_axi_master <> Lsu_i.axi
+    lsu_to_cache   <> Lsu_i.to_cache
+    lsu_from_cache <> Lsu_i.from_cache
 }
