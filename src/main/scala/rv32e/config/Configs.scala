@@ -23,18 +23,20 @@ object Configs {
 }
 
 object Cache_Configs {
-  val offWidth    = 4
-  val idxWidth    = 4
-  val tagWidth    = Configs.ADDR_WIDTH-offWidth-idxWidth
+  val offWidth = 4
+  val idxWidth = 4
+  val tagWidth = Configs.ADDR_WIDTH-offWidth-idxWidth
 
 //   val blkWidth    = (1<<offWidth)*Configs.BYTE_WIDTH
 
-  val off_LSB     = 0
-  val off_MSB     = off_LSB + offWidth - 1
-  val idx_LSB     = off_MSB + 1
-  val idx_MSB     = idx_LSB + idxWidth - 1
-  val tag_LSB     = idx_MSB + 1
-  val tag_MSB     = tag_LSB + tagWidth - 1
+  val byte_LSB = 0
+  val byte_MSB = byte_LSB + Configs.DATA_BYTE_WIDTH - 1
+  val ent_LSB  = byte_MSB + 1
+  val ent_MSB  = ent_LSB  + (offWidth-Configs.DATA_BYTE_WIDTH) - 1
+  val idx_LSB  = ent_MSB  + 1
+  val idx_MSB  = idx_LSB  + idxWidth - 1
+  val tag_LSB  = idx_MSB  + 1
+  val tag_MSB  = tag_LSB  + tagWidth - 1
 
   val numSetsWidth = 1
   val numSets      = 1<<numSetsWidth

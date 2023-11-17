@@ -18,14 +18,17 @@ class EXU extends Module {
     val to_IFU   = IO(Decoupled(new EXU2IFU_bus))
     val difftest = IO(new DiffCsr)
     val lsu_axi_master = IO(new AXIIO_master)
+    // val lsu_to_cache   = IO(Decoupled(new LSU2Cache_bus))
+    // val lsu_from_cache = IO(Flipped(Decoupled(new Cache2LSU_bus)))
 
-    val Alu_i               = Module(new Alu())
-    val Mdu_i               = Module(new Mdu())
-    val Bru_i               = Module(new Bru())
-    val Lsu_i               = Module(new Lsu_axi())
-    val Csr_i               = Module(new Csr())
-    val ebreak_moudle_i     = Module(new ebreak_moudle())
-    val not_impl_moudle_i   = Module(new not_impl_moudle())
+    val Alu_i             = Module(new Alu())
+    val Mdu_i             = Module(new Mdu())
+    val Bru_i             = Module(new Bru())
+    val Lsu_i             = Module(new Lsu_axi())
+    // val Lsu_i             = Module(new Lsu_cache())
+    val Csr_i             = Module(new Csr())
+    val ebreak_moudle_i   = Module(new ebreak_moudle())
+    val not_impl_moudle_i = Module(new not_impl_moudle())
 
     // !!!!! to core change StageConnect !!!!!!!!!
     // from_ISU.ready := true.B
@@ -70,9 +73,9 @@ class EXU extends Module {
     ))
 
     // mdu
-    Mdu_i.io.in.op     := from_ISU.bits.ctrl_sig.mdu_op
-    Mdu_i.io.in.src1   := from_ISU.bits.rdata1
-    Mdu_i.io.in.src2   := from_ISU.bits.rdata2
+    Mdu_i.io.in.op   := from_ISU.bits.ctrl_sig.mdu_op
+    Mdu_i.io.in.src1 := from_ISU.bits.rdata1
+    Mdu_i.io.in.src2 := from_ISU.bits.rdata2
 
     // lsu
     Lsu_i.io.in.addr    := Alu_i.io.out.result
@@ -104,16 +107,18 @@ class EXU extends Module {
     to_WBU.bits.lsu_rdata  := Lsu_i.io.out.rdata
     to_WBU.bits.csr_rdata  := Csr_i.io.out.r_csr
     // to_WBU.bits.csr_rdata  := Csr_i.io.out.rdata
-    to_WBU.bits.pc         := from_ISU.bits.pc
-    to_WBU.bits.reg_wen    := from_ISU.bits.ctrl_sig.reg_wen
-    to_WBU.bits.fu_op      := from_ISU.bits.ctrl_sig.fu_op
-    to_WBU.bits.rd         := from_ISU.bits.rd
+    to_WBU.bits.pc      := from_ISU.bits.pc
+    to_WBU.bits.reg_wen := from_ISU.bits.ctrl_sig.reg_wen
+    to_WBU.bits.fu_op   := from_ISU.bits.ctrl_sig.fu_op
+    to_WBU.bits.rd      := from_ISU.bits.rd
 
-    to_IFU.bits.bru_ctrl_br     := Bru_i.io.out.ctrl_br
-    to_IFU.bits.bru_addr        := Alu_i.io.out.result
-    to_IFU.bits.csr_ctrl_br     := Csr_i.io.out.csr_br
-    to_IFU.bits.csr_addr        := Csr_i.io.out.csr_addr
+    to_IFU.bits.bru_ctrl_br := Bru_i.io.out.ctrl_br
+    to_IFU.bits.bru_addr    := Alu_i.io.out.result
+    to_IFU.bits.csr_ctrl_br := Csr_i.io.out.csr_br
+    to_IFU.bits.csr_addr    := Csr_i.io.out.csr_addr
 
     difftest <> Csr_i.io.out.difftest
     lsu_axi_master <> Lsu_i.axi
+    // lsu_to_cache   <> Lsu_i.to_cache
+    // lsu_from_cache <> Lsu_i.from_cache
 }

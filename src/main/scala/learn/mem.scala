@@ -46,7 +46,7 @@ class RWSmem extends Module {
     val dataOut = Output(UInt(DATA_WIDTH.W))
   })
 
-  val EntId       = io.addr(off_MSB, off_LSB)
+  val EntId       = io.addr(ent_MSB, ent_LSB)
   val CacheLineId = io.addr(idx_MSB, idx_LSB)
   val tagId       = io.addr(tag_MSB, tag_LSB)
   val SetId = RegInit(0.U(numSetsWidth.W))

@@ -5,11 +5,12 @@ import chisel3._
 import chisel3.util._
 import rv32e.config.Configs._
 import rv32e.define.Dec_Info._
+import rv32e.config.Axi_Configs._
 
 // ifu to idu bus
 class IFU2IDU_bus extends Bundle {
-    val inst    =   Output(UInt(ADDR_WIDTH.W)) 
-    val pc      =   Output(UInt(ADDR_WIDTH.W))       
+    val inst    =   Output(UInt(ADDR_WIDTH.W))
+    val pc      =   Output(UInt(ADDR_WIDTH.W))      
 }
 
 /* contrl signals */
@@ -83,9 +84,15 @@ class Cache2IFU_bus extends Bundle {
 }
 
 class LSU2Cache_bus extends Bundle {
+    val addr      = Output(UInt(ADDR_WIDTH.W))
 
+    val wdata     = Output(UInt(DATA_WIDTH.W))
+    val is_write  = Output(Bool())
+    val wmask     = Output(UInt(DATA_WIDTH.W))
 }
 
 class Cache2LSU_bus extends Bundle {
+    val data = Output(UInt(DATA_WIDTH.W))
 
+    val bresp = Output(Bool())  // write response
 }
