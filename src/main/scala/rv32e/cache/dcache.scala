@@ -40,7 +40,7 @@ class D_Cache extends Module {
     val tagSeq = for (i <- 0 until numSets) yield {
         tagArray(i)(CacheLineId) -> i.U
     }
-    val SetId = MuxLookup(tag, 0.U, tagSeq)
+    val SetId = MuxLookup(tag, 0.U)(tagSeq)
 
     val hitCacheAddr = Cat(SetId, CacheLineId, EntId) // 
 
@@ -133,27 +133,27 @@ class D_Cache extends Module {
     val toMemData = dataArray(replaceCacheAddr)
 
     // signals
-    from_LSU.ready := MuxLookup(state_dcache, false.B, List(s_idle -> true.B))
+    from_LSU.ready := MuxLookup(state_dcache, false.B)(List(s_idle -> true.B))
 
-    to_sram.ar.valid      := MuxLookup(state_dcache, false.B, List(s_rrq -> true.B))
-    to_sram.ar.bits.addr  := MuxLookup(state_dcache, 0.U, List(s_rrq -> ((from_LSU.bits.addr>>offWidth.U)<<offWidth.U)))
-    to_sram.ar.bits.size  := MuxLookup(state_dcache, 0.U, List(s_rrq -> DATA_WIDTH.U))
-    to_sram.ar.bits.len   := MuxLookup(state_dcache, 0.U, List(s_rrq -> (numEnts-1).U)) //transfer anlen+1 items
+    to_sram.ar.valid      := MuxLookup(state_dcache, false.B)(List(s_rrq -> true.B))
+    to_sram.ar.bits.addr  := MuxLookup(state_dcache, 0.U)(List(s_rrq -> ((from_LSU.bits.addr>>offWidth.U)<<offWidth.U)))
+    to_sram.ar.bits.size  := MuxLookup(state_dcache, 0.U)(List(s_rrq -> DATA_WIDTH.U))
+    to_sram.ar.bits.len   := MuxLookup(state_dcache, 0.U)(List(s_rrq -> (numEnts-1).U)) //transfer anlen+1 items
     to_sram.ar.bits.burst := INCR.U
-    to_sram.r.ready       := MuxLookup(state_dcache, false.B, List(s_reading ->  true.B))
-    to_sram.aw.valid      := MuxLookup(state_dcache, false.B, List(s_wrq -> true.B))
+    to_sram.r.ready       := MuxLookup(state_dcache, false.B)(List(s_reading ->  true.B))
+    to_sram.aw.valid      := MuxLookup(state_dcache, false.B)(List(s_wrq -> true.B))
     to_sram.aw.bits.addr  := Cat(tagArray(replace_set)(CacheLineId), CacheLineId, 0.U(offWidth.W)) // is the address of cache line
-    to_sram.aw.bits.size  := MuxLookup(state_dcache, 0.U, List(s_wrq -> DATA_WIDTH.U))
-    to_sram.aw.bits.len   := MuxLookup(state_dcache, 0.U, List(s_wrq -> (numEnts-1).U)) //transfer anlen+1 items
+    to_sram.aw.bits.size  := MuxLookup(state_dcache, 0.U)(List(s_wrq -> DATA_WIDTH.U))
+    to_sram.aw.bits.len   := MuxLookup(state_dcache, 0.U)(List(s_wrq -> (numEnts-1).U)) //transfer anlen+1 items
     to_sram.aw.bits.burst := INCR.U
-    to_sram.w.valid       := MuxLookup(state_dcache, false.B, List(s_writing ->  true.B))
+    to_sram.w.valid       := MuxLookup(state_dcache, false.B)(List(s_writing ->  true.B))
     to_sram.w.bits.data   := toMemData
     to_sram.w.bits.strb   := "b1111".U
     to_sram.w.bits.last   := Mux(state_dcache === s_wend, true.B, false.B)
-    to_sram.b.ready       := MuxLookup(state_dcache, false.B, List(s_wend -> true.B))
+    to_sram.b.ready       := MuxLookup(state_dcache, false.B)(List(s_wend -> true.B))
 
     to_LSU.bits.data  := Mux(hit, outdata, 0.U)
-    to_LSU.bits.bresp := MuxLookup(state_dcache, false.B, List(s_wresp -> true.B))
-    to_LSU.valid      := MuxLookup(state_dcache, false.B, List(s_rresp -> true.B, s_wresp -> true.B))
+    to_LSU.bits.bresp := MuxLookup(state_dcache, false.B)(List(s_wresp -> true.B))
+    to_LSU.valid      := MuxLookup(state_dcache, false.B)(List(s_rresp -> true.B, s_wresp -> true.B))
 }
 

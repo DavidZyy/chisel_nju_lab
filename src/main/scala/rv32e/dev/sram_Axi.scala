@@ -53,7 +53,7 @@ class SRAM_axi extends Module {
         is (s_read_mid) {
             state_sram  := Mux(reg_AxLen === 1.U, s_read_end, s_read_mid)
             reg_AxLen   := Mux(axi.r.fire, reg_AxLen-1.U, reg_AxLen)
-            reg_addr    := MuxLookup(reg_burst, reg_addr, List(
+            reg_addr    := MuxLookup(reg_burst, reg_addr)(List(
                 INCR.U -> Mux(axi.r.fire, (reg_addr + ADDR_BYTE.U), reg_addr)
             ))
         }
@@ -65,20 +65,20 @@ class SRAM_axi extends Module {
     val RamBB_i1 = Module(new RamBB())
     RamBB_i1.io.clock   := clock
     RamBB_i1.io.addr    := reg_addr
-    RamBB_i1.io.mem_wen := MuxLookup(state_sram, false.B, List())
-    RamBB_i1.io.valid   := MuxLookup(state_sram, false.B, List( s_read_mid  -> true.B, s_read_end  -> true.B))
+    RamBB_i1.io.mem_wen := MuxLookup(state_sram, false.B)(List())
+    RamBB_i1.io.valid   := MuxLookup(state_sram, false.B)(List( s_read_mid  -> true.B, s_read_end  -> true.B))
     RamBB_i1.io.wdata   :=  axi.w.bits.data
     RamBB_i1.io.wmask   :=  axi.w.bits.strb
 
     // axi slave signals
-    axi.ar.ready    := MuxLookup(state_sram, false.B, List( s_idle      ->  true.B))
-    axi.r.valid     := MuxLookup(state_sram, false.B, List( s_read_mid  ->  true.B, s_read_end -> true.B))
+    axi.ar.ready    := MuxLookup(state_sram, false.B)(List( s_idle      ->  true.B))
+    axi.r.valid     := MuxLookup(state_sram, false.B)(List( s_read_mid  ->  true.B, s_read_end -> true.B))
     axi.r.bits.data := RamBB_i1.io.rdata
     axi.r.bits.resp := 0.U
     axi.r.bits.last := Mux(state_sram === s_read_end, true.B, false.B)
-    axi.aw.ready    := MuxLookup(state_sram, false.B, List())
-    axi.w.ready     := MuxLookup(state_sram, false.B, List())
-    axi.b.valid     := MuxLookup(state_sram, false.B, List())
+    axi.aw.ready    := MuxLookup(state_sram, false.B)(List())
+    axi.w.ready     := MuxLookup(state_sram, false.B)(List())
+    axi.b.valid     := MuxLookup(state_sram, false.B)(List())
     axi.b.bits.resp := 0.U
 }
 
@@ -126,7 +126,7 @@ class sram_axi_rw extends Module {
         is (s_read_mid) {
             state_sram  := Mux(reg_AxLen === 1.U, s_read_end, s_read_mid)
             reg_AxLen   := Mux(axi.r.fire, reg_AxLen-1.U, reg_AxLen)
-            reg_addr    := MuxLookup(reg_burst, reg_addr, List(
+            reg_addr    := MuxLookup(reg_burst, reg_addr)(List(
                 INCR.U -> Mux(axi.r.fire, (reg_addr + ADDR_BYTE.U), reg_addr)
             ))
         }
@@ -149,7 +149,7 @@ class sram_axi_rw extends Module {
             state_sram  := Mux(reg_AxLen === 1.U, s_write_end, s_write_mid)
             // state_sram  := Mux(axi.w.bits.last, s_write_end, s_write_mid)
             reg_AxLen   := Mux(axi.w.fire, reg_AxLen-1.U, reg_AxLen)
-            reg_addr    := MuxLookup(reg_burst, reg_addr, List(
+            reg_addr    := MuxLookup(reg_burst, reg_addr)(List(
                 INCR.U -> Mux(axi.w.fire, (reg_addr + ADDR_BYTE.U), reg_addr)
             ))
         }
@@ -161,11 +161,11 @@ class sram_axi_rw extends Module {
     val RamBB_i1 = Module(new RamBB())
     RamBB_i1.io.clock   := clock
     RamBB_i1.io.addr    := reg_addr
-    RamBB_i1.io.mem_wen := MuxLookup(state_sram, false.B, List(
+    RamBB_i1.io.mem_wen := MuxLookup(state_sram, false.B)(List(
         s_write_mid -> true.B, 
         s_write_end -> true.B,
     ))
-    RamBB_i1.io.valid   := MuxLookup(state_sram, false.B, List( 
+    RamBB_i1.io.valid   := MuxLookup(state_sram, false.B)(List( 
         s_read_mid  -> true.B, 
         s_read_end  -> true.B,
         s_write_mid -> true.B, 
@@ -175,14 +175,14 @@ class sram_axi_rw extends Module {
     RamBB_i1.io.wmask   := axi.w.bits.strb
 
     // axi slave signals
-    axi.ar.ready    := MuxLookup(state_sram, false.B, List( s_idle  ->  true.B))
-    axi.r.valid     := MuxLookup(state_sram, false.B, List( s_read_mid  ->  true.B, s_read_end -> true.B))
+    axi.ar.ready    := MuxLookup(state_sram, false.B)(List( s_idle  ->  true.B))
+    axi.r.valid     := MuxLookup(state_sram, false.B)(List( s_read_mid  ->  true.B, s_read_end -> true.B))
     axi.r.bits.data := RamBB_i1.io.rdata
     axi.r.bits.resp := 0.U
     axi.r.bits.last := Mux(state_sram === s_read_end, true.B, false.B)
     axi.r.bits.resp := 0.U
-    axi.aw.ready    := MuxLookup(state_sram, false.B, List( s_idle  ->  true.B))
-    axi.w.ready     := MuxLookup(state_sram, false.B, List( s_fill -> true.B, s_write_mid -> true.B, s_write_end -> true.B))
-    axi.b.valid     := MuxLookup(state_sram, false.B, List( s_write_end -> true.B))
+    axi.aw.ready    := MuxLookup(state_sram, false.B)(List( s_idle  ->  true.B))
+    axi.w.ready     := MuxLookup(state_sram, false.B)(List( s_fill -> true.B, s_write_mid -> true.B, s_write_end -> true.B))
+    axi.b.valid     := MuxLookup(state_sram, false.B)(List( s_write_end -> true.B))
     axi.b.bits.resp := 0.U
 }

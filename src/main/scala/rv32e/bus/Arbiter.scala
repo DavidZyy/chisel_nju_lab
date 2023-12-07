@@ -98,55 +98,55 @@ class Arbiter extends Module {
     }
 
 
-    to_slave.ar.valid       := MuxLookup(state, false.B, List(
+    to_slave.ar.valid       := MuxLookup(state, false.B)(List(
         s_read_rq_m1    ->  true.B,
         s_read_rq_m2    ->  true.B
     ))
-    to_slave.ar.bits.addr   := MuxLookup(state, 0.U, List(
+    to_slave.ar.bits.addr   := MuxLookup(state, 0.U)(List(
         s_read_rq_m1      ->  from_master1.ar.bits.addr,
         s_read_wait_m1    ->  from_master1.ar.bits.addr,
 
         s_read_rq_m2      ->  from_master2.ar.bits.addr,
         s_read_wait_m2    ->  from_master2.ar.bits.addr,
     ))
-    to_slave.r.ready    := MuxLookup(state, false.B, List(
+    to_slave.r.ready    := MuxLookup(state, false.B)(List(
         s_read_wait_m1  ->  true.B,
         s_read_wait_m2  ->  true.B,
     ))
-    to_slave.aw.valid     :=    MuxLookup(state, false.B, List(
+    to_slave.aw.valid     :=    MuxLookup(state, false.B)(List(
         s_write_rq_m2 -> true.B
     ))
-    to_slave.aw.bits.addr :=    MuxLookup(state, 0xffffffffL.U, List(
+    to_slave.aw.bits.addr :=    MuxLookup(state, 0xffffffffL.U)(List(
         s_write_rq_m2     ->  from_master2.aw.bits.addr,
         s_write_wait_m2   ->  from_master2.aw.bits.addr
     ))
-    to_slave.w.valid      :=    MuxLookup(state, false.B, List(
+    to_slave.w.valid      :=    MuxLookup(state, false.B)(List(
         s_write_rq_m2 -> true.B
     ))
-    to_slave.w.bits.data  :=    MuxLookup(state, false.B, List(
+    to_slave.w.bits.data  :=    MuxLookup(state, 0.U)(List(
         s_write_rq_m2     ->  from_master2.w.bits.data,
         s_write_wait_m2   ->  from_master2.w.bits.data
     ))
-    to_slave.w.bits.strb  :=    MuxLookup(state, false.B, List(
+    to_slave.w.bits.strb  :=    MuxLookup(state, 0.U)(List(
         s_write_rq_m2     ->  from_master2.w.bits.strb,
         s_write_wait_m2   ->  from_master2.w.bits.strb
     ))
-    to_slave.b.ready      :=    MuxLookup(state, false.B, List(
+    to_slave.b.ready      :=    MuxLookup(state, false.B)(List(
         s_write_wait_m2 -> true.B
     )) 
 
 
-    from_master1.ar.ready    := MuxLookup(state, false.B, List(s_rcv_rrq_m1 -> true.B))
-    from_master1.r.valid     := MuxLookup(state, false.B, List(s_read_end_m1 -> true.B))
+    from_master1.ar.ready    := MuxLookup(state, false.B)(List(s_rcv_rrq_m1 -> true.B))
+    from_master1.r.valid     := MuxLookup(state, false.B)(List(s_read_end_m1 -> true.B))
     from_master1.r.bits.data := to_slave.r.bits.data
     from_master1.aw.ready    := false.B
     from_master1.w.ready     := false.B
     from_master1.b.valid     := false.B
 
-    from_master2.ar.ready    := MuxLookup(state, false.B, List(s_rcv_rrq_m2 -> true.B))
-    from_master2.r.valid     := MuxLookup(state, false.B, List(s_read_end_m2 -> true.B))
+    from_master2.ar.ready    := MuxLookup(state, false.B)(List(s_rcv_rrq_m2 -> true.B))
+    from_master2.r.valid     := MuxLookup(state, false.B)(List(s_read_end_m2 -> true.B))
     from_master2.r.bits.data := to_slave.r.bits.data
-    from_master2.aw.ready    := MuxLookup(state, false.B, List(s_rcv_wrq_m2 -> true.B))
-    from_master2.w.ready     := MuxLookup(state, false.B, List(s_rcv_wrq_m2 -> true.B))
-    from_master2.b.valid     := MuxLookup(state, false.B, List(s_write_end_m2 -> true.B))
+    from_master2.aw.ready    := MuxLookup(state, false.B)(List(s_rcv_wrq_m2 -> true.B))
+    from_master2.w.ready     := MuxLookup(state, false.B)(List(s_rcv_wrq_m2 -> true.B))
+    from_master2.b.valid     := MuxLookup(state, false.B)(List(s_write_end_m2 -> true.B))
 }

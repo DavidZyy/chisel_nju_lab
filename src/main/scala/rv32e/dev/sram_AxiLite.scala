@@ -76,14 +76,14 @@ class SRAM extends Module {
 
     val RamBB_i1 = Module(new RamBB())
     RamBB_i1.io.clock   := clock
-    RamBB_i1.io.addr    := MuxLookup(state, 0.U, List(
+    RamBB_i1.io.addr    := MuxLookup(state, 0.U)(List(
         s_read_end  -> axi.ar.bits.addr,
         s_write_end -> axi.aw.bits.addr,
     ))
-    RamBB_i1.io.mem_wen := MuxLookup(state, false.B, List(
+    RamBB_i1.io.mem_wen := MuxLookup(state, false.B)(List(
         s_write_end -> true.B
     ))
-    RamBB_i1.io.valid   := MuxLookup(state, false.B, List(
+    RamBB_i1.io.valid   := MuxLookup(state, false.B)(List(
         s_read_end  -> true.B,
         s_write_end -> true.B
     ))
@@ -91,12 +91,12 @@ class SRAM extends Module {
     RamBB_i1.io.wmask   :=  axi.w.bits.strb
 
     // axi slave signals
-    axi.ar.ready    := MuxLookup(state, false.B, List( s_idle      ->  true.B))
-    axi.r.valid     := MuxLookup(state, false.B, List( s_read_end  ->  true.B))
+    axi.ar.ready    := MuxLookup(state, false.B)(List( s_idle      ->  true.B))
+    axi.r.valid     := MuxLookup(state, false.B)(List( s_read_end  ->  true.B))
     axi.r.bits.data := RamBB_i1.io.rdata
     axi.r.bits.resp := 0.U
-    axi.aw.ready    := MuxLookup(state, false.B, List( s_idle      ->  true.B))
-    axi.w.ready     := MuxLookup(state, false.B, List( s_idle      ->  true.B))
-    axi.b.valid     := MuxLookup(state, false.B, List( s_write_end  ->  true.B))
+    axi.aw.ready    := MuxLookup(state, false.B)(List( s_idle      ->  true.B))
+    axi.w.ready     := MuxLookup(state, false.B)(List( s_idle      ->  true.B))
+    axi.b.valid     := MuxLookup(state, false.B)(List( s_write_end  ->  true.B))
     axi.b.bits.resp := 0.U
 }

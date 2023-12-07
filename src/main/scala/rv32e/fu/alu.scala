@@ -31,7 +31,7 @@ class Alu extends Module {
     val shamt = operand2(4, 0)
 
     io.out.result   :=
-    MuxLookup(alu_op, 0.U, Array(
+    MuxLookup(alu_op, 0.U)(List(
         ("b" + alu_x   ).U  -> 0.U,
         ("b" + alu_add ).U  -> (operand1 + operand2).asUInt,
         ("b" + alu_sub ).U  -> (operand1 - operand2).asUInt,

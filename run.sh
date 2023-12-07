@@ -1,14 +1,15 @@
 #!/bin/bash
 
-rm -rf ./generated/cpu/*
+rm -rf ./generated/*
 # generate verilog file
-sbt "runMain rv32e.top_main"
-
+# sbt "runMain rv32e.top_main"
+# ./mill.sh myProject.runMain rv32e.top_main
+./mill.sh -i myProject.runMain rv32e.top_main -td /home/zhuyangyang/project/CPU/chisel-empty/generated
 # Define the file name
-file_name="generated/cpu/top.v"
+file_name="generated/top.v"
 
 # Define the comments to add
-comments="/* verilator lint_off DECLFILENAME */\n/* verilator lint_off UNUSEDSIGNAL */\n/* verilator lint_off UNDRIVEN */\n/* verilator lint_off UNOPTFLAT */\n/* verilator lint_off WIDTHEXPAND */"
+comments="/* verilator lint_off DECLFILENAME */\n/* verilator lint_off UNUSEDSIGNAL */\n/* verilator lint_off UNDRIVEN */\n/* verilator lint_off UNOPTFLAT */\n/* verilator lint_off WIDTHEXPAND */\n/* verilator lint_off PINCONNECTEMPTY */"
 
 # Check if the file exists
 if [ -e "$file_name" ]; then
@@ -20,8 +21,8 @@ else
 fi
 
 # Define the source directory
-source_dir="/home/zhuyangyang/project/nju_digital_design_chisel/chisel-empty/generated/cpu"
-
+# source_dir="/home/zhuyangyang/project/nju_digital_design_chisel/chisel-empty/generated"
+source_dir="/home/zhuyangyang/project/CPU/chisel-empty/generated"
 # Define the destination directory
 destination_dir="/home/zhuyangyang/project/ysyx-workbench/npc/vsrc"
 
@@ -32,7 +33,8 @@ if [ -d "$source_dir" ]; then
   mkdir -p "$destination_dir"
 
   # Search for .v files in the source directory and copy them to the destination directory
-  find "$source_dir" -type f -name "*.v" -exec cp {} "$destination_dir" \;
+  # find "$source_dir" -type f -name "*.v" -name "*.sv" -exec cp {} "$destination_dir" \;
+  find "$source_dir" -type f \( -name "*.v" -o -name "*.sv" \) -exec cp {} "$destination_dir" \;
 
   echo "Copied .v files from $source_dir to $destination_dir"
 else

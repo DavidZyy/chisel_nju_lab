@@ -30,7 +30,7 @@ class FSM extends Module {
     reg           := next_state
     current_state := reg
 
-    next_state  := MuxLookup(current_state, S0, Seq(
+    next_state  := MuxLookup(current_state, S0)(Seq(
         S0 -> Mux(io.in, S5, S1),
         S1 -> Mux(io.in, S5, S2),
         S2 -> Mux(io.in, S5, S3),
@@ -42,7 +42,7 @@ class FSM extends Module {
         S8 -> Mux(io.in, S8, S1)
     ))
 
-    val out = MuxLookup(current_state, false.B, Seq(
+    val out = MuxLookup(current_state, false.B)(Seq(
         S0 -> false.B,
         S1 -> false.B,
         S2 -> false.B,

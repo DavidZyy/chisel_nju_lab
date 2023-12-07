@@ -8,7 +8,7 @@ import rv32e.bus.AXIIO_slave
 
 // left -> right
 object StageConnect {
-    def apply[T <: Data](left: DecoupledIO[T], right: DecoupledIO[T]) {
+    def apply[T <: Data](left: DecoupledIO[T], right: DecoupledIO[T]) = {
         // val fire = left.valid && right.ready
         // right.bits   :=  Mux(fire, left.bits, 0.U.asTypeOf(left.bits))
 
@@ -19,7 +19,7 @@ object StageConnect {
 }
 
 object StageConnect_reg {
-    def apply[T <: Data](left: DecoupledIO[T], right: DecoupledIO[T]) {
+    def apply[T <: Data](left: DecoupledIO[T], right: DecoupledIO[T]) = {
         // val fire = left.valid && right.ready
         // right.bits   :=  Mux(fire, left.bits, 0.U.asTypeOf(left.bits))
 
@@ -30,7 +30,7 @@ object StageConnect_reg {
 }
 
 object AxiLiteConnect {
-    def apply(master: AXILiteIO_master, slave: AXILiteIO_slave) {
+    def apply(master: AXILiteIO_master, slave: AXILiteIO_slave) = {
         StageConnect(master.ar, slave.ar)
         StageConnect(slave.r, master.r)
 
@@ -41,7 +41,7 @@ object AxiLiteConnect {
 }
 
 object AxiConnect {
-    def apply(master: AXIIO_master, slave: AXIIO_slave) {
+    def apply(master: AXIIO_master, slave: AXIIO_slave) = {
         StageConnect(master.ar, slave.ar)
         StageConnect(slave.r, master.r)
 

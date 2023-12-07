@@ -18,11 +18,11 @@ class IDU extends Module {
 
     // val s_idle :: s_busy :: Nil = Enum(2)
     // val state = RegInit(s_idle)
-    // state := MuxLookup(state, s_idle, List(
+    // state := MuxLookup(state, s_idle)(List(
     //     s_idle  -> Mux(from_IFU.valid, s_busy, s_idle),
     //     s_busy  -> s_idle
     // ))
-    // from_IFU.ready  :=  MuxLookup(state, false.B, List(
+    // from_IFU.ready  :=  MuxLookup(state, false.B)(List(
     //     s_idle  ->  true.B,
     //     s_busy  ->  false.B
     // ))
@@ -109,7 +109,7 @@ MRET    ->  BitPat("b" + fu_csr + lsu_x + bru_x + i_type  + alu_x + src_x + src_
     val decode_info =   decoder(from_IFU.bits.inst, table)
 
     val inst_type   =   decode_info(INST_TYPEOP_MSB, INST_TYPEOP_LSB)
-    to_ISU.bits.imm := MuxLookup(inst_type, 0.U, Array(
+    to_ISU.bits.imm := MuxLookup(inst_type, 0.U)(List(
         ("b"+ i_type).U -> imm_i,
         ("b"+ s_type).U -> imm_s,
         ("b"+ b_type).U -> imm_b,

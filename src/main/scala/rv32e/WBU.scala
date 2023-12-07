@@ -19,7 +19,7 @@ class WBU extends Module {
     to_ISU.bits.reg_wen := Mux(from_EXU.fire, from_EXU.bits.reg_wen, false.B)
     to_ISU.bits.rd      := from_EXU.bits.rd
 
-    to_ISU.bits.wdata   := MuxLookup(from_EXU.bits.fu_op, 0.U, Array(
+    to_ISU.bits.wdata   := MuxLookup(from_EXU.bits.fu_op, 0.U)(List(
         ("b"+fu_alu).U  ->  from_EXU.bits.alu_result,
         ("b"+fu_lsu).U  ->  from_EXU.bits.lsu_rdata,
         ("b"+fu_bru).U  ->  (from_EXU.bits.pc + ADDR_BYTE.U),

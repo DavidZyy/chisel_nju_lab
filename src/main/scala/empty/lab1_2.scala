@@ -58,7 +58,7 @@ class Decoder24 extends Module {
   })
 
   when(io.en) {
-    io.y := MuxLookup(io.x, 0.U, Seq(
+    io.y := MuxLookup(io.x, 0.U)(Seq(
       0.U -> "b0001".U,
       1.U -> "b0010".U,
       2.U -> "b0100".U,
@@ -85,7 +85,7 @@ class encoder24 extends Module {
   })
 
   when(io.en) {
-    io.y := MuxLookup(io.x, 0.U, Seq(
+    io.y := MuxLookup(io.x, 0.U)(Seq(
       "b0001".U -> 0.U,
       "b0010".U -> 1.U,
       "b0100".U -> 2.U,

@@ -64,19 +64,19 @@
 // 
 //   val rdata       = WireInit(0.U(DATA_WIDTH.W))
 // 
-//   io.out.csr_br := MuxLookup(io.in.op, false.B, Array(
+//   io.out.csr_br := MuxLookup(io.in.op, false.B)(List(
 //     ("b" + csr_ecall ).U  ->   true.B,
 //     ("b" + csr_mret  ).U  ->   true.B,
 //   ))
 // 
-//   io.out.csr_addr :=  MuxLookup(io.in.op, 0.U, Array(
+//   io.out.csr_addr :=  MuxLookup(io.in.op, 0.U)(List(
 //     ("b" + csr_ecall ).U  ->   reg_mtvec,
 //     ("b" + csr_mret  ).U  ->   reg_mepc,
 //   ))
 // 
 // 
 //   io.out.rdata  :=  rdata
-//   // io.out.r_csr   :=  MuxLookup(io.in.csr_id, 0.U, Array(
+//   // io.out.r_csr   :=  MuxLookup(io.in.csr_id, 0.U)(List(
 //   //   mtvec_id    -> reg_mtvec,
 //   //   mepc_id     -> reg_mepc,
 //   //   mcause_id   -> reg_mcause,

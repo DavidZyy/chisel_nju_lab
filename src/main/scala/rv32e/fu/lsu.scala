@@ -79,26 +79,26 @@ class Lsu extends Module {
     val lhu_rdata = Wire(UInt(DATA_WIDTH.W))
     val lw_rdata  = Wire(UInt(DATA_WIDTH.W))
 
-    lb_rdata := MuxLookup(addr_low_2, 0.U, Array(
+    lb_rdata := MuxLookup(addr_low_2, 0.U)(List(
         0.U -> Cat(Fill(24, rdata_align_4(7 )), rdata_align_4(7, 0)),
         1.U -> Cat(Fill(24, rdata_align_4(15)), rdata_align_4(15, 8)),
         2.U -> Cat(Fill(24, rdata_align_4(23)), rdata_align_4(23, 16)),
         3.U -> Cat(Fill(24, rdata_align_4(31)), rdata_align_4(31, 24)),
     ))
 
-    lbu_rdata := MuxLookup(addr_low_2, 0.U, Array(
+    lbu_rdata := MuxLookup(addr_low_2, 0.U)(List(
         0.U -> Cat(Fill(24, 0.U), rdata_align_4(7, 0)),
         1.U -> Cat(Fill(24, 0.U), rdata_align_4(15, 8)),
         2.U -> Cat(Fill(24, 0.U), rdata_align_4(23, 16)),
         3.U -> Cat(Fill(24, 0.U), rdata_align_4(31, 24)),
     ))
 
-    lh_rdata := MuxLookup(addr_low_2, 0.U, Array(
+    lh_rdata := MuxLookup(addr_low_2, 0.U)(List(
         0.U -> Cat(Fill(16, rdata_align_4(15)), rdata_align_4(15, 0 )),
         2.U -> Cat(Fill(16, rdata_align_4(31)), rdata_align_4(31, 16)),
     ))
 
-    lhu_rdata := MuxLookup(addr_low_2, 0.U, Array(
+    lhu_rdata := MuxLookup(addr_low_2, 0.U)(List(
         0.U -> Cat(Fill(16, 0.U), rdata_align_4(15, 0 )),
         2.U -> Cat(Fill(16, 0.U), rdata_align_4(31, 16)),
     ))
@@ -110,29 +110,29 @@ class Lsu extends Module {
     val sh_wmask = Wire(UInt((DATA_WIDTH/BYTE_WIDTH).W))
     val sw_wmask = Wire(UInt((DATA_WIDTH/BYTE_WIDTH).W))
 
-    sb_wmask    :=  MuxLookup(addr_low_2, 0.U, Array(
+    sb_wmask    :=  MuxLookup(addr_low_2, 0.U)(List(
         0.U -> "b0001".U,
         1.U -> "b0010".U,
         2.U -> "b0100".U,
         3.U -> "b1000".U,
     ))
 
-    sh_wmask    :=  MuxLookup(addr_low_2, 0.U, Array(
+    sh_wmask    :=  MuxLookup(addr_low_2, 0.U)(List(
         0.U -> "b0011".U,
         2.U -> "b1100".U,
     ))
 
     sw_wmask    :=  "b1111".U
 
-    val wmask   =  MuxLookup(lsu_op, 0.U, Array(
+    val wmask   =  MuxLookup(lsu_op, 0.U)(List(
         ("b" + lsu_sb).U -> sb_wmask,
         ("b" + lsu_sh).U -> sh_wmask,
         ("b" + lsu_sw).U -> sw_wmask,
     ))
 
-    io.out.idle  := MuxLookup(state_lsu, false.B, List(s_idle -> true.B))
-    io.out.end   := MuxLookup(state_lsu, false.B, List(s_end  -> true.B))
-    io.out.rdata    :=  MuxLookup(lsu_op, 0.U, Array(
+    io.out.idle  := MuxLookup(state_lsu, false.B)(List(s_idle -> true.B))
+    io.out.end   := MuxLookup(state_lsu, false.B)(List(s_end  -> true.B))
+    io.out.rdata    :=  MuxLookup(lsu_op, 0.U)(List(
         ("b" + lsu_x  ).U -> 0.U,
         ("b" + lsu_lb ).U -> lb_rdata,
         ("b" + lsu_lbu).U -> lbu_rdata,
@@ -142,15 +142,15 @@ class Lsu extends Module {
     ))
 
     // axi master signals
-    axi.ar.valid     := MuxLookup(state_lsu, false.B, List(s_read_request  -> true.B))
+    axi.ar.valid     := MuxLookup(state_lsu, false.B)(List(s_read_request  -> true.B))
     axi.ar.bits.addr := io.in.addr
-    axi.r.ready      := MuxLookup(state_lsu, false.B, List(s_read_wait     -> true.B))
-    axi.aw.valid     := MuxLookup(state_lsu, false.B, List(s_write_request -> true.B))
+    axi.r.ready      := MuxLookup(state_lsu, false.B)(List(s_read_wait     -> true.B))
+    axi.aw.valid     := MuxLookup(state_lsu, false.B)(List(s_write_request -> true.B))
     axi.aw.bits.addr := io.in.addr
-    axi.w.valid      := MuxLookup(state_lsu, false.B, List(s_write_request -> true.B))
+    axi.w.valid      := MuxLookup(state_lsu, false.B)(List(s_write_request -> true.B))
     axi.w.bits.data  := io.in.wdata
     axi.w.bits.strb  := wmask
-    axi.b.ready      := MuxLookup(state_lsu, false.B, List(s_write_wait    -> true.B))
+    axi.b.ready      := MuxLookup(state_lsu, false.B)(List(s_write_wait    -> true.B))
 }
 
 // lsu with axi interface
@@ -211,26 +211,26 @@ class Lsu_axi extends Module {
     val lhu_rdata = Wire(UInt(DATA_WIDTH.W))
     val lw_rdata  = Wire(UInt(DATA_WIDTH.W))
 
-    lb_rdata := MuxLookup(addr_low_2, 0.U, Array(
+    lb_rdata := MuxLookup(addr_low_2, 0.U)(List(
         0.U -> Cat(Fill(24, rdata_align_4(7 )), rdata_align_4(7, 0)),
         1.U -> Cat(Fill(24, rdata_align_4(15)), rdata_align_4(15, 8)),
         2.U -> Cat(Fill(24, rdata_align_4(23)), rdata_align_4(23, 16)),
         3.U -> Cat(Fill(24, rdata_align_4(31)), rdata_align_4(31, 24)),
     ))
 
-    lbu_rdata := MuxLookup(addr_low_2, 0.U, Array(
+    lbu_rdata := MuxLookup(addr_low_2, 0.U)(List(
         0.U -> Cat(Fill(24, 0.U), rdata_align_4(7, 0)),
         1.U -> Cat(Fill(24, 0.U), rdata_align_4(15, 8)),
         2.U -> Cat(Fill(24, 0.U), rdata_align_4(23, 16)),
         3.U -> Cat(Fill(24, 0.U), rdata_align_4(31, 24)),
     ))
 
-    lh_rdata := MuxLookup(addr_low_2, 0.U, Array(
+    lh_rdata := MuxLookup(addr_low_2, 0.U)(List(
         0.U -> Cat(Fill(16, rdata_align_4(15)), rdata_align_4(15, 0 )),
         2.U -> Cat(Fill(16, rdata_align_4(31)), rdata_align_4(31, 16)),
     ))
 
-    lhu_rdata := MuxLookup(addr_low_2, 0.U, Array(
+    lhu_rdata := MuxLookup(addr_low_2, 0.U)(List(
         0.U -> Cat(Fill(16, 0.U), rdata_align_4(15, 0 )),
         2.U -> Cat(Fill(16, 0.U), rdata_align_4(31, 16)),
     ))
@@ -242,29 +242,29 @@ class Lsu_axi extends Module {
     val sh_wmask = Wire(UInt((DATA_WIDTH/BYTE_WIDTH).W))
     val sw_wmask = Wire(UInt((DATA_WIDTH/BYTE_WIDTH).W))
 
-    sb_wmask    :=  MuxLookup(addr_low_2, 0.U, Array(
+    sb_wmask    :=  MuxLookup(addr_low_2, 0.U)(List(
         0.U -> "b0001".U,
         1.U -> "b0010".U,
         2.U -> "b0100".U,
         3.U -> "b1000".U,
     ))
 
-    sh_wmask    :=  MuxLookup(addr_low_2, 0.U, Array(
+    sh_wmask    :=  MuxLookup(addr_low_2, 0.U)(List(
         0.U -> "b0011".U,
         2.U -> "b1100".U,
     ))
 
     sw_wmask    :=  "b1111".U
 
-    val wmask   =  MuxLookup(lsu_op, 0.U, Array(
+    val wmask   =  MuxLookup(lsu_op, 0.U)(List(
         ("b" + lsu_sb).U -> sb_wmask,
         ("b" + lsu_sh).U -> sh_wmask,
         ("b" + lsu_sw).U -> sw_wmask,
     ))
 
-    io.out.idle  := MuxLookup(state_lsu, false.B, List(s_idle -> true.B))
-    io.out.end   := MuxLookup(state_lsu, false.B, List(s_end  -> true.B))
-    io.out.rdata    :=  MuxLookup(lsu_op, 0.U, Array(
+    io.out.idle  := MuxLookup(state_lsu, false.B)(List(s_idle -> true.B))
+    io.out.end   := MuxLookup(state_lsu, false.B)(List(s_end  -> true.B))
+    io.out.rdata    :=  MuxLookup(lsu_op, 0.U)(List(
         ("b" + lsu_x  ).U -> 0.U,
         ("b" + lsu_lb ).U -> lb_rdata,
         ("b" + lsu_lbu).U -> lbu_rdata,
@@ -274,22 +274,22 @@ class Lsu_axi extends Module {
     ))
 
     // axi master signals
-    axi.ar.valid      := MuxLookup(state_lsu, false.B, List(s_read_request  -> true.B))
+    axi.ar.valid      := MuxLookup(state_lsu, false.B)(List(s_read_request  -> true.B))
     axi.ar.bits.addr  := io.in.addr
-    axi.ar.bits.size  := MuxLookup(state_lsu , 0.U, List(s_read_request -> DATA_WIDTH.U))
+    axi.ar.bits.size  := MuxLookup(state_lsu , 0.U)(List(s_read_request -> DATA_WIDTH.U))
     axi.ar.bits.len   := 0.U
     axi.ar.bits.burst := INCR.U
-    axi.r.ready       := MuxLookup(state_lsu, false.B, List(s_read_wait     -> true.B))
-    axi.aw.valid      := MuxLookup(state_lsu, false.B, List(s_write_request -> true.B))
+    axi.r.ready       := MuxLookup(state_lsu, false.B)(List(s_read_wait     -> true.B))
+    axi.aw.valid      := MuxLookup(state_lsu, false.B)(List(s_write_request -> true.B))
     axi.aw.bits.addr  := io.in.addr
     axi.aw.bits.size  := 0.U
     axi.aw.bits.len   := 0.U
     axi.aw.bits.burst := 0.U
-    axi.w.valid       := MuxLookup(state_lsu, false.B, List(s_write_wait -> true.B))
+    axi.w.valid       := MuxLookup(state_lsu, false.B)(List(s_write_wait -> true.B))
     axi.w.bits.data   := io.in.wdata
     axi.w.bits.strb   := wmask
     axi.w.bits.last   := true.B
-    axi.b.ready       := MuxLookup(state_lsu, false.B, List(s_write_wait -> true.B))
+    axi.b.ready       := MuxLookup(state_lsu, false.B)(List(s_write_wait -> true.B))
 }
 
 // ifu connects to icache
@@ -352,26 +352,26 @@ class Lsu_cache extends Module {
     val lhu_rdata = Wire(UInt(DATA_WIDTH.W))
     val lw_rdata  = Wire(UInt(DATA_WIDTH.W))
 
-    lb_rdata := MuxLookup(addr_low_2, 0.U, Array(
+    lb_rdata := MuxLookup(addr_low_2, 0.U)(List(
         0.U -> Cat(Fill(24, rdata_align_4(7 )), rdata_align_4(7, 0)),
         1.U -> Cat(Fill(24, rdata_align_4(15)), rdata_align_4(15, 8)),
         2.U -> Cat(Fill(24, rdata_align_4(23)), rdata_align_4(23, 16)),
         3.U -> Cat(Fill(24, rdata_align_4(31)), rdata_align_4(31, 24)),
     ))
 
-    lbu_rdata := MuxLookup(addr_low_2, 0.U, Array(
+    lbu_rdata := MuxLookup(addr_low_2, 0.U)(List(
         0.U -> Cat(Fill(24, 0.U), rdata_align_4(7, 0)),
         1.U -> Cat(Fill(24, 0.U), rdata_align_4(15, 8)),
         2.U -> Cat(Fill(24, 0.U), rdata_align_4(23, 16)),
         3.U -> Cat(Fill(24, 0.U), rdata_align_4(31, 24)),
     ))
 
-    lh_rdata := MuxLookup(addr_low_2, 0.U, Array(
+    lh_rdata := MuxLookup(addr_low_2, 0.U)(List(
         0.U -> Cat(Fill(16, rdata_align_4(15)), rdata_align_4(15, 0 )),
         2.U -> Cat(Fill(16, rdata_align_4(31)), rdata_align_4(31, 16)),
     ))
 
-    lhu_rdata := MuxLookup(addr_low_2, 0.U, Array(
+    lhu_rdata := MuxLookup(addr_low_2, 0.U)(List(
         0.U -> Cat(Fill(16, 0.U), rdata_align_4(15, 0 )),
         2.U -> Cat(Fill(16, 0.U), rdata_align_4(31, 16)),
     ))
@@ -383,29 +383,29 @@ class Lsu_cache extends Module {
     val sh_wmask = Wire(UInt((DATA_WIDTH).W))
     val sw_wmask = Wire(UInt((DATA_WIDTH).W))
 
-    sb_wmask    :=  MuxLookup(addr_low_2, 0.U, Array(
+    sb_wmask    :=  MuxLookup(addr_low_2, 0.U)(List(
         0.U -> 0x000000ffL.U,
         1.U -> 0x0000ff00L.U,
         2.U -> 0x00ff0000L.U,
         3.U -> 0xff000000L.U,
     ))
 
-    sh_wmask    :=  MuxLookup(addr_low_2, 0.U, Array(
+    sh_wmask    :=  MuxLookup(addr_low_2, 0.U)(List(
         0.U -> 0x0000ffffL.U,
         2.U -> 0xffff0000L.U,
     ))
 
     sw_wmask    :=  0xffffffffL.U
 
-    val wmask   =  MuxLookup(lsu_op, 0.U, Array(
+    val wmask   =  MuxLookup(lsu_op, 0.U)(List(
         ("b" + lsu_sb).U -> sb_wmask,
         ("b" + lsu_sh).U -> sh_wmask,
         ("b" + lsu_sw).U -> sw_wmask,
     ))
 
-    io.out.idle  := MuxLookup(state_lsu, false.B, List(s_idle -> true.B))
-    io.out.end   := MuxLookup(state_lsu, false.B, List(s_end  -> true.B))
-    io.out.rdata    :=  MuxLookup(lsu_op, 0.U, Array(
+    io.out.idle  := MuxLookup(state_lsu, false.B)(List(s_idle -> true.B))
+    io.out.end   := MuxLookup(state_lsu, false.B)(List(s_end  -> true.B))
+    io.out.rdata    :=  MuxLookup(lsu_op, 0.U)(List(
         ("b" + lsu_x  ).U -> 0.U,
         ("b" + lsu_lb ).U -> lb_rdata,
         ("b" + lsu_lbu).U -> lbu_rdata,
@@ -414,18 +414,18 @@ class Lsu_cache extends Module {
         ("b" + lsu_lw ).U -> lw_rdata,
     ))
 
-    from_cache.ready       := MuxLookup(state_lsu, false.B, List(s_read_wait -> true.B, s_write_wait -> true.B))
+    from_cache.ready       := MuxLookup(state_lsu, false.B)(List(s_read_wait -> true.B, s_write_wait -> true.B))
 
     // axi master signals
-    to_cache.valid         := MuxLookup(state_lsu, false.B, List(s_read_request  -> true.B, s_write_request -> true.B))
+    to_cache.valid         := MuxLookup(state_lsu, false.B)(List(s_read_request  -> true.B, s_write_request -> true.B))
     to_cache.bits.addr     := io.in.addr
     to_cache.bits.wdata    := io.in.wdata
     to_cache.bits.wmask    := wmask
-    to_cache.bits.is_write := MuxLookup(state_lsu, false.B, List(s_write_request  -> true.B, s_write_wait -> true.B))
+    to_cache.bits.is_write := MuxLookup(state_lsu, false.B)(List(s_write_request  -> true.B, s_write_wait -> true.B))
 }
 
 
 // object decoder_main extends App {
-//     emitVerilog(new Ram(), Array("--target-dir", "generated"))
-//     // emitVerilog(new WriteSmem(), Array("--target-dir", "generated"))
+//     emitVerilog(new Ram())(List("--target-dir", "generated"))
+//     // emitVerilog(new WriteSmem())(List("--target-dir", "generated"))
 // }

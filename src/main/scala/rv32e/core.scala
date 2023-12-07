@@ -2,6 +2,7 @@ package rv32e
 
 import chisel3._
 import chisel3.util._
+import chisel3.stage._
 import chisel3.util.BitPat
 import chisel3.util.experimental.decode._
 import rv32e.config.Configs._
@@ -19,6 +20,9 @@ import rv32e.dev.sram_axi_rw
 import rv32e.cache.I_Cache
 import rv32e.cache.D_Cache
 import rv32e.cache.iCacheV2
+import _root_.circt.stage.ChiselStage
+import _root_.circt.stage.CIRCTTargetAnnotation
+import _root_.circt.stage.CIRCTTarget
 
 class out_class extends Bundle {
     val inst     = Output(UInt(INST_WIDTH.W))
@@ -38,9 +42,9 @@ class top extends Module {
     val WBU_i   =   Module(new WBU())
 
     /* ifu connect to sram with axi-lite */
-    val IFU_i   =   Module(new IFU())
-    val sram_i  =   Module(new SRAM())
-    AxiLiteConnect(IFU_i.axi, sram_i.axi)
+    // val IFU_i   =   Module(new IFU())
+    // val sram_i  =   Module(new SRAM())
+    // AxiLiteConnect(IFU_i.axi, sram_i.axi)
 
     /* ifu connect to sram with axi */
     // val IFU_i   =   Module(new IFU_axi())
@@ -48,12 +52,12 @@ class top extends Module {
     // AxiConnect(IFU_i.axi, sram_i.axi)
 
     /* ifu connect to cache */
-    // val IFU_i   =   Module(new IFU_cache())
-    // val icache  =   Module(new iCacheV2())
-    // val sram_i  =   Module(new sram_axi_rw())
-    // StageConnect(IFU_i.to_cache, icache.from_IFU)
-    // StageConnect(icache.to_IFU, IFU_i.from_cache)
-    // AxiConnect(icache.to_sram, sram_i.axi)
+    val IFU_i   =   Module(new IFU_cache())
+    val icache  =   Module(new iCacheV2())
+    val sram_i  =   Module(new sram_axi_rw())
+    StageConnect(IFU_i.to_cache, icache.from_IFU)
+    StageConnect(icache.to_IFU, IFU_i.from_cache)
+    AxiConnect(icache.to_sram, sram_i.axi)
     
     /* lsu connect to mem with axi */
     // val sram_i2 =   Module(new sram_axi_rw())
@@ -89,5 +93,11 @@ class top extends Module {
 }
 
 object top_main extends App {
-    emitVerilog(new top(), Array("--target-dir", "generated/cpu"))
+    // emitVerilog(new top(), Array("--target-dir", "generated/cpu"))
+    // def 
+    // (new ChiselStage).execute(args, Seq(ChiselGeneratorAnnotation(() => new top)))
+    def t = new top()
+    // println(args)
+    val generator = Seq(chisel3.stage.ChiselGeneratorAnnotation(() => t))
+    (new ChiselStage).execute(args, generator :+ CIRCTTargetAnnotation(CIRCTTarget.Verilog))
 }

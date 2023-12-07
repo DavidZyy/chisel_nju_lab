@@ -57,17 +57,17 @@ class EXU extends Module {
             state := s_idle
         }
     }
-    from_ISU.ready := MuxLookup(state, false.B, List(s_idle -> true.B))
-    to_WBU.valid   := MuxLookup(state, false.B, List(s_end  -> true.B))
-    to_IFU.valid   := MuxLookup(state, false.B, List(s_end  -> true.B))
+    from_ISU.ready := MuxLookup(state, false.B)(List(s_idle -> true.B))
+    to_WBU.valid   := MuxLookup(state, false.B)(List(s_end  -> true.B))
+    to_IFU.valid   := MuxLookup(state, false.B)(List(s_end  -> true.B))
 
     // alu
     Alu_i.io.in.op := from_ISU.bits.ctrl_sig.alu_op
-    Alu_i.io.in.src1   := MuxLookup(from_ISU.bits.ctrl_sig.src1_op, 0.U, Array(
+    Alu_i.io.in.src1   := MuxLookup(from_ISU.bits.ctrl_sig.src1_op, 0.U)(List(
         ("b"+src_rf).U  ->  from_ISU.bits.rdata1,
         ("b"+src_pc).U  ->  from_ISU.bits.pc,
     ))
-    Alu_i.io.in.src2   := MuxLookup(from_ISU.bits.ctrl_sig.src2_op, 0.U, Array(
+    Alu_i.io.in.src2   := MuxLookup(from_ISU.bits.ctrl_sig.src2_op, 0.U)(List(
         ("b"+src_rf).U   ->  from_ISU.bits.rdata2,
         ("b"+src_imm).U  ->  from_ISU.bits.imm,
     ))
@@ -83,7 +83,7 @@ class EXU extends Module {
     Lsu_i.io.in.mem_wen := from_ISU.bits.ctrl_sig.mem_wen
     Lsu_i.io.in.op      := from_ISU.bits.ctrl_sig.lsu_op
     // Lsu_i.io.in.valid   := (from_ISU.bits.ctrl_sig.fu_op === ("b"+fu_lsu).U) && (state === s_end)
-    Lsu_i.io.in.valid   := MuxLookup(state, false.B, List(s_wait_lsu -> true.B))
+    Lsu_i.io.in.valid   := MuxLookup(state, false.B)(List(s_wait_lsu -> true.B))
 
     // bru
     Bru_i.io.in.op     := from_ISU.bits.ctrl_sig.bru_op

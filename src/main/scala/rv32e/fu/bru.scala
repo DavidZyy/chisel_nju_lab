@@ -29,7 +29,7 @@ class Bru extends Module {
     val operand1    =   io.in.src1 
     val operand2    =   io.in.src2
 
-    io.out.ctrl_br  :=   MuxLookup(op, 0.U, Array(
+    io.out.ctrl_br  :=   MuxLookup(op, 0.U)(List(
         ("b" + bru_jal ).U  ->   true.B,
         ("b" + bru_jalr).U  ->   true.B,
         ("b" + bru_beq ).U  ->   (operand1 === operand2),

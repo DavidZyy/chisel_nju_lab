@@ -2,8 +2,8 @@ package learn
 
 import chisel3._
 import chisel3.util._
-import chisel3.tester._
-import chisel3.tester.RawTester.test
+// import chisel3.tester._
+// import chisel3.tester.RawTester.test
 import rv32e.config.Cache_Configs._
 import rv32e.config.Configs._
 
@@ -85,44 +85,44 @@ object mem5_main extends App {
 }
 
 // cache 1
-class ReadWriteSmemV extends Module {
-  val io = IO(new Bundle {
-    val enable  = Input(Bool())
-    val write   = Input(Bool())
-    val w_en    = Input(Bool())
-    val addr    = Input(UInt(ADDR_WIDTH.W))
-    val dataIn  = Input(UInt(DATA_WIDTH.W))
-    val dataOut = Output(UInt(DATA_WIDTH.W))
-  })
+// class ReadWriteSmemV extends Module {
+//   val io = IO(new Bundle {
+//     val enable  = Input(Bool())
+//     val write   = Input(Bool())
+//     val w_en    = Input(Bool())
+//     val addr    = Input(UInt(ADDR_WIDTH.W))
+//     val dataIn  = Input(UInt(DATA_WIDTH.W))
+//     val dataOut = Output(UInt(DATA_WIDTH.W))
+//   })
+// 
+//   val random_num = RegInit(0.U(numSetsWidth.W))
+//   random_num := random_num+1.U
+//   val data = VecInit(Seq.fill(4)(io.dataIn))
+//   // val mem = SyncReadMem(12, Vec(4, UInt(2.W)))
+//   val mem = SyncReadMem(12, Vec(4, Vec(4, UInt(2.W))))
+// 
+//   val mask = MuxLookup(random_num, 0.U)(List(
+//     0.U -> "b0001".U,
+//     1.U -> "b0010".U,
+//     2.U -> "b0100".U,
+//     3.U -> "b1000".U,
+//   ))
+// 
+//   // mem.write(io.addr, data, mask.asBools)
+// 
+//   val rdata = mem.read(io.addr, io.enable)
+//   // we coulde use map here to simplify the code
+//   io.dataOut := MuxLookup(random_num, 0.U)(List(
+//     0.U -> rdata(0),
+//     1.U -> rdata(1),
+//     2.U -> rdata(2),
+//     3.U -> rdata(3),
+//   ))
+// }
 
-  val random_num = RegInit(0.U(numSetsWidth.W))
-  random_num := random_num+1.U
-  val data = VecInit(Seq.fill(4)(io.dataIn))
-  // val mem = SyncReadMem(12, Vec(4, UInt(2.W)))
-  val mem = SyncReadMem(12, Vec(4, Vec(4, UInt(2.W))))
-
-  val mask = MuxLookup(random_num, 0.U, List(
-    0.U -> "b0001".U,
-    1.U -> "b0010".U,
-    2.U -> "b0100".U,
-    3.U -> "b1000".U,
-  ))
-
-  // mem.write(io.addr, data, mask.asBools)
-
-  val rdata = mem.read(io.addr, io.enable)
-  // we coulde use map here to simplify the code
-  io.dataOut := MuxLookup(random_num, 0.U, List(
-    0.U -> rdata(0),
-    1.U -> rdata(1),
-    2.U -> rdata(2),
-    3.U -> rdata(3),
-  ))
-}
-
-object mem3_main extends App {
-    emitVerilog(new ReadWriteSmemV(), Array("--target-dir", "generated"))
-}
+// object mem3_main extends App {
+//     emitVerilog(new ReadWriteSmemV(), Array("--target-dir", "generated"))
+// }
 
 class ReadWriteSmemV2 extends Module {
   val width: Int = 16
