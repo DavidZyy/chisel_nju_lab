@@ -17,9 +17,7 @@ import rv32e.utils.AxiConnect
 import rv32e.utils.AxiLiteConnect
 import rv32e.dev.SRAM_axi
 import rv32e.dev.sram_axi_rw
-import rv32e.cache.I_Cache
-import rv32e.cache.D_Cache
-import rv32e.cache.iCacheV2
+import rv32e.cache._
 import _root_.circt.stage.ChiselStage
 import _root_.circt.stage.CIRCTTargetAnnotation
 import _root_.circt.stage.CIRCTTarget
@@ -52,11 +50,14 @@ class top extends Module {
     // AxiConnect(IFU_i.axi, sram_i.axi)
 
     /* ifu connect to cache */
-    val IFU_i   =   Module(new IFU_cache())
-    val icache  =   Module(new iCacheV2())
+    // val IFU_i   =   Module(new IFU_cache())
+    // val icache  =   Module(new iCacheV2())
+    val IFU_i   =   Module(new IFU_simpleBus)
+    val icache  =   Module(new Icache_SimpleBus())
     val sram_i  =   Module(new sram_axi_rw())
-    StageConnect(IFU_i.to_cache, icache.from_IFU)
-    StageConnect(icache.to_IFU, IFU_i.from_cache)
+    // StageConnect(IFU_i.to_cache, icache.from_IFU)
+    // StageConnect(icache.to_IFU, IFU_i.from_cache)
+    IFU_i.to_mem <> icache.from_ifu
     AxiConnect(icache.to_sram, sram_i.axi)
     
     /* lsu connect to mem with axi */
@@ -64,10 +65,12 @@ class top extends Module {
     // AxiConnect(EXU_i.lsu_axi_master, sram_i2.axi)
 
     /* lsu connect to cache */
-    val dcache  =   Module(new D_Cache())
+    // val dcache  =   Module(new D_Cache())
+    val dcache  =   Module(new Dcache_SimpleBus())
     val sram_i2 =   Module(new sram_axi_rw())
-    StageConnect(EXU_i.lsu_to_cache, dcache.from_LSU)
-    StageConnect(dcache.to_LSU, EXU_i.lsu_from_cache)
+    // StageConnect(EXU_i.lsu_to_cache, dcache.from_LSU)
+    // StageConnect(dcache.to_LSU, EXU_i.lsu_from_cache)
+    EXU_i.lsu_to_mem <> dcache.from_lsu
     AxiConnect(dcache.to_sram, sram_i2.axi)
 
     // val sram_i  =   Module(new SRAM())

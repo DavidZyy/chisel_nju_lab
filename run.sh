@@ -20,8 +20,11 @@ else
   echo "File $file_name does not exist."
 fi
 
+# split verilog codes
+cd "generated"
+source ../scripts/extract_files.sh ./top.v
+
 # Define the source directory
-# source_dir="/home/zhuyangyang/project/nju_digital_design_chisel/chisel-empty/generated"
 source_dir="/home/zhuyangyang/project/CPU/chisel-empty/generated"
 # Define the destination directory
 destination_dir="/home/zhuyangyang/project/ysyx-workbench/npc/vsrc"
@@ -32,13 +35,10 @@ if [ -d "$source_dir" ]; then
   # Create the destination directory if it doesn't exist
   mkdir -p "$destination_dir"
 
-  # Search for .v files in the source directory and copy them to the destination directory
-  # find "$source_dir" -type f -name "*.v" -name "*.sv" -exec cp {} "$destination_dir" \;
+  # Search for .v and .sv files in the source directory and copy them to the destination directory
   find "$source_dir" -type f \( -name "*.v" -o -name "*.sv" \) -exec cp {} "$destination_dir" \;
 
   echo "Copied .v files from $source_dir to $destination_dir"
 else
   echo "Source directory $source_dir does not exist."
 fi
-
-# cp /home/zhuyangyang/project/nju_digital_design_chisel/chisel-empty/generated/top.v /home/zhuyangyang/project/ysyx-workbench/npc/vsrc

@@ -1,4 +1,0 @@
-generated/RamBB.v
-generated/RegisterFileBB.v
-generated/NotImplBB.v
-generated/EbreakBB.v
