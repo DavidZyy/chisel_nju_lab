@@ -16,7 +16,7 @@ import rv32e.bus._
 import rv32e.utils.LFSR
 
 class SRAM_axi extends Module {
-    val axi = IO(new AXIIO_slave)
+    val axi = IO(Flipped(new AXIIO))
 
     val lfsr = Module(new LFSR())
     val delay = RegInit(0.U)
@@ -83,7 +83,7 @@ class SRAM_axi extends Module {
 }
 
 class sram_axi_rw extends Module {
-    val axi = IO(new AXIIO_slave)
+    val axi = IO(Flipped(new AXIIO))
 
     val lfsr = Module(new LFSR())
     val delay = RegInit(0.U)

@@ -159,7 +159,7 @@ class Lsu_axi extends Module {
         val in  = (new ram_in_class )
         val out = (new ram_out_class)
     })
-    val axi = IO(new AXIIO_master)
+    val axi = IO(new AXIIO)
 
     // state_lsu machine, issue aw signals in write_request, issue w signals in write_wait
     val s_idle :: s_read_request :: s_read_wait :: s_write_request :: s_write_wait :: s_end :: Nil = Enum(6)

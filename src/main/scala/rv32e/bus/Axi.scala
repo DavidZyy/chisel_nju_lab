@@ -9,15 +9,7 @@ import rv32e.config.Configs._
 import rv32e.config.Cache_Configs._
 import rv32e.config.Axi_Configs._
 
-class AXIIO_slave extends Bundle {
-  val ar = Flipped(Decoupled(new AXIReadAddressChannel))
-  val r  = Decoupled(new AXIReadDataChannel)
-  val aw = Flipped(Decoupled(new AXIWriteAddressChannel))
-  val w  = Flipped(Decoupled(new AXIWriteDataChannel))
-  val b  = Decoupled(new AXIWriteResponseChannel)
-}
-
-class AXIIO_master extends Bundle {
+class AXIIO extends Bundle {
   val ar = Decoupled(new AXIReadAddressChannel)
   val r  = Flipped(Decoupled(new AXIReadDataChannel))
   val aw = Decoupled(new AXIWriteAddressChannel)

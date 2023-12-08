@@ -82,7 +82,7 @@ class IFU_axi extends Module {
     val to_IDU   = IO(Decoupled(new IFU2IDU_bus)) // only to IDU signal
     val from_EXU = IO(Flipped(Decoupled(new EXU2IFU_bus)))
     val from_WBU = IO(Flipped(Decoupled(new WBU2IFU_bus)))
-    val axi      = IO(new AXIIO_master)
+    val axi      = IO(new AXIIO)
 
     val reg_PC  = RegInit(UInt(ADDR_WIDTH.W), START_ADDR.U)
     val next_PC = Wire(UInt(ADDR_WIDTH.W))

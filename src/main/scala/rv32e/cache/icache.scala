@@ -16,7 +16,7 @@ class I_Cache extends Module {
     val from_IFU = IO(Flipped(Decoupled(new IFU2Cache_bus)))
     val to_IFU   = IO(Decoupled(new Cache2IFU_bus))
     // val to_Arb   = IO(new AXILiteIO_master) // to Arbiter
-    val to_sram  = IO(new AXIIO_master) // to Arbiter
+    val to_sram  = IO(new AXIIO) // to Arbiter
 
     val replace_set = RegInit(0.U)
     val EntId       = from_IFU.bits.addr(ent_MSB, ent_LSB)
@@ -112,7 +112,7 @@ class I_Cache extends Module {
 class iCacheV2 extends Module {
     val from_IFU = IO(Flipped(Decoupled(new IFU2Cache_bus)))
     val to_IFU   = IO(Decoupled(new Cache2IFU_bus))
-    val to_sram  = IO(new AXIIO_master) // to Arbiter
+    val to_sram  = IO(new AXIIO) // to Arbiter
 
     val replace_set = RegInit(0.U)
     val EntId       = from_IFU.bits.addr(ent_MSB, ent_LSB)
@@ -211,7 +211,7 @@ class iCacheV2 extends Module {
 
 class Icache_SimpleBus extends Module {
     val from_ifu = IO(Flipped(new SimpleBus))
-    val to_sram  = IO(new AXIIO_master) // to Arbiter
+    val to_sram  = IO(new AXIIO) // to Arbiter
 
     val replace_set = RegInit(0.U)
     val EntId       = from_ifu.req.bits.addr(ent_MSB, ent_LSB)

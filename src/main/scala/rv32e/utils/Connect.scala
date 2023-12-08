@@ -3,8 +3,7 @@ import chisel3._
 import chisel3.util._
 import rv32e.bus.AXILiteIO_master
 import rv32e.bus.AXILiteIO_slave
-import rv32e.bus.AXIIO_master
-import rv32e.bus.AXIIO_slave
+import rv32e.bus.AXIIO
 
 // left -> right
 object StageConnect {
@@ -41,7 +40,7 @@ object AxiLiteConnect {
 }
 
 object AxiConnect {
-    def apply(master: AXIIO_master, slave: AXIIO_slave) = {
+    def apply(master: AXIIO, slave: AXIIO) = {
         StageConnect(master.ar, slave.ar)
         StageConnect(slave.r, master.r)
 
