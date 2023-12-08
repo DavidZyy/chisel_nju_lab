@@ -5,11 +5,12 @@ import chisel3._
 import chisel3.util._
 import rv32e.config.Configs._
 import rv32e.define.Dec_Info._
+import rv32e.config.Axi_Configs._
 
 // ifu to idu bus
 class IFU2IDU_bus extends Bundle {
-    val inst    =   Output(UInt(ADDR_WIDTH.W)) 
-    val pc      =   Output(UInt(ADDR_WIDTH.W))       
+    val inst    =   Output(UInt(ADDR_WIDTH.W))
+    val pc      =   Output(UInt(ADDR_WIDTH.W))      
 }
 
 /* contrl signals */
@@ -42,6 +43,7 @@ class ISU2EXU_bus extends Bundle {
     val pc       = Output(UInt(ADDR_WIDTH.W))
     val rdata1   = Output(UInt(DATA_WIDTH.W))
     val rdata2   = Output(UInt(DATA_WIDTH.W))
+    val rd       = Output(UInt(REG_OP_WIDTH.W))
     val ctrl_sig = new IDU_CtrlSig
 }
 
@@ -52,21 +54,45 @@ class EXU2WBU_bus extends Bundle {
     val csr_rdata  = Output(UInt(DATA_WIDTH.W))
     val pc         = Output(UInt(ADDR_WIDTH.W))
     val reg_wen    = Output(Bool()) // idu -> isu -> exu -> wbu -> isu
-    val fu_op     = Output(UInt(FU_TYPEOP_WIDTH.W)) // used in wb stage
+    val rd         = Output(UInt(REG_OP_WIDTH.W))
+    val fu_op      = Output(UInt(FU_TYPEOP_WIDTH.W)) // used in wb stage
 }
 
 class EXU2IFU_bus extends Bundle {
     val bru_ctrl_br     = Output(Bool()) 
-    val bru_addr   = Output(UInt(ADDR_WIDTH.W)) // from alu
+    val bru_addr        = Output(UInt(ADDR_WIDTH.W)) // from alu
     val csr_ctrl_br     = Output(Bool())
-    val csr_addr   = Output(UInt(ADDR_WIDTH.W))
+    val csr_addr        = Output(UInt(ADDR_WIDTH.W))
 }
 
 class WBU2ISU_bus extends Bundle {
     val reg_wen   = Output(Bool())
     val wdata     = Output(UInt(DATA_WIDTH.W))
+    val rd        = Output(UInt(REG_OP_WIDTH.W))
 }
 
 class WBU2IFU_bus extends Bundle {
 
+}
+
+class IFU2Cache_bus extends Bundle {
+    val addr = Output(UInt(ADDR_WIDTH.W))
+}
+
+class Cache2IFU_bus extends Bundle {
+    val data = Output(UInt(DATA_WIDTH.W))
+}
+
+class LSU2Cache_bus extends Bundle {
+    val addr      = Output(UInt(ADDR_WIDTH.W))
+
+    val wdata     = Output(UInt(DATA_WIDTH.W))
+    val is_write  = Output(Bool())
+    val wmask     = Output(UInt(DATA_WIDTH.W))
+}
+
+class Cache2LSU_bus extends Bundle {
+    val data = Output(UInt(DATA_WIDTH.W))
+
+    val bresp = Output(Bool())  // write response
 }

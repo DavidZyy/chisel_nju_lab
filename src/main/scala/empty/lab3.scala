@@ -26,7 +26,7 @@ class alu extends Module {
     io.carry    := 0.U
     io.overflow := 0.U
 
-    io.Result   := MuxLookup(io.op, 0.U, Seq(
+    io.Result   := MuxLookup(io.op, 0.U)(Seq(
         "b000".U -> (io.A + io.B),
         "b001".U -> (io.A - io.B),
         "b010".U -> ~(io.A),

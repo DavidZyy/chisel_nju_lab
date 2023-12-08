@@ -44,37 +44,37 @@ class Csr extends Module {
   val reg_mtvec_csrrw    = WireInit(0.U(DATA_WIDTH.W))
   val reg_mtvec_csrrs    = WireInit(0.U(DATA_WIDTH.W))
 
-  reg_mcause_csrrw := MuxLookup(io.in.csr_id, reg_mcause, Array(
+  reg_mcause_csrrw := MuxLookup(io.in.csr_id, reg_mcause)(List(
     mcause_id  -> io.in.wdata,
   ))
-  reg_mcause_csrrs := MuxLookup(io.in.csr_id, reg_mcause, Array(
+  reg_mcause_csrrs := MuxLookup(io.in.csr_id, reg_mcause)(List(
     mcause_id  -> (io.in.wdata | reg_mcause),
   ))
-  reg_mcause := MuxLookup(io.in.op, reg_mcause, Array(
+  reg_mcause := MuxLookup(io.in.op, reg_mcause)(List(
     ("b" + csr_ecall ).U  ->   0xb.U,
     ("b" + csr_csrrw ).U  ->   reg_mcause_csrrw,
     ("b" + csr_csrrs ).U  ->   reg_mcause_csrrs,
   ))
 
-  reg_mepc_csrrw := MuxLookup(io.in.csr_id, reg_mepc, Array(
+  reg_mepc_csrrw := MuxLookup(io.in.csr_id, reg_mepc)(List(
     mepc_id  -> io.in.wdata,
   ))
-  reg_mepc_csrrs := MuxLookup(io.in.csr_id, reg_mepc, Array(
+  reg_mepc_csrrs := MuxLookup(io.in.csr_id, reg_mepc)(List(
     mepc_id  -> (io.in.wdata | reg_mepc),
   ))
-  reg_mepc := MuxLookup(io.in.op, reg_mepc, Array(
+  reg_mepc := MuxLookup(io.in.op, reg_mepc)(List(
     ("b" + csr_ecall ).U  ->   io.in.cur_pc,
     ("b" + csr_csrrw ).U  ->   reg_mepc_csrrw,
     ("b" + csr_csrrs ).U  ->   reg_mepc_csrrs,
   ))
 
-  reg_mstatus_csrrw := MuxLookup(io.in.csr_id, reg_mstatus, Array(
+  reg_mstatus_csrrw := MuxLookup(io.in.csr_id, reg_mstatus)(List(
     mstatus_id  -> io.in.wdata,
   ))
-  reg_mstatus_csrrs := MuxLookup(io.in.csr_id, reg_mstatus, Array(
+  reg_mstatus_csrrs := MuxLookup(io.in.csr_id, reg_mstatus)(List(
     mstatus_id  -> (io.in.wdata | reg_mstatus),
   ))
-  reg_mstatus := MuxLookup(io.in.op, reg_mstatus, Array(
+  reg_mstatus := MuxLookup(io.in.op, reg_mstatus)(List(
     ("b" + csr_ecall ).U  ->   Cat( reg_mstatus(sd_MSB, fs_LSB),
                                     "b11".U,
                                     reg_mstatus(wpri3_MSB, spp_LSB),
@@ -93,29 +93,29 @@ class Csr extends Module {
     ("b" + csr_csrrs ).U  ->   reg_mstatus_csrrs,
   ))
 
-  reg_mtvec_csrrw := MuxLookup(io.in.csr_id, reg_mtvec, Array(
+  reg_mtvec_csrrw := MuxLookup(io.in.csr_id, reg_mtvec)(List(
     mtvec_id  -> io.in.wdata,
   ))
-  reg_mtvec_csrrs := MuxLookup(io.in.csr_id, reg_mtvec, Array(
+  reg_mtvec_csrrs := MuxLookup(io.in.csr_id, reg_mtvec)(List(
     mtvec_id  -> (io.in.wdata | reg_mtvec),
   ))
-  reg_mtvec := MuxLookup(io.in.op, reg_mtvec, Array(
+  reg_mtvec := MuxLookup(io.in.op, reg_mtvec)(List(
     ("b" + csr_csrrw ).U  ->   reg_mtvec_csrrw,
     ("b" + csr_csrrs ).U  ->   reg_mtvec_csrrs,
   ))
 
-  io.out.csr_br := MuxLookup(io.in.op, false.B, Array(
+  io.out.csr_br := MuxLookup(io.in.op, false.B)(List(
     ("b" + csr_ecall ).U  ->   true.B,
     ("b" + csr_mret  ).U  ->   true.B,
   ))
 
-  io.out.csr_addr :=  MuxLookup(io.in.op, 0.U, Array(
+  io.out.csr_addr :=  MuxLookup(io.in.op, 0.U)(List(
     ("b" + csr_ecall ).U  ->   reg_mtvec,
     ("b" + csr_mret  ).U  ->   reg_mepc,
   ))
 
   // io.out.r_csr  :=  r_csr
-  io.out.r_csr   :=  MuxLookup(io.in.csr_id, 0.U, Array(
+  io.out.r_csr   :=  MuxLookup(io.in.csr_id, 0.U)(List(
     mtvec_id    -> reg_mtvec,
     mepc_id     -> reg_mepc,
     mcause_id   -> reg_mcause,
@@ -129,6 +129,6 @@ class Csr extends Module {
 }
 
 // object csr_main extends App {
-//     emitVerilog(new CSR(), Array("--target-dir", "generated"))
-//     // emitVerilog(new WriteSmem(), Array("--target-dir", "generated"))
+//     emitVerilog(new CSR())(List("--target-dir", "generated"))
+//     // emitVerilog(new WriteSmem())(List("--target-dir", "generated"))
 // }

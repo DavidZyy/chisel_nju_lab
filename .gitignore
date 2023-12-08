@@ -9,5 +9,6 @@ generated/
 target/
 test_run_dir/
 project/
+out/
 
 # !src/

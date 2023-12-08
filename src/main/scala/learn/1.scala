@@ -2,6 +2,7 @@ package learn
 
 import chisel3._
 import chisel3.util.Counter
+import scala.math._
 
 object aamain  extends App {
     val m = VecInit(1.U, 2.U, 4.U, 8.U)
@@ -36,3 +37,34 @@ object main extends App {
   
 }
 
+
+object yield_main extends App {
+  val hitarray = for (i <- 0 until 100) yield {
+    i
+  }
+  println(hitarray)
+}
+
+object log_main extends App {
+  val number = 16
+  val logBase2 = log(number) / log(2)
+
+  println(logBase2)
+}
+
+object addmain extends App {
+  val devAddrSpace = List(
+    (0x40600000L, 0x10L), // uart
+    (0x50000000L, 0x400000L), // vmem
+    (0x40001000L, 0x8L),  // vga ctrl
+    (0x40000000L, 0x1000L),  // flash
+    (0x40002000L, 0x1000L), // dummy sdcard
+    (0x40004000L, 0x1000L), // meipGen
+    (0x40003000L, 0x1000L)  // dma
+  )
+  
+  val addr = 0x1L
+  val outMatchVec = devAddrSpace.map(
+    range => (addr >= range._1 && addr < (range._1 + range._2)))
+  println(outMatchVec)
+}

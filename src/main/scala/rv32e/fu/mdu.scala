@@ -31,7 +31,7 @@ class Mdu extends Module {
     val shamt = operand2(4, 0)
 
     io.out.result   :=
-    MuxLookup(mdu_op, 0.U, Array(
+    MuxLookup(mdu_op, 0.U)(List(
         ("b" + mdu_x     ).U  -> 0.U,
         ("b" + mdu_mul   ).U  -> (operand1 * operand2).asUInt,
         ("b" + mdu_mulh  ).U  -> ((operand1.asSInt * operand2.asSInt) >> DATA_WIDTH).asUInt,
