@@ -6,7 +6,7 @@ import rv32e.define.Dec_Info._
 import rv32e.fu._
 import rv32e.bus._
 import rv32e.utils.DiffCsr
-import rv32e.dev.SRAM
+import rv32e.device.SRAM
 import rv32e.utils.StageConnect
 import rv32e.bus.Arbiter
 import rv32e.bus.AXILiteIO_master

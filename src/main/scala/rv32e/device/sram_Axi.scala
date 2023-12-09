@@ -2,7 +2,7 @@
   * a sram module use dpi-c as axi slave
   * refer https://zipcpu.com/blog/2019/05/29/demoaxi.html
   */
-package rv32e.dev
+package rv32e.device
 
 import chisel3._
 import chisel3.util._

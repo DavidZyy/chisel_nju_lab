@@ -34,9 +34,9 @@ class SimpleBusCrossBar1toN(addressSpace: List[(Long, Long)]) extends Module {
             when (io.in.req.fire) { state := s_resp}
             when (reqInvalidAddr) { state := s_error}
         }
+        is (s_resp)  {when (io.in.resp.fire) {state := s_idle}}
+        is (s_error) {when (io.in.resp.fire) {state := s_idle}}
     }
-    is (s_resp)  {when (io.in.resp.fire) {state := s_idle}}
-    is (s_error) {when (io.in.resp.fire) {state := s_idle}}
 
     // in.req
     io.in.req.ready  := Mux1H(outSelVec, io.out.map(_.req.ready)) || reqInvalidAddr
