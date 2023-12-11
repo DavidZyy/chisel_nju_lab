@@ -13,19 +13,6 @@ import rv32e.bus._
 class IDU extends Module {
     val from_IFU  = IO(Flipped(Decoupled(new IFU2IDU_bus))) // only to IFU signal
     val to_ISU    = IO(Decoupled(new IDU2ISU_bus))
-    from_IFU.ready := true.B
-    to_ISU.valid   := from_IFU.valid
-
-    // val s_idle :: s_busy :: Nil = Enum(2)
-    // val state = RegInit(s_idle)
-    // state := MuxLookup(state, s_idle)(List(
-    //     s_idle  -> Mux(from_IFU.valid, s_busy, s_idle),
-    //     s_busy  -> s_idle
-    // ))
-    // from_IFU.ready  :=  MuxLookup(state, false.B)(List(
-    //     s_idle  ->  true.B,
-    //     s_busy  ->  false.B
-    // ))
 
     val imm_i   =   Cat(Fill(20, from_IFU.bits.inst(31)), from_IFU.bits.inst(31, 20))
     val imm_s   =   Cat(Fill(20, from_IFU.bits.inst(31)), from_IFU.bits.inst(31, 25), from_IFU.bits.inst(11, 7))
@@ -116,12 +103,17 @@ MRET    ->  BitPat("b" + fu_csr + lsu_x + bru_x + i_type  + alu_x + src_x + src_
         ("b"+ u_type).U -> imm_u,
         ("b"+ j_type).U -> imm_j
     ))
-    to_ISU.bits.rs1 := from_IFU.bits.inst(19, 15)
-    to_ISU.bits.rs2 := from_IFU.bits.inst(24, 20)
-    to_ISU.bits.rd  := from_IFU.bits.inst(11, 7)
-    to_ISU.bits.pc  := from_IFU.bits.pc
 
-    // from MSB to LSB
+    // to ifu
+    from_IFU.ready  := to_ISU.ready
+    
+    // to isu
+    to_ISU.valid     := from_IFU.valid
+    to_ISU.bits.rs1  := from_IFU.bits.inst(19, 15)
+    to_ISU.bits.rs2  := from_IFU.bits.inst(24, 20)
+    to_ISU.bits.rd   := from_IFU.bits.inst(11, 7)
+    to_ISU.bits.pc   := from_IFU.bits.pc
+    to_ISU.bits.inst := from_IFU.bits.inst
     to_ISU.bits.ctrl_sig.mdu_op   :=  decode_info(MDUOP_MSB, MDUOP_LSB)
     to_ISU.bits.ctrl_sig.csr_op   :=  decode_info(CSROP_MSB, CSROP_LSB)
     to_ISU.bits.ctrl_sig.not_impl :=  decode_info(NotImpl_OP_MSB, NotImpl_OP_LSB)

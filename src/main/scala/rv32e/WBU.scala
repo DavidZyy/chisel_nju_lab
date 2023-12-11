@@ -11,14 +11,17 @@ class WBU extends Module {
     val from_EXU = IO(Flipped(Decoupled(new EXU2WBU_bus)))
     val to_ISU   = IO(Decoupled(new WBU2ISU_bus))
     val to_IFU   = IO(Decoupled(new WBU2IFU_bus))
+
+    // to exu
     from_EXU.ready := true.B
-    to_ISU.valid   := true.B
+
+    // to ifu
     to_IFU.valid   := from_EXU.valid // finish signal
 
-    // if not valid, don't reg_wen !!
+    // to isu
+    to_ISU.valid        := true.B
     to_ISU.bits.reg_wen := Mux(from_EXU.fire, from_EXU.bits.reg_wen, false.B)
     to_ISU.bits.rd      := from_EXU.bits.rd
-
     to_ISU.bits.wdata   := MuxLookup(from_EXU.bits.fu_op, 0.U)(List(
         ("b"+fu_alu).U  ->  from_EXU.bits.alu_result,
         ("b"+fu_lsu).U  ->  from_EXU.bits.lsu_rdata,
@@ -27,4 +30,3 @@ class WBU extends Module {
         ("b"+fu_mdu).U  ->  from_EXU.bits.mdu_result,
     ))
 }
-

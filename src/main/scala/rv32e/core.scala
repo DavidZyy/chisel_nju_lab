@@ -24,12 +24,14 @@ import _root_.circt.stage.CIRCTTargetAnnotation
 import _root_.circt.stage.CIRCTTarget
 import rv32e.bus._
 import rv32e.device._
+import rv32e.utils._
 
 class out_class extends Bundle {
     val inst     = Output(UInt(INST_WIDTH.W))
     val pc       = Output(UInt(DATA_WIDTH.W))
     val difftest = new DiffCsr
     val wb       = Output(Bool())
+    val wb_inst     = Output(UInt(INST_WIDTH.W)) // for not optimize signal to debug
 }
 
 class top extends Module {
@@ -39,7 +41,8 @@ class top extends Module {
 
     val IDU_i   =   Module(new IDU())
     val ISU_i   =   Module(new ISU())
-    val EXU_i   =   Module(new EXU()) 
+    val EXU_i   =   Module(new EXU_pipeline()) 
+    // val EXU_i   =   Module(new EXU()) 
     val WBU_i   =   Module(new WBU())
 
     /* ifu connect to cache */
@@ -67,8 +70,10 @@ class top extends Module {
 
     EXU_i.to_IFU <> IFU_i.from_EXU
     IFU_i.to_IDU <> IDU_i.from_IFU
+    // PipelineConnect(IFU_i.to_IDU, IDU_i.from_IFU, false.B)
     IDU_i.to_ISU <> ISU_i.from_IDU
-    StageConnect_reg(ISU_i.to_EXU, EXU_i.from_ISU)
+    // StageConnect_reg(ISU_i.to_EXU, EXU_i.from_ISU)
+    PipelineConnect(ISU_i.to_EXU, EXU_i.from_ISU, EXU_i.to_WBU.fire, false.B)
     EXU_i.to_WBU <> WBU_i.from_EXU
     WBU_i.to_ISU <> ISU_i.from_WBU
     WBU_i.to_IFU <> IFU_i.from_WBU
@@ -76,7 +81,7 @@ class top extends Module {
     io.out.inst    := IFU_i.to_IDU.bits.inst
     io.out.pc      := IFU_i.to_IDU.bits.pc
     io.out.wb      := WBU_i.to_IFU.valid
-
+    io.out.wb_inst := WBU_i.from_EXU.bits.inst
     io.out.difftest <> EXU_i.difftest
 }
 

@@ -36,6 +36,8 @@ class IDU2ISU_bus extends Bundle {
     val rs2      = Output(UInt(REG_OP_WIDTH.W))
     val rd       = Output(UInt(REG_OP_WIDTH.W))
     val ctrl_sig = new IDU_CtrlSig
+
+    val inst    =   Output(UInt(ADDR_WIDTH.W)) // for debug
 }
 
 class ISU2EXU_bus extends Bundle {
@@ -45,6 +47,12 @@ class ISU2EXU_bus extends Bundle {
     val rdata2   = Output(UInt(DATA_WIDTH.W))
     val rd       = Output(UInt(REG_OP_WIDTH.W))
     val ctrl_sig = new IDU_CtrlSig
+
+    def isLSU    = ctrl_sig.fu_op === ("b"+fu_lsu).U
+    def isBRU    = ctrl_sig.fu_op === ("b"+fu_bru).U
+    def isCSR    = ctrl_sig.fu_op === ("b"+fu_csr).U
+
+    val inst    =   Output(UInt(ADDR_WIDTH.W)) // for debug
 }
 
 class EXU2WBU_bus extends Bundle {
@@ -56,6 +64,8 @@ class EXU2WBU_bus extends Bundle {
     val reg_wen    = Output(Bool()) // idu -> isu -> exu -> wbu -> isu
     val rd         = Output(UInt(REG_OP_WIDTH.W))
     val fu_op      = Output(UInt(FU_TYPEOP_WIDTH.W)) // used in wb stage
+
+    val inst    =   Output(UInt(ADDR_WIDTH.W)) // for debug
 }
 
 class EXU2IFU_bus extends Bundle {
