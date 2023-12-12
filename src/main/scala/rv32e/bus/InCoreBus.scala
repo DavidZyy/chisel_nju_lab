@@ -51,8 +51,10 @@ class ISU2EXU_bus extends Bundle {
     def isLSU    = ctrl_sig.fu_op === ("b"+fu_lsu).U
     def isBRU    = ctrl_sig.fu_op === ("b"+fu_bru).U
     def isCSR    = ctrl_sig.fu_op === ("b"+fu_csr).U
+    def isALU    = ctrl_sig.fu_op === ("b"+fu_alu).U
+    def isMDU    = ctrl_sig.fu_op === ("b"+fu_mdu).U
 
-    val inst    =   Output(UInt(ADDR_WIDTH.W)) // for debug
+    val inst     = Output(UInt(ADDR_WIDTH.W)) // for debug
 }
 
 class EXU2WBU_bus extends Bundle {

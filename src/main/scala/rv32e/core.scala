@@ -25,6 +25,7 @@ import _root_.circt.stage.CIRCTTarget
 import rv32e.bus._
 import rv32e.device._
 import rv32e.utils._
+import rv32e.define.Dec_Info
 
 class out_class extends Bundle {
     val inst     = Output(UInt(INST_WIDTH.W))
@@ -46,7 +47,8 @@ class top extends Module {
     val WBU_i   =   Module(new WBU())
 
     /* ifu connect to cache */
-    val IFU_i   =   Module(new IFU_simpleBus)
+    // val IFU_i   =   Module(new IFU_simpleBus)
+    val IFU_i   =   Module(new IFU_pipeline())
     val icache  =   Module(new Icache_SimpleBus())
     val sram_i  =   Module(new sram_axi_rw())
     IFU_i.to_mem   <> icache.from_ifu
@@ -70,18 +72,24 @@ class top extends Module {
 
     EXU_i.to_IFU <> IFU_i.from_EXU
     IFU_i.to_IDU <> IDU_i.from_IFU
-    // PipelineConnect(IFU_i.to_IDU, IDU_i.from_IFU, false.B)
     IDU_i.to_ISU <> ISU_i.from_IDU
-    // StageConnect_reg(ISU_i.to_EXU, EXU_i.from_ISU)
-    PipelineConnect(ISU_i.to_EXU, EXU_i.from_ISU, EXU_i.to_WBU.fire, false.B)
+    // PipelineConnect(ISU_i.to_EXU, EXU_i.from_ISU, EXU_i.to_WBU.fire, false.B)
+    // val wb_sig = (EXU_i.from_ISU.bits.isBRU && EXU_i.to_IFU.fire) || EXU_i.to_WBU.fire
+    val wb_sig = MuxLookup(EXU_i.from_ISU.bits.ctrl_sig.fu_op, EXU_i.to_WBU.fire)(List(
+        ("b"+Dec_Info.fu_bru).U -> EXU_i.to_IFU.fire,
+        ("b"+Dec_Info.fu_csr).U -> EXU_i.to_IFU.fire,
+    ))
+    // PipelineConnect(ISU_i.to_EXU, EXU_i.from_ISU, wb_sig, EXU_i.from_ISU.bits.isBRU && EXU_i.from_ISU.valid && ISU_i.to_EXU.fire)
+    PipelineConnect(ISU_i.to_EXU, EXU_i.from_ISU, wb_sig, (EXU_i.to_IFU.bits.bru_ctrl_br || EXU_i.to_IFU.bits.csr_ctrl_br) && EXU_i.from_ISU.valid && ISU_i.to_EXU.fire)
+    // PipelineConnect(ISU_i.to_EXU, EXU_i.from_ISU, EXU_i.to_WBU.fire, EXU_i.from_ISU.bits.isBRU)
     EXU_i.to_WBU <> WBU_i.from_EXU
     WBU_i.to_ISU <> ISU_i.from_WBU
-    WBU_i.to_IFU <> IFU_i.from_WBU
+    // WBU_i.to_IFU <> IFU_i.from_WBU
 
-    io.out.inst    := IFU_i.to_IDU.bits.inst
-    io.out.pc      := IFU_i.to_IDU.bits.pc
-    io.out.wb      := WBU_i.to_IFU.valid
-    io.out.wb_inst := WBU_i.from_EXU.bits.inst
+    io.out.inst     := IFU_i.to_IDU.bits.inst
+    io.out.pc       := IFU_i.to_IDU.bits.pc
+    io.out.wb       := WBU_i.from_EXU.valid
+    io.out.wb_inst  := WBU_i.from_EXU.bits.inst
     io.out.difftest <> EXU_i.difftest
 }
 

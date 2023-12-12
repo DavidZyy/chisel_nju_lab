@@ -166,10 +166,10 @@ class EXU_pipeline extends Module {
     Csr_i.io.in.wdata   :=  from_ISU.bits.rdata1
 
     // ebreak
-    ebreak_moudle_i.is_ebreak  := from_ISU.bits.ctrl_sig.is_ebreak
+    ebreak_moudle_i.is_ebreak  := from_ISU.bits.ctrl_sig.is_ebreak && from_ISU.valid
 
     // not implemented
-    not_impl_moudle_i.not_impl := from_ISU.bits.ctrl_sig.not_impl
+    not_impl_moudle_i.not_impl := from_ISU.bits.ctrl_sig.not_impl && from_ISU.valid
 
     // to isu
     from_ISU.ready := MuxLookup(from_ISU.bits.ctrl_sig.fu_op, true.B)(List(
@@ -177,12 +177,14 @@ class EXU_pipeline extends Module {
           * from_ISU is not valid means the result has been committed to WB, so we are ready to receive the
           * next inst.
           */ 
-        ("b"+fu_lsu).U -> (~from_ISU.valid || Lsu_i.io.out.end) 
+        ("b"+fu_lsu).U -> (~from_ISU.valid || Lsu_i.io.out.end)
     ))
 
     // to wbu, logical not right here.
     to_WBU.valid := from_ISU.fire && MuxLookup(from_ISU.bits.ctrl_sig.fu_op, true.B)(List(
-        ("b"+fu_lsu).U -> Lsu_i.io.out.end
+        ("b"+fu_lsu).U -> Lsu_i.io.out.end,
+        ("b"+fu_csr).U -> to_IFU.fire, // write rf and pc at the same cycle
+        ("b"+fu_bru).U -> to_IFU.fire,
     ))
     to_WBU.bits.alu_result := Alu_i.io.out.result
     to_WBU.bits.mdu_result := Mdu_i.io.out.result
@@ -194,11 +196,11 @@ class EXU_pipeline extends Module {
     to_WBU.bits.fu_op      := from_ISU.bits.ctrl_sig.fu_op
     to_WBU.bits.rd         := from_ISU.bits.rd
 
-    // to ifu
+    // to ifu, branch control's wirte back signal should be put to IFU
     to_IFU.valid            := true.B
-    to_IFU.bits.bru_ctrl_br := Bru_i.io.out.ctrl_br && from_ISU.bits.isBRU
+    to_IFU.bits.bru_ctrl_br := Bru_i.io.out.ctrl_br && from_ISU.bits.isBRU && from_ISU.fire
     to_IFU.bits.bru_addr    := Alu_i.io.out.result
-    to_IFU.bits.csr_ctrl_br := Csr_i.io.out.csr_br  && from_ISU.bits.isCSR
+    to_IFU.bits.csr_ctrl_br := Csr_i.io.out.csr_br  && from_ISU.bits.isCSR && from_ISU.fire
     to_IFU.bits.csr_addr    := Csr_i.io.out.csr_addr
 
     difftest <> Csr_i.io.out.difftest

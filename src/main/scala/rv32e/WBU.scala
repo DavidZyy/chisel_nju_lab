@@ -10,13 +10,13 @@ import rv32e.config.Configs._
 class WBU extends Module {
     val from_EXU = IO(Flipped(Decoupled(new EXU2WBU_bus)))
     val to_ISU   = IO(Decoupled(new WBU2ISU_bus))
-    val to_IFU   = IO(Decoupled(new WBU2IFU_bus))
+    // val to_IFU   = IO(Decoupled(new WBU2IFU_bus))
 
     // to exu
     from_EXU.ready := true.B
 
     // to ifu
-    to_IFU.valid   := from_EXU.valid // finish signal
+    // to_IFU.valid   := from_EXU.valid // finish signal
 
     // to isu
     to_ISU.valid        := true.B
