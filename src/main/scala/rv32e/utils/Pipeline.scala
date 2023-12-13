@@ -14,9 +14,10 @@ object PipelineConnect {
     when (left.valid && right.ready) { valid := true.B } // new data in, so set it to true
     when (isFlush) { valid := false.B } // data is be flushed, so set it false
 
+    val ze = 0.U.asTypeOf(left.bits)
     left.ready := right.ready
-    // right.bits := RegEnable(Mux(isFlush, 0.U, left.bits), left.valid && right.ready)
-    right.bits := RegEnable(left.bits, left.valid && right.ready)
+    right.bits := RegEnable(Mux(isFlush, ze, left.bits), left.valid && right.ready)
+    // right.bits := RegEnable(left.bits, left.valid && right.ready)
     right.valid := valid //&& !isFlush
   }
 }
