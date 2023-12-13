@@ -26,13 +26,14 @@ import rv32e.bus._
 import rv32e.device._
 import rv32e.utils._
 import rv32e.define.Dec_Info
+import _root_.circt.stage.FirtoolOption
 
 class out_class extends Bundle {
     val inst     = Output(UInt(INST_WIDTH.W))
     val pc       = Output(UInt(DATA_WIDTH.W))
     val difftest = new DiffCsr
     val wb       = Output(Bool())
-    val wb_inst     = Output(UInt(INST_WIDTH.W)) // for not optimize signal to debug
+    val wb_inst  = Output(UInt(INST_WIDTH.W)) // for not optimize signal to debug
 }
 
 class top extends Module {
@@ -95,6 +96,14 @@ class top extends Module {
 
 object top_main extends App {
     def t = new top()
-    val generator = Seq(chisel3.stage.ChiselGeneratorAnnotation(() => t))
-    (new ChiselStage).execute(args, generator :+ CIRCTTargetAnnotation(CIRCTTarget.Verilog))
+    val generator = Seq(
+        chisel3.stage.ChiselGeneratorAnnotation(() => t),
+        CIRCTTargetAnnotation(CIRCTTarget.Verilog)
+    )
+    val firtoolOptions = Seq(
+        FirtoolOption("--disable-all-randomization"),
+        FirtoolOption("--lowering-options=disallowLocalVariables, locationInfoStyle=none"),
+        // FirtoolOption("--lowering-options=locationInfoStyle=none")
+    )
+    (new ChiselStage).execute(args, generator ++ firtoolOptions)
 }
