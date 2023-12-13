@@ -44,11 +44,9 @@ class top extends Module {
     val IDU_i   =   Module(new IDU())
     val ISU_i   =   Module(new ISU())
     val EXU_i   =   Module(new EXU_pipeline()) 
-    // val EXU_i   =   Module(new EXU()) 
     val WBU_i   =   Module(new WBU())
 
     /* ifu connect to cache */
-    // val IFU_i   =   Module(new IFU_simpleBus)
     val IFU_i   =   Module(new IFU_pipeline())
     val icache  =   Module(new Icache_SimpleBus())
     val sram_i  =   Module(new sram_axi_rw())
@@ -74,18 +72,10 @@ class top extends Module {
     EXU_i.to_IFU <> IFU_i.from_EXU
     IFU_i.to_IDU <> IDU_i.from_IFU
     IDU_i.to_ISU <> ISU_i.from_IDU
-    // PipelineConnect(ISU_i.to_EXU, EXU_i.from_ISU, EXU_i.to_WBU.fire, false.B)
-    // val wb_sig = (EXU_i.from_ISU.bits.isBRU && EXU_i.to_IFU.fire) || EXU_i.to_WBU.fire
-    val wb_sig = MuxLookup(EXU_i.from_ISU.bits.ctrl_sig.fu_op, EXU_i.to_WBU.fire)(List(
-        ("b"+Dec_Info.fu_bru).U -> EXU_i.to_IFU.fire,
-        ("b"+Dec_Info.fu_csr).U -> EXU_i.to_IFU.fire,
-    ))
-    // PipelineConnect(ISU_i.to_EXU, EXU_i.from_ISU, wb_sig, EXU_i.from_ISU.bits.isBRU && EXU_i.from_ISU.valid && ISU_i.to_EXU.fire)
-    PipelineConnect(ISU_i.to_EXU, EXU_i.from_ISU, wb_sig, (EXU_i.to_IFU.bits.bru_ctrl_br || EXU_i.to_IFU.bits.csr_ctrl_br) && EXU_i.from_ISU.valid && ISU_i.to_EXU.fire)
-    // PipelineConnect(ISU_i.to_EXU, EXU_i.from_ISU, EXU_i.to_WBU.fire, EXU_i.from_ISU.bits.isBRU)
+
+    PipelineConnect(ISU_i.to_EXU, EXU_i.from_ISU, EXU_i.to_WBU.fire,  EXU_i.to_IFU.bits.redirect && ISU_i.to_EXU.fire)
     EXU_i.to_WBU <> WBU_i.from_EXU
     WBU_i.to_ISU <> ISU_i.from_WBU
-    // WBU_i.to_IFU <> IFU_i.from_WBU
 
     io.out.inst     := IFU_i.to_IDU.bits.inst
     io.out.pc       := IFU_i.to_IDU.bits.pc

@@ -70,11 +70,14 @@ class EXU2WBU_bus extends Bundle {
     val inst    =   Output(UInt(ADDR_WIDTH.W)) // for debug
 }
 
+// redirect
 class EXU2IFU_bus extends Bundle {
-    val bru_ctrl_br     = Output(Bool()) 
-    val bru_addr        = Output(UInt(ADDR_WIDTH.W)) // from alu
-    val csr_ctrl_br     = Output(Bool())
-    val csr_addr        = Output(UInt(ADDR_WIDTH.W))
+    // val bru_ctrl_br     = Output(Bool()) 
+    // val bru_addr        = Output(UInt(ADDR_WIDTH.W)) // from alu
+    // val csr_ctrl_br     = Output(Bool())
+    // val csr_addr        = Output(UInt(ADDR_WIDTH.W))
+    val target   = Output(UInt(ADDR_WIDTH.W))
+    val redirect = Output(Bool())
 }
 
 class WBU2ISU_bus extends Bundle {

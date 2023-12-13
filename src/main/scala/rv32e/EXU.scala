@@ -105,10 +105,10 @@ class EXU extends Module {
     to_WBU.bits.fu_op   := from_ISU.bits.ctrl_sig.fu_op
     to_WBU.bits.rd      := from_ISU.bits.rd
 
-    to_IFU.bits.bru_ctrl_br := Bru_i.io.out.ctrl_br
-    to_IFU.bits.bru_addr    := Alu_i.io.out.result
-    to_IFU.bits.csr_ctrl_br := Csr_i.io.out.csr_br
-    to_IFU.bits.csr_addr    := Csr_i.io.out.csr_addr
+    // to_IFU.bits.bru_ctrl_br := Bru_i.io.out.ctrl_br
+    // to_IFU.bits.bru_addr    := Alu_i.io.out.result
+    // to_IFU.bits.csr_ctrl_br := Csr_i.io.out.csr_br
+    // to_IFU.bits.csr_addr    := Csr_i.io.out.csr_addr
 
     difftest <> Csr_i.io.out.difftest
 
@@ -153,6 +153,7 @@ class EXU_pipeline extends Module {
     Lsu_i.io.in.mem_wen := from_ISU.bits.ctrl_sig.mem_wen
     Lsu_i.io.in.op      := from_ISU.bits.ctrl_sig.lsu_op
     Lsu_i.io.in.valid   := from_ISU.bits.isLSU && from_ISU.valid
+    lsu_to_mem          <> Lsu_i.to_mem
 
     // bru
     Bru_i.io.in.op     := from_ISU.bits.ctrl_sig.bru_op
@@ -197,13 +198,15 @@ class EXU_pipeline extends Module {
     to_WBU.bits.rd         := from_ISU.bits.rd
 
     // to ifu, branch control's wirte back signal should be put to IFU
-    to_IFU.valid            := true.B
-    to_IFU.bits.bru_ctrl_br := Bru_i.io.out.ctrl_br && from_ISU.bits.isBRU && from_ISU.fire
-    to_IFU.bits.bru_addr    := Alu_i.io.out.result
-    to_IFU.bits.csr_ctrl_br := Csr_i.io.out.csr_br  && from_ISU.bits.isCSR && from_ISU.fire
-    to_IFU.bits.csr_addr    := Csr_i.io.out.csr_addr
+    to_IFU.valid          := MuxLookup(from_ISU.bits.ctrl_sig.fu_op, false.B)(List(
+        ("b"+fu_bru).U -> true.B,
+        ("b"+fu_csr).U -> true.B
+    ))
+    to_IFU.bits.redirect := (Bru_i.io.out.ctrl_br || Csr_i.io.out.csr_br)
+    to_IFU.bits.target   := MuxLookup(from_ISU.bits.ctrl_sig.fu_op, 0.U)(List(
+        ("b"+fu_bru).U -> Alu_i.io.out.result,
+        ("b"+fu_csr).U -> Csr_i.io.out.csr_addr
+    ))
 
     difftest <> Csr_i.io.out.difftest
-
-    lsu_to_mem <> Lsu_i.to_mem
 }
