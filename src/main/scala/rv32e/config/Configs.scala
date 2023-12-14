@@ -29,6 +29,7 @@ object Cache_Configs {
 
 //   val blkWidth    = (1<<offWidth)*Configs.BYTE_WIDTH
 
+  // 0 1 2 3 4 7 8 31
   val byte_LSB = 0
   val byte_MSB = byte_LSB + Configs.DATA_BYTE_WIDTH - 1
   val ent_LSB  = byte_MSB + 1

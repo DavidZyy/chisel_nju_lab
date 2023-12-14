@@ -48,7 +48,8 @@ class top extends Module {
 
     /* ifu connect to cache */
     val IFU_i   =   Module(new IFU_pipeline())
-    val icache  =   Module(new Icache_SimpleBus())
+    // val icache  =   Module(new Icache_SimpleBus())
+    val icache  =   Module(new Icache_pipeline())
     val sram_i  =   Module(new sram_axi_rw())
     IFU_i.to_mem   <> icache.from_ifu
     icache.to_sram <> sram_i.axi

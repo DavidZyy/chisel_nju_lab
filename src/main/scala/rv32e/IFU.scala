@@ -241,13 +241,17 @@ class IFU_pipeline extends Module {
     val from_EXU   = IO(Flipped(Decoupled(new EXU2IFU_bus)))
     val to_mem     = IO(new SimpleBus)
 
-    val reg_PC  = RegInit(UInt(ADDR_WIDTH.W), START_ADDR.U)
+    val reg_PC   = RegInit(UInt(ADDR_WIDTH.W), START_ADDR.U)
+    val inst_PC  = RegInit(UInt(ADDR_WIDTH.W), 0.U)
     val next_PC = Wire(UInt(ADDR_WIDTH.W))
 
     next_PC := Mux(from_EXU.fire && from_EXU.bits.redirect, from_EXU.bits.target, reg_PC + ADDR_BYTE.U)
 
     // in some cycle, it has some instruction issue
-    reg_PC  := Mux(to_mem.resp.fire && to_IDU.fire, next_PC, reg_PC)
+    // reg_PC  := Mux(to_mem.resp.fire && to_IDU.fire, next_PC, reg_PC) // none pipelined cache
+
+    reg_PC  := Mux(to_mem.req.fire, next_PC, reg_PC) // pipelined cache
+    when(to_mem.req.fire) {inst_PC := reg_PC}
 
     // to mem signals
     to_mem.req.valid      := to_IDU.ready
@@ -260,7 +264,7 @@ class IFU_pipeline extends Module {
     // to IDU signals
     to_IDU.valid     := to_mem.resp.fire
     to_IDU.bits.inst := Mux(to_IDU.fire, to_mem.resp.bits.rdata, 0.U) // if not ready, transfer nop inst
-    to_IDU.bits.pc   := reg_PC
+    to_IDU.bits.pc   := inst_PC
 
     // from EXU signals
     from_EXU.ready  := to_mem.resp.fire
