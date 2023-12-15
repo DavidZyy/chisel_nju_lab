@@ -111,3 +111,13 @@ class Cache2LSU_bus extends Bundle {
 
     val bresp = Output(Bool())  // write response
 }
+
+class EXU2ISU_bus extends Bundle {
+    val rd      = Output(UInt(REG_OP_WIDTH.W))
+    val have_wb = Output(Bool())
+}
+
+class PipelineDebugInfo extends Bundle {
+    val inst    =   Output(UInt(ADDR_WIDTH.W))
+    val pc      =   Output(UInt(ADDR_WIDTH.W))      
+}

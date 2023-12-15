@@ -29,11 +29,14 @@ import rv32e.define.Dec_Info
 import _root_.circt.stage.FirtoolOption
 
 class out_class extends Bundle {
-    val inst     = Output(UInt(INST_WIDTH.W))
-    val pc       = Output(UInt(DATA_WIDTH.W))
+    val ifu_fetchPc = Output(UInt(ADDR_WIDTH.W))
+    val ifu      = new PipelineDebugInfo
+    val idu      = new PipelineDebugInfo
+    // val isu      = new PipelineDebugInfo
+    val exu      = new PipelineDebugInfo
+    // val wbu      = new PipelineDebugInfo
     val difftest = new DiffCsr
     val wb       = Output(Bool())
-    val wb_inst  = Output(UInt(INST_WIDTH.W)) // for not optimize signal to debug
 }
 
 class top extends Module {
@@ -71,17 +74,23 @@ class top extends Module {
     dcache.to_sram    <> sram_i2.axi
 
     EXU_i.to_IFU <> IFU_i.from_EXU
-    IFU_i.to_IDU <> IDU_i.from_IFU
+    // IFU_i.to_IDU <> IDU_i.from_IFU
+    PipelineConnect(IFU_i.to_IDU, IDU_i.from_IFU, IDU_i.to_ISU.fire, EXU_i.to_IFU.bits.redirect && IFU_i.to_IDU.fire)
     IDU_i.to_ISU <> ISU_i.from_IDU
 
-    PipelineConnect(ISU_i.to_EXU, EXU_i.from_ISU, EXU_i.to_WBU.fire,  EXU_i.to_IFU.bits.redirect && ISU_i.to_EXU.fire)
+    PipelineConnect(ISU_i.to_EXU, EXU_i.from_ISU, EXU_i.to_WBU.fire, EXU_i.to_IFU.bits.redirect && ISU_i.to_EXU.fire)
     EXU_i.to_WBU <> WBU_i.from_EXU
+    EXU_i.to_ISU <> ISU_i.from_EXU
     WBU_i.to_ISU <> ISU_i.from_WBU
 
-    io.out.inst     := IFU_i.to_IDU.bits.inst
-    io.out.pc       := IFU_i.to_IDU.bits.pc
+    io.out.ifu_fetchPc := IFU_i.fetch_PC
+    io.out.ifu.pc   := IFU_i.to_IDU.bits.pc
+    io.out.ifu.inst := IFU_i.to_IDU.bits.inst
+    io.out.idu.pc   := IDU_i.to_ISU.bits.pc
+    io.out.idu.inst := IDU_i.to_ISU.bits.inst
+    io.out.exu.pc   := EXU_i.to_WBU.bits.pc
+    io.out.exu.inst := EXU_i.to_WBU.bits.inst
     io.out.wb       := WBU_i.from_EXU.valid
-    io.out.wb_inst  := WBU_i.from_EXU.bits.inst
     io.out.difftest <> EXU_i.difftest
 }
 

@@ -122,6 +122,7 @@ class EXU_pipeline extends Module {
     val to_IFU      = IO(Decoupled(new EXU2IFU_bus)) // redirection
     val difftest    = IO(new DiffCsr)
     val lsu_to_mem  = IO(new SimpleBus)
+    val to_ISU      = IO(new EXU2ISU_bus)
 
     val Alu_i             = Module(new Alu())
     val Mdu_i             = Module(new Mdu())
@@ -207,6 +208,10 @@ class EXU_pipeline extends Module {
         ("b"+fu_bru).U -> Alu_i.io.out.result,
         ("b"+fu_csr).U -> Csr_i.io.out.csr_addr
     ))
+
+    // to isu
+    to_ISU.rd      := from_ISU.bits.rd
+    to_ISU.have_wb := ~from_ISU.valid
 
     difftest <> Csr_i.io.out.difftest
 }

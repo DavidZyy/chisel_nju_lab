@@ -150,7 +150,7 @@ class Icache_pipeline extends Module {
     val state_cache = RegInit(s_idle)
     switch (state_cache) {
         is (s_idle) {
-            state_cache := Mux(hit, s_idle, s_rq)
+            state_cache := Mux(~hit && from_ifu.resp.ready, s_rq, s_idle)
         }
         // read request
         is (s_rq) {
@@ -170,7 +170,14 @@ class Icache_pipeline extends Module {
         }
     }
 
-    val cachedata = dataArray(hitCacheAddr)
+    val cachedata = Wire(UInt(DATA_WIDTH.W)) 
+    cachedata := DontCare
+    // val cachedata = RegInit(0.U(DATA_WIDTH.W))
+    when(from_ifu.resp.ready) {
+        cachedata := dataArray(hitCacheAddr)
+    // val cachedata = dataArray(hitCacheAddr, from_ifu.resp.ready)
+    }
+
     // can move the following codes to "is (s_reading)" state 
     val replaceCacheAddr = Cat(replace_set, CacheLineId, off)
     when ((state_cache === s_reading) && to_sram.r.fire) {
@@ -185,9 +192,11 @@ class Icache_pipeline extends Module {
     dataHit := hit
 
     from_ifu.req.ready       := hit
-    from_ifu.resp.valid      := dataHit && state_cache === s_idle // when the data has been read from mem, just transfer it to ifu, do not need to wait all data in a cache line been read
-    // from_ifu.resp.bits.rdata := Mux(hit, cachedata, 0.U)
-    from_ifu.resp.bits.rdata := Mux(dataHit, cachedata, 0.U)
+    // when the data has been read from mem, just transfer it to ifu, do not need to wait all data in a cache line been read
+    from_ifu.resp.valid      := dataHit && state_cache === s_idle 
+    // when(from_ifu.resp.ready) {
+    from_ifu.resp.bits.rdata := cachedata
+    // }
     from_ifu.resp.bits.wresp := DontCare
 
     to_sram.ar.valid      := MuxLookup(state_cache, false.B)(List(s_rq -> true.B))

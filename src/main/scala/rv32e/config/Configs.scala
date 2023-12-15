@@ -23,7 +23,8 @@ object Configs {
 }
 
 object Cache_Configs {
-  val offWidth = 4
+  // val offWidth = 4
+  val offWidth = 5
   val idxWidth = 4
   val tagWidth = Configs.ADDR_WIDTH-offWidth-idxWidth
 
