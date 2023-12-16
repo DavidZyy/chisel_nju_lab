@@ -115,6 +115,7 @@ class Cache2LSU_bus extends Bundle {
 class EXU2ISU_bus extends Bundle {
     val rd      = Output(UInt(REG_OP_WIDTH.W))
     val have_wb = Output(Bool())
+    val isBRU   = Output(Bool())
 }
 
 class PipelineDebugInfo extends Bundle {

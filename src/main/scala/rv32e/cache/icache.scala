@@ -117,6 +117,7 @@ class Icache_SimpleBus extends Module {
 class Icache_pipeline extends Module {
     val from_ifu = IO(Flipped(new SimpleBus))
     val to_sram  = IO(new AXIIO) // to Arbiter
+    val redirect = IO(Input(Bool()))
 
     val replace_set = RegInit(0.U)
     val EntId       = from_ifu.req.bits.addr(ent_MSB, ent_LSB)
@@ -170,13 +171,7 @@ class Icache_pipeline extends Module {
         }
     }
 
-    val cachedata = Wire(UInt(DATA_WIDTH.W)) 
-    cachedata := DontCare
-    // val cachedata = RegInit(0.U(DATA_WIDTH.W))
-    when(from_ifu.resp.ready) {
-        cachedata := dataArray(hitCacheAddr)
-    // val cachedata = dataArray(hitCacheAddr, from_ifu.resp.ready)
-    }
+    val cachedata = dataArray(hitCacheAddr)
 
     // can move the following codes to "is (s_reading)" state 
     val replaceCacheAddr = Cat(replace_set, CacheLineId, off)
@@ -188,15 +183,33 @@ class Icache_pipeline extends Module {
         }
     }
 
-    val dataHit = RegInit(false.B)
-    dataHit := hit
+    val dataValid = RegInit(false.B)
+    dataValid := hit
 
-    from_ifu.req.ready       := hit
-    // when the data has been read from mem, just transfer it to ifu, do not need to wait all data in a cache line been read
-    from_ifu.resp.valid      := dataHit && state_cache === s_idle 
-    // when(from_ifu.resp.ready) {
-    from_ifu.resp.bits.rdata := cachedata
-    // }
+    // val instReg = RegInit(0xdeadbeefL.U(INST_WIDTH.W))
+    // when(~from_ifu.resp.ready && (instReg === 0xdeadbeefL.U )) {instReg := cachedata}
+    // .elsewhen(redirect) {instReg := 0.U}
+    // .otherwise {instReg := 0xdeadbeefL.U}
+
+
+    val instReg      = RegInit(0.U(INST_WIDTH.W))
+    val instRegValid = RegInit(false.B)
+    when(~from_ifu.resp.ready && ~instRegValid && dataValid) {
+        instReg := cachedata
+        instRegValid := true.B
+    } .elsewhen(redirect) {
+        instReg := 0.U
+        dataValid := false.B // flushed
+        // instRegValid := true.B
+    } .elsewhen(instRegValid  && from_ifu.resp.fire) {
+        instRegValid := false.B
+    }
+
+    // when the data has been read from mem, just transfer it to ifu, do not need to wait all data in a cache line been read, critical word first
+    from_ifu.req.ready       := hit && (state_cache === s_idle || state_cache === s_end)
+    from_ifu.resp.valid      := (dataValid && state_cache === s_idle) || (instReg =/= 0.U && instRegValid) //flushed, stored
+    // from_ifu.resp.valid      := (dataValid) || (instReg =/= 0.U && instRegValid) //flushed, stored, easy error!
+    from_ifu.resp.bits.rdata := Mux(instRegValid, instReg, cachedata)
     from_ifu.resp.bits.wresp := DontCare
 
     to_sram.ar.valid      := MuxLookup(state_cache, false.B)(List(s_rq -> true.B))

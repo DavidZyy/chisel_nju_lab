@@ -56,6 +56,7 @@ class top extends Module {
     val sram_i  =   Module(new sram_axi_rw())
     IFU_i.to_mem   <> icache.from_ifu
     icache.to_sram <> sram_i.axi
+    icache.redirect := EXU_i.to_IFU.bits.redirect
     
     val addrSpace = List(
         (pmemBase, pmemSize),

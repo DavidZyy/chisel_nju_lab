@@ -179,14 +179,19 @@ class EXU_pipeline extends Module {
           * from_ISU is not valid means the result has been committed to WB, so we are ready to receive the
           * next inst.
           */ 
-        ("b"+fu_lsu).U -> (~from_ISU.valid || Lsu_i.io.out.end)
+        ("b"+fu_lsu).U -> (~from_ISU.valid || Lsu_i.io.out.end),
+        // ("b"+fu_bru).U -> (~from_ISU.valid),
+        // ("b"+fu_csr).U -> (~from_ISU.valid),
+        ("b"+fu_bru).U -> to_IFU.ready,
+        ("b"+fu_csr).U -> to_IFU.ready,
     ))
 
     // to wbu, logical not right here.
-    to_WBU.valid := from_ISU.fire && MuxLookup(from_ISU.bits.ctrl_sig.fu_op, true.B)(List(
+    // to_WBU.valid := from_ISU.fire && MuxLookup(from_ISU.bits.ctrl_sig.fu_op, true.B)(List(
+    to_WBU.valid := from_ISU.valid && MuxLookup(from_ISU.bits.ctrl_sig.fu_op, true.B)(List(
         ("b"+fu_lsu).U -> Lsu_i.io.out.end,
-        ("b"+fu_csr).U -> to_IFU.fire, // write rf and pc at the same cycle
         ("b"+fu_bru).U -> to_IFU.fire,
+        ("b"+fu_csr).U -> to_IFU.fire, // write rf and pc at the same cycle
     ))
     to_WBU.bits.alu_result := Alu_i.io.out.result
     to_WBU.bits.mdu_result := Mdu_i.io.out.result
@@ -203,7 +208,7 @@ class EXU_pipeline extends Module {
         ("b"+fu_bru).U -> true.B,
         ("b"+fu_csr).U -> true.B
     ))
-    to_IFU.bits.redirect := (Bru_i.io.out.ctrl_br || Csr_i.io.out.csr_br)
+    to_IFU.bits.redirect := (Bru_i.io.out.ctrl_br || Csr_i.io.out.csr_br) && from_ISU.valid
     to_IFU.bits.target   := MuxLookup(from_ISU.bits.ctrl_sig.fu_op, 0.U)(List(
         ("b"+fu_bru).U -> Alu_i.io.out.result,
         ("b"+fu_csr).U -> Csr_i.io.out.csr_addr
@@ -212,6 +217,7 @@ class EXU_pipeline extends Module {
     // to isu
     to_ISU.rd      := from_ISU.bits.rd
     to_ISU.have_wb := ~from_ISU.valid
+    to_ISU.isBRU   := from_ISU.bits.isBRU
 
     difftest <> Csr_i.io.out.difftest
 }

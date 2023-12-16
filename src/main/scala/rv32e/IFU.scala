@@ -254,6 +254,9 @@ class IFU_pipeline extends Module {
     reg_PC  := Mux(to_mem.req.fire, next_PC, reg_PC) // pipelined cache
     when(to_mem.req.fire) {inst_PC := reg_PC}
 
+    // refetch, for cache pipeline cannot stall, and inst will be discard. 
+    // when(~to_IDU.ready) {reg_PC := inst_PC}
+
     // to mem signals
     to_mem.req.valid      := to_IDU.ready
     to_mem.req.bits.addr  := reg_PC
@@ -263,14 +266,15 @@ class IFU_pipeline extends Module {
     to_mem.resp.ready     := to_IDU.ready
 
     // to IDU signals
-    to_IDU.valid     := to_mem.resp.fire
+    to_IDU.valid     := to_mem.resp.valid
     // to_IDU.bits.inst := Mux(to_IDU.fire, to_mem.resp.bits.rdata, 0.U) // if not ready, transfer nop inst
     to_IDU.bits.inst := to_mem.resp.bits.rdata // if not ready, transfer nop inst
     // to_IDU.bits.inst := Mux(to_IDU.valid, to_mem.resp.bits.rdata, to_IDU.bits.inst) // if not ready, transfer nop inst
     to_IDU.bits.pc   := inst_PC
 
     // from EXU signals
-    from_EXU.ready  := to_mem.resp.fire
+    // from_EXU.ready  := to_mem.resp.fire
+    from_EXU.ready  := to_mem.req.ready
 
     fetch_PC        := reg_PC
 }
