@@ -151,7 +151,8 @@ class Icache_pipeline extends Module {
     val state_cache = RegInit(s_idle)
     switch (state_cache) {
         is (s_idle) {
-            state_cache := Mux(~hit && from_ifu.resp.ready, s_rq, s_idle)
+            // state_cache := Mux(~hit && from_ifu.resp.ready, s_rq, s_idle)
+            state_cache := Mux(~hit, s_rq, s_idle)
         }
         // read request
         is (s_rq) {
@@ -184,7 +185,10 @@ class Icache_pipeline extends Module {
     }
 
     val dataValid = RegInit(false.B)
-    dataValid := hit
+    dataValid := hit && from_ifu.resp.ready
+
+    // when(from_ifu.resp.fire) {dataValid := false.B}
+    // when(hit && from_ifu.resp.ready) {dataValid := true.B}
 
     // val instReg = RegInit(0xdeadbeefL.U(INST_WIDTH.W))
     // when(~from_ifu.resp.ready && (instReg === 0xdeadbeefL.U )) {instReg := cachedata}
@@ -194,16 +198,28 @@ class Icache_pipeline extends Module {
 
     val instReg      = RegInit(0.U(INST_WIDTH.W))
     val instRegValid = RegInit(false.B)
-    when(~from_ifu.resp.ready && ~instRegValid && dataValid) {
-        instReg := cachedata
-        instRegValid := true.B
-    } .elsewhen(redirect) {
+
+    // when(~from_ifu.resp.ready && ~instRegValid && dataValid) {
+    //     instReg := cachedata
+    //     instRegValid := true.B
+    // } .elsewhen(redirect) {
+    //     instReg := 0.U
+    //     dataValid := false.B // flushed
+    //     // instRegValid := true.B
+    // } .elsewhen(instRegValid  && from_ifu.resp.fire) {
+    //     instRegValid := false.B
+    // }
+    when (redirect) {
         instReg := 0.U
         dataValid := false.B // flushed
         // instRegValid := true.B
+    } .elsewhen (~from_ifu.resp.ready && ~instRegValid && dataValid) {
+        instReg := cachedata
+        instRegValid := true.B
     } .elsewhen(instRegValid  && from_ifu.resp.fire) {
         instRegValid := false.B
     }
+ 
 
     // when the data has been read from mem, just transfer it to ifu, do not need to wait all data in a cache line been read, critical word first
     from_ifu.req.ready       := hit && (state_cache === s_idle || state_cache === s_end)

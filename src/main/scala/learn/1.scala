@@ -68,3 +68,13 @@ object addmain extends App {
     range => (addr >= range._1 && addr < (range._1 + range._2)))
   println(outMatchVec)
 }
+
+class Person(name: String, age: Int) {
+  def apply(): String = s"Name: $name, Age: $age"
+}
+
+object applymain extends App {
+  val p = new Person("John Doe", 30)
+  val details = p.apply()
+  println(details)
+}
