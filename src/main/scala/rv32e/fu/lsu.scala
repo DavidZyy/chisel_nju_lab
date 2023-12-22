@@ -159,7 +159,7 @@ class Lsu_axi extends Module {
         val in  = (new ram_in_class )
         val out = (new ram_out_class)
     })
-    val axi = IO(new AXIIO)
+    val axi = IO(new AXI4)
 
     // state_lsu machine, issue aw signals in write_request, issue w signals in write_wait
     val s_idle :: s_read_request :: s_read_wait :: s_write_request :: s_write_wait :: s_end :: Nil = Enum(6)
@@ -557,6 +557,8 @@ class Lsu_simpleBus extends Module {
                                     s_write_request  -> SimpleBusCmd.write, 
                                     s_write_wait     -> SimpleBusCmd.write
                                 ))
+    to_mem.req.bits.len      := 0.U
+    to_mem.req.bits.last     := true.B
 }
 
 // object decoder_main extends App {

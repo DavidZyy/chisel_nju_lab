@@ -3,3 +3,6 @@
 
 12-1
 1. mill generate .sv codes.
+
+12-18
+1. - [ ] optimize cache pipeline logic.

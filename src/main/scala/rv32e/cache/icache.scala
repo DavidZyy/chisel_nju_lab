@@ -14,7 +14,7 @@ import _root_.dataclass.data
 
 class Icache_SimpleBus extends Module {
     val from_ifu = IO(Flipped(new SimpleBus))
-    val to_sram  = IO(new AXIIO) // to Arbiter
+    val to_sram  = IO(new AXI4) // to Arbiter
 
     val replace_set = RegInit(0.U)
     val EntId       = from_ifu.req.bits.addr(ent_MSB, ent_LSB)
@@ -116,8 +116,9 @@ class Icache_SimpleBus extends Module {
   */
 class Icache_pipeline extends Module {
     val from_ifu = IO(Flipped(new SimpleBus))
-    val to_sram  = IO(new AXIIO) // to Arbiter
+    val to_sram  = IO(new AXI4) // to Arbiter
     val redirect = IO(Input(Bool()))
+    val instPC   = IO(Output(UInt(ADDR_WIDTH.W)))
 
     val replace_set = RegInit(0.U)
     val EntId       = from_ifu.req.bits.addr(ent_MSB, ent_LSB)
@@ -186,6 +187,14 @@ class Icache_pipeline extends Module {
 
     val dataValid = RegInit(false.B)
     dataValid := hit && from_ifu.resp.ready
+
+    val instPCReg = RegInit(0.U(ADDR_WIDTH.W))
+    
+    when(from_ifu.resp.ready) {
+        instPCReg := from_ifu.req.bits.addr
+    }
+
+    instPC := instPCReg
 
     // when(from_ifu.resp.fire) {dataValid := false.B}
     // when(hit && from_ifu.resp.ready) {dataValid := true.B}

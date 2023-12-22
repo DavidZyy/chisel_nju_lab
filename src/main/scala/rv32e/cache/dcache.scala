@@ -14,7 +14,7 @@ import rv32e.bus._
 class D_Cache extends Module {
     val from_LSU = IO(Flipped(Decoupled(new LSU2Cache_bus)))
     val to_LSU   = IO(Decoupled(new Cache2LSU_bus))
-    val to_sram  = IO(new AXIIO)
+    val to_sram  = IO(new AXI4)
     
     val replace_set = RegInit(0.U)
     val ByteId      = from_LSU.bits.addr(byte_MSB, byte_LSB)
@@ -159,7 +159,7 @@ class D_Cache extends Module {
 
 class Dcache_SimpleBus extends Module {
     val from_lsu  = IO(Flipped(new SimpleBus))
-    val to_sram   = IO(new AXIIO)
+    val to_sram   = IO(new AXI4)
     
     val replace_set = RegInit(0.U)
     val ByteId      = from_lsu.req.bits.addr(byte_MSB, byte_LSB)

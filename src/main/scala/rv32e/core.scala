@@ -8,15 +8,10 @@ import chisel3.util.experimental.decode._
 import rv32e.config.Configs._
 import rv32e.utils.DiffCsr
 import java.awt.MouseInfo
-import rv32e.utils.StageConnect
-import rv32e.utils.StageConnect_reg
 import utils.RegFile
 import rv32e.device.SRAM
 import rv32e.bus.Arbiter
-import rv32e.utils.AxiConnect
-import rv32e.utils.AxiLiteConnect
-import rv32e.device.SRAM_axi
-import rv32e.device.sram_axi_rw
+import rv32e.device.AXI4RAM
 import rv32e.cache._
 import rv32e.define.Mem._
 import _root_.circt.stage.ChiselStage
@@ -53,8 +48,9 @@ class top extends Module {
     val IFU_i   =   Module(new IFU_pipeline())
     // val icache  =   Module(new Icache_SimpleBus())
     val icache  =   Module(new Icache_pipeline())
-    val sram_i  =   Module(new sram_axi_rw())
+    val sram_i  =   Module(new AXI4RAM())
     IFU_i.to_mem   <> icache.from_ifu
+    IFU_i.to_IDU_PC := icache.instPC
     icache.to_sram <> sram_i.axi
     icache.redirect := EXU_i.to_IFU.bits.redirect
     
@@ -67,7 +63,7 @@ class top extends Module {
 
     /* lsu connect to cache */
     val dcache  =   Module(new Dcache_SimpleBus())
-    val sram_i2 =   Module(new sram_axi_rw())
+    val sram_i2 =   Module(new AXI4RAM())
     val mmio    =   Module(new MMIO())
     EXU_i.lsu_to_mem  <> memXbar.io.in
     memXbar.io.out(0) <> dcache.from_lsu
@@ -93,9 +89,11 @@ class top extends Module {
     io.out.exu.inst := EXU_i.to_WBU.bits.inst
     io.out.wb       := WBU_i.from_EXU.valid
     io.out.difftest <> EXU_i.difftest
+    // assert(DATA_WIDTH == 64, "it should be 64")
 }
 
 object top_main extends App {
+    // assert(DATA_WIDTH == 64, "it should be 64")
     def t = new top()
     val generator = Seq(
         chisel3.stage.ChiselGeneratorAnnotation(() => t),

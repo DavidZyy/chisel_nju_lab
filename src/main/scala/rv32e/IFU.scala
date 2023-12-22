@@ -82,7 +82,7 @@ class IFUIO extends Bundle {
 //     val to_IDU   = IO(Decoupled(new IFU2IDU_bus)) // only to IDU signal
 //     val from_EXU = IO(Flipped(Decoupled(new EXU2IFU_bus)))
 //     val from_WBU = IO(Flipped(Decoupled(new WBU2IFU_bus)))
-//     val axi      = IO(new AXIIO)
+//     val axi      = IO(new AXI4)
 // 
 //     val reg_PC  = RegInit(UInt(ADDR_WIDTH.W), START_ADDR.U)
 //     val next_PC = Wire(UInt(ADDR_WIDTH.W))
@@ -241,6 +241,7 @@ class IFU_pipeline extends Module {
     val from_EXU   = IO(Flipped(Decoupled(new EXU2IFU_bus)))
     val to_mem     = IO(new SimpleBus)
     val fetch_PC   = IO(Output(UInt(ADDR_WIDTH.W)))
+    val to_IDU_PC  = IO(Input(UInt(ADDR_WIDTH.W))) // from icache
 
     val reg_PC   = RegInit(UInt(ADDR_WIDTH.W), START_ADDR.U)
     val inst_PC  = RegInit(UInt(ADDR_WIDTH.W), 0.U)
@@ -263,6 +264,8 @@ class IFU_pipeline extends Module {
     to_mem.req.bits.cmd   := SimpleBusCmd.read
     to_mem.req.bits.wdata := DontCare
     to_mem.req.bits.wmask := DontCare
+    to_mem.req.bits.len   := 0.U
+    to_mem.req.bits.last  := true.B
     to_mem.resp.ready     := to_IDU.ready
 
     // to IDU signals
@@ -271,6 +274,7 @@ class IFU_pipeline extends Module {
     to_IDU.bits.inst := to_mem.resp.bits.rdata // if not ready, transfer nop inst
     // to_IDU.bits.inst := Mux(to_IDU.valid, to_mem.resp.bits.rdata, to_IDU.bits.inst) // if not ready, transfer nop inst
     to_IDU.bits.pc   := inst_PC
+    // to_IDU.bits.pc   := to_IDU_PC
 
     // from EXU signals
     // from_EXU.ready  := to_mem.resp.fire

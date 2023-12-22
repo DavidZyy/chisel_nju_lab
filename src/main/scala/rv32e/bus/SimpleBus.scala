@@ -3,6 +3,7 @@ package rv32e.bus
 import chisel3._
 import chisel3.util._
 import rv32e.config.Configs._
+import rv32e.config.Axi_Configs
 
 object SimpleBusCmd {
     def read    = "b0000".U
@@ -13,11 +14,13 @@ object SimpleBusCmd {
 
 class SimpleBusReqBundle extends Bundle {
     val addr  = Output(UInt(ADDR_WIDTH.W))
+    val len   = Output(UInt(Axi_Configs.AxLEN_WIDTH.W)) // the total entries - 1
 
     val wdata = Output(UInt(DATA_WIDTH.W))
-    val cmd   = Output(SimpleBusCmd())
     val wmask = Output(UInt(DATA_WIDTH.W))
+    val wlast  = Output(Bool())
 
+    val cmd   = Output(SimpleBusCmd())
     def isRead()  = (cmd === SimpleBusCmd.read)
     def isWrite() = (cmd === SimpleBusCmd.write)
 }
@@ -33,4 +36,5 @@ class SimpleBus extends Bundle {
 
     def isRead  = req.bits.isRead()
     def isWrite = req.bits.isWrite()
+    def toAXI4(AxLen: Int) = SimpleBus2AXI4Converter(this)
 }
