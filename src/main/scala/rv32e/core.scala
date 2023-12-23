@@ -26,8 +26,8 @@ import rv32e.bus._
 import rv32e.device._
 
 class out_class extends Bundle {
-    val inst     = Output(UInt(INST_WIDTH.W))
-    val pc       = Output(UInt(DATA_WIDTH.W))
+    val ifu_inst     = Output(UInt(INST_WIDTH.W))
+    val ifu_fetchPc       = Output(UInt(DATA_WIDTH.W))
     val difftest = new DiffCsr
     val wb       = Output(Bool())
 }
@@ -73,8 +73,8 @@ class top extends Module {
     WBU_i.to_ISU <> ISU_i.from_WBU
     WBU_i.to_IFU <> IFU_i.from_WBU
 
-    io.out.inst    := IFU_i.to_IDU.bits.inst
-    io.out.pc      := IFU_i.to_IDU.bits.pc
+    io.out.ifu_inst    := IFU_i.to_IDU.bits.inst
+    io.out.ifu_fetchPc      := IFU_i.to_IDU.bits.pc
     io.out.wb      := WBU_i.to_IFU.valid
 
     io.out.difftest <> EXU_i.difftest
