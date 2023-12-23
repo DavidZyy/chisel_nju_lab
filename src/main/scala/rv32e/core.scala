@@ -49,21 +49,23 @@ class top extends Module {
     IFU_i.to_mem   <> icache.from_ifu
     icache.to_sram <> sram_i.axi
     
-    val addrSpace = List(
-        (pmemBase, pmemSize),
-        (mmioBase, mmioSize),
-    )
-
-    val memXbar   = Module(new SimpleBusCrossBar1toN(addrSpace))
+//     val addrSpace = List(
+//         (pmemBase, pmemSize),
+//         (mmioBase, mmioSize),
+//     )
+// 
+//     val memXbar   = Module(new SimpleBusCrossBar1toN(addrSpace))
 
     /* lsu connect to cache */
-    val dcache  =   Module(new Dcache_SimpleBus())
+    // val dcache  =   Module(new Dcache_SimpleBus())
     val sram_i2 =   Module(new sram_axi_rw())
-    val mmio    =   Module(new MMIO())
-    EXU_i.lsu_to_mem  <> memXbar.io.in
-    memXbar.io.out(0) <> dcache.from_lsu
-    memXbar.io.out(1) <> mmio.from_lsu
-    dcache.to_sram    <> sram_i2.axi
+    // val mmio    =   Module(new MMIO())
+    // EXU_i.lsu_to_mem  <> memXbar.io.in
+    // memXbar.io.out(0) <> dcache.from_lsu
+    // memXbar.io.out(1) <> mmio.from_lsu
+    // dcache.to_sram    <> sram_i2.axi
+
+    EXU_i.lsu_to_mem  <> sram_i2.axi
 
     EXU_i.to_IFU <> IFU_i.from_EXU
     IFU_i.to_IDU <> IDU_i.from_IFU
