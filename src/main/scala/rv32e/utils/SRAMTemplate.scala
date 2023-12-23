@@ -39,6 +39,8 @@ class SRAMTemplate(val addrWidth: Int, val dataWidth: Int) extends Module {
         val w = new SRAMWriteBus(addrWidth, dataWidth)
     })
 
+    io.r.req.ready := true.B
+    io.w.req.ready := true.B
     assert(DATA_WIDTH == 32, "if cpu is 64 bits, this should be modify, in 32 bits cpu, both data and inst is 32 bits, but in " +
       "64 bit cpu, inst is 32 bits and data is 64 bits. So dataWidth can be 32 in icache and be 64 in dcache")
     val array = SyncReadMem(1<<addrWidth, UInt(dataWidth.W))

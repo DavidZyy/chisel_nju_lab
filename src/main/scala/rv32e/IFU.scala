@@ -265,7 +265,7 @@ class IFU_pipeline extends Module {
     to_mem.req.bits.wdata := DontCare
     to_mem.req.bits.wmask := DontCare
     to_mem.req.bits.len   := 0.U
-    to_mem.req.bits.last  := true.B
+    to_mem.req.bits.wlast := true.B
     to_mem.resp.ready     := to_IDU.ready
 
     // to IDU signals

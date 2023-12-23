@@ -36,5 +36,5 @@ class SimpleBus extends Bundle {
 
     def isRead  = req.bits.isRead()
     def isWrite = req.bits.isWrite()
-    def toAXI4(AxLen: Int) = SimpleBus2AXI4Converter(this)
+    def toAXI4() = SimpleBus2AXI4Converter(this)
 }

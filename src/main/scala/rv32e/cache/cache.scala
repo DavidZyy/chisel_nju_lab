@@ -38,7 +38,7 @@ class Stage1IO extends Bundle with HasCacheConst {
 
 class Stage2IO extends Bundle with HasCacheConst {
   val addr  = Output(UInt(ADDR_WIDTH.W))
-  val rdata = Output(UInt(DATA_WIDTH.W))
+  val resp  = Decoupled(new SimpleBusRespBundle)
 }
 
 /**
@@ -50,7 +50,7 @@ class CacheStage1(val dataWidth: Int) extends Module with HasCacheConst {
     val mem = new SimpleBus // to and from mem
     val out = Decoupled(new Stage1IO) // to Cachestage2
     val dataReadBus  = Decoupled(new SRAMBundleReadReq(addrWidth)) // to sram
-    val dataWriteBus = new SRAMWriteBus(addrWidth, dataWidth) // to sram
+    val dataWriteBus = Flipped(new SRAMWriteBus(addrWidth, dataWidth)) // to sram
   })
 
   val replaceWayReg = RegInit(0.U)
@@ -108,6 +108,8 @@ class CacheStage1(val dataWidth: Int) extends Module with HasCacheConst {
 
   val writeCacheAddr = Cat(replaceWayReg, setIdx, entryOff)
 
+  io.in.ready      := hit && (stateCache === s_idle || stateCache === s_end)
+
   io.out.valid     := hit
   io.out.bits.addr := io.in.bits.addr
 
@@ -115,12 +117,16 @@ class CacheStage1(val dataWidth: Int) extends Module with HasCacheConst {
   io.dataReadBus.bits.raddr := hitCacheAddr 
 
   // cache missing
-  io.mem.req.valid     := MuxLookup(stateCache, false.B)(List(s_rq -> true.B))
-  io.mem.req.bits.cmd  := SimpleBusCmd.read
-  io.mem.req.bits.addr := (io.in.bits.addr>>byteIdxWidth.U)<<byteIdxWidth.U
-  io.mem.req.bits.len  := (entryCnt-1).U
+  io.mem.req.valid      := MuxLookup(stateCache, false.B)(List(s_rq -> true.B))
+  io.mem.req.bits.cmd   := SimpleBusCmd.read
+  io.mem.req.bits.addr  := (io.in.bits.addr>>(byteIdxWidth+entryIdxWidth).U)<<(byteIdxWidth+entryIdxWidth).U
+  io.mem.req.bits.len   := (entryCnt-1).U
+  io.mem.req.bits.wdata := 0.U
+  io.mem.req.bits.wmask := 0.U
+  io.mem.req.bits.wlast := false.B
+  io.mem.resp.ready     := MuxLookup(stateCache, false.B)(List(s_reading ->  true.B))
 
-  io.dataWriteBus.req.valid      := (stateCache === s_reading) && io.mem.req.fire
+  io.dataWriteBus.req.valid      := (stateCache === s_reading) && io.mem.resp.fire
   io.dataWriteBus.req.bits.waddr := writeCacheAddr
   io.dataWriteBus.req.bits.wdata := io.mem.resp.bits.rdata
 }
@@ -128,16 +134,16 @@ class CacheStage1(val dataWidth: Int) extends Module with HasCacheConst {
 class CacheStage2(val dataWidth: Int) extends Module with HasCacheConst {
   val io = IO(new Bundle {
     val in  = Flipped(Decoupled(new Stage1IO)) // from stage 1
-    val dataReadBus = new SRAMBundleReadResp(dataWidth) // from sram
-    val out = Decoupled(new Stage2IO)// to cache.in.resp
+    val dataReadBus = Flipped(new SRAMBundleReadResp(dataWidth)) // from sram
+    val out = new Stage2IO // to cache.in.resp
   })
 
-  io.in.ready       := io.out.ready
+  io.in.ready       := io.out.resp.ready
   
-  io.out.valid      := io.in.valid
-  io.out.bits.rdata := io.dataReadBus.rdata
-  io.out.bits.rdata := Mux(io.in.valid, io.dataReadBus.rdata, 0.U)
-  io.out.bits.addr  := io.in.bits.addr
+  io.out.resp.valid      := io.in.valid
+  io.out.resp.bits.rdata := Mux(io.in.valid, io.dataReadBus.rdata, 0.U)
+  io.out.resp.bits.wresp := false.B
+  io.out.addr  := io.in.bits.addr
 }
 
 class Cache(val dataWidth: Int) extends Module with HasCacheConst {
@@ -157,12 +163,12 @@ class Cache(val dataWidth: Int) extends Module with HasCacheConst {
   s1.io.mem <> io.mem
   s1.io.dataReadBus  <> dataArray.io.r.req
   s1.io.dataWriteBus <> dataArray.io.w
-  PipelineConnect(s1.io.out, s2.io.in, s2.io.out.fire, io.flush)
+  PipelineConnect(s1.io.out, s2.io.in, s2.io.out.resp.fire, io.flush)
 
   // s2
   s2.io.dataReadBus <> dataArray.io.r.resp
 
   // cache
-  io.stage2Addr := s2.io.out.bits.addr
-  io.in.resp.bits.rdata := s2.io.out.bits.rdata 
+  io.stage2Addr := s2.io.out.addr
+  io.in.resp    <> s2.io.out.resp
 }

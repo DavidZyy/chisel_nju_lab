@@ -46,20 +46,26 @@ class top extends Module {
 
     /* ifu connect to cache */
     val IFU_i   =   Module(new IFU_pipeline())
-    // val icache  =   Module(new Icache_SimpleBus())
-    val icache  =   Module(new Icache_pipeline())
-    val sram_i  =   Module(new AXI4RAM())
-    IFU_i.to_mem   <> icache.from_ifu
-    IFU_i.to_IDU_PC := icache.instPC
-    icache.to_sram <> sram_i.axi
-    icache.redirect := EXU_i.to_IFU.bits.redirect
+    val ram_i   =   Module(new AXI4RAM())
+
+    // val icache  =   Module(new Icache_pipeline())
+    // IFU_i.to_mem    <> icache.from_ifu
+    // IFU_i.to_IDU_PC := icache.instPC
+    // icache.to_sram  <> ram_i.axi
+    // icache.redirect := EXU_i.to_IFU.bits.redirect
     
+    val icache  =   Module(new Cache(DATA_WIDTH))
+    IFU_i.to_mem  <> icache.io.in
+    IFU_i.to_IDU_PC := icache.io.stage2Addr
+    icache.io.mem.toAXI4() <> ram_i.axi
+    icache.io.flush := EXU_i.to_IFU.bits.redirect
+
     val addrSpace = List(
         (pmemBase, pmemSize),
         (mmioBase, mmioSize),
     )
 
-    val memXbar   = Module(new SimpleBusCrossBar1toN(addrSpace))
+    val memXbar = Module(new SimpleBusCrossBar1toN(addrSpace))
 
     /* lsu connect to cache */
     val dcache  =   Module(new Dcache_SimpleBus())

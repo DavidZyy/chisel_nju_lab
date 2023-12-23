@@ -558,7 +558,7 @@ class Lsu_simpleBus extends Module {
                                     s_write_wait     -> SimpleBusCmd.write
                                 ))
     to_mem.req.bits.len      := 0.U
-    to_mem.req.bits.last     := true.B
+    to_mem.req.bits.wlast    := true.B
 }
 
 // object decoder_main extends App {
