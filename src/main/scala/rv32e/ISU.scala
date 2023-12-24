@@ -20,7 +20,7 @@ class ISU extends Module {
     RegFile_i.io.in.rs1     := from_IDU.bits.rs1
     RegFile_i.io.in.rs2     := from_IDU.bits.rs2
     RegFile_i.io.in.rd      := from_WBU.bits.rd
-    RegFile_i.io.in.reg_wen := from_WBU.bits.reg_wen
+    RegFile_i.io.in.reg_wen := from_WBU.bits.reg_wen && from_WBU.fire
     RegFile_i.io.in.wdata   := from_WBU.bits.wdata
 
     // to idu

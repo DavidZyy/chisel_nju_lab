@@ -10,16 +10,29 @@ import rv32e.config.Configs._
 class WBU extends Module {
     val from_EXU = IO(Flipped(Decoupled(new EXU2WBU_bus)))
     val to_ISU   = IO(Decoupled(new WBU2ISU_bus))
-    // val to_IFU   = IO(Decoupled(new WBU2IFU_bus))
+    val to_IFU   = IO(Decoupled(new WBU2IFU_bus))
+    val wb       = IO(Output(Bool()))
+
+    wb := MuxLookup(from_EXU.bits.fu_op, from_EXU.valid)(List(
+        ("b"+fu_bru).U -> to_IFU.fire,
+        ("b"+fu_csr).U -> to_IFU.fire,
+    ))
 
     // to exu
-    from_EXU.ready := true.B
+    from_EXU.ready := MuxLookup(from_EXU.bits.fu_op, true.B)(List(
+        ("b"+fu_bru).U -> to_IFU.ready,
+        ("b"+fu_csr).U -> to_IFU.ready,
+    ))
 
     // to ifu
-    // to_IFU.valid   := from_EXU.valid // finish signal
+    to_IFU.valid := from_EXU.valid && MuxLookup(from_EXU.bits.fu_op, false.B)(List(
+        ("b"+fu_bru).U -> true.B,
+        ("b"+fu_csr).U -> true.B,
+    ))
+    to_IFU.bits.redirect <> from_EXU.bits.redirect
 
     // to isu
-    to_ISU.valid        := true.B
+    to_ISU.valid        := from_EXU.valid
     to_ISU.bits.reg_wen := Mux(from_EXU.fire, from_EXU.bits.reg_wen, false.B)
     to_ISU.bits.rd      := from_EXU.bits.rd
     to_ISU.bits.wdata   := MuxLookup(from_EXU.bits.fu_op, 0.U)(List(

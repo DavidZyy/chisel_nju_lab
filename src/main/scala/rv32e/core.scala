@@ -60,7 +60,7 @@ class top extends Module {
     IFU_i.to_mem  <> icache.io.in
     IFU_i.to_IDU_PC := icache.io.stage2Addr
     icache.io.mem.toAXI4() <> ram_i.axi
-    icache.io.flush := EXU_i.to_IFU.bits.redirect
+    icache.io.flush := WBU_i.to_IFU.bits.redirect.valid
 
     val ram_i2 =   Module(new AXI4RAM())
 
@@ -79,10 +79,10 @@ class top extends Module {
     // EXU_i.lsu_to_mem <> ram_i2.axi
 
 
-    EXU_i.to_IFU <> IFU_i.from_EXU
-    PipelineConnect(IFU_i.to_IDU, IDU_i.from_IFU, IDU_i.to_ISU.fire, EXU_i.to_IFU.bits.redirect && IFU_i.to_IDU.fire)
-    PipelineConnect(IDU_i.to_ISU, ISU_i.from_IDU, ISU_i.to_EXU.fire, EXU_i.to_IFU.bits.redirect && IDU_i.to_ISU.fire)
-    PipelineConnect(ISU_i.to_EXU, EXU_i.from_ISU, EXU_i.to_WBU.fire, EXU_i.to_IFU.bits.redirect && ISU_i.to_EXU.fire)
+    WBU_i.to_IFU <> IFU_i.from_WBU
+    PipelineConnect(IFU_i.to_IDU, IDU_i.from_IFU, IDU_i.to_ISU.fire, WBU_i.to_IFU.bits.redirect.valid && IFU_i.to_IDU.fire)
+    PipelineConnect(IDU_i.to_ISU, ISU_i.from_IDU, ISU_i.to_EXU.fire, WBU_i.to_IFU.bits.redirect.valid && IDU_i.to_ISU.fire)
+    PipelineConnect(ISU_i.to_EXU, EXU_i.from_ISU, EXU_i.to_WBU.fire, WBU_i.to_IFU.bits.redirect.valid && ISU_i.to_EXU.fire)
     // PipelineConnect(EXU_i.to_WBU, WBU_i.from_EXU, WBU_i.to_ISU.fire, false.B)
     EXU_i.to_WBU <> WBU_i.from_EXU
     EXU_i.to_ISU <> ISU_i.from_EXU
@@ -115,7 +115,7 @@ class top extends Module {
     io.out.exu.inst := EXU_i.to_WBU.bits.inst
     io.out.wbu.pc   := WBU_i.from_EXU.bits.pc
     io.out.wbu.inst := WBU_i.from_EXU.bits.inst
-    io.out.wb       := WBU_i.from_EXU.valid
+    io.out.wb       := WBU_i.wb
     io.out.difftest <> EXU_i.difftest
 }
 
