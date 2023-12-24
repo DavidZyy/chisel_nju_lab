@@ -244,7 +244,7 @@ class IFU_pipeline extends Module {
     val to_IDU_PC  = IO(Input(UInt(ADDR_WIDTH.W))) // from icache
 
     val reg_PC   = RegInit(UInt(ADDR_WIDTH.W), START_ADDR.U)
-    val inst_PC  = RegInit(UInt(ADDR_WIDTH.W), 0.U)
+    // val inst_PC  = RegInit(UInt(ADDR_WIDTH.W), 0.U)
     val next_PC  = Wire(UInt(ADDR_WIDTH.W))
 
     next_PC := Mux(from_EXU.fire && from_EXU.bits.redirect, from_EXU.bits.target, reg_PC + ADDR_BYTE.U)
@@ -253,7 +253,7 @@ class IFU_pipeline extends Module {
     // reg_PC  := Mux(to_mem.resp.fire && to_IDU.fire, next_PC, reg_PC) // none pipelined cache
 
     reg_PC  := Mux(to_mem.req.fire, next_PC, reg_PC) // pipelined cache
-    when(to_mem.req.fire) {inst_PC := reg_PC}
+    // when(to_mem.req.fire) {inst_PC := reg_PC}
 
     // refetch, for cache pipeline cannot stall, and inst will be discard. 
     // when(~to_IDU.ready) {reg_PC := inst_PC}
@@ -273,8 +273,8 @@ class IFU_pipeline extends Module {
     // to_IDU.bits.inst := Mux(to_IDU.fire, to_mem.resp.bits.rdata, 0.U) // if not ready, transfer nop inst
     to_IDU.bits.inst := to_mem.resp.bits.rdata // if not ready, transfer nop inst
     // to_IDU.bits.inst := Mux(to_IDU.valid, to_mem.resp.bits.rdata, to_IDU.bits.inst) // if not ready, transfer nop inst
-    to_IDU.bits.pc   := inst_PC
-    // to_IDU.bits.pc   := to_IDU_PC
+    // to_IDU.bits.pc   := inst_PC
+    to_IDU.bits.pc   := to_IDU_PC
 
     // from EXU signals
     // from_EXU.ready  := to_mem.resp.fire

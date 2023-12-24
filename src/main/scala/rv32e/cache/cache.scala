@@ -5,6 +5,7 @@ import chisel3.util._
 import rv32e.bus._
 import rv32e.config.Configs._
 import rv32e.utils._
+import chisel3.util.experimental.BoringUtils
 
 trait HasCacheConst {
   val byteIdxWidth  = 2 // one entry contains 1<<$ bytes
@@ -137,6 +138,9 @@ class CacheStage2(val dataWidth: Int) extends Module with HasCacheConst {
     val dataReadBus = Flipped(new SRAMBundleReadResp(dataWidth)) // from sram
     val out = new Stage2IO // to cache.in.resp
   })
+
+  BoringUtils.addSource(io.in.valid, "id1")
+  BoringUtils.addSource(io.in.bits.addr, "id2")
 
   io.in.ready       := io.out.resp.ready
   
