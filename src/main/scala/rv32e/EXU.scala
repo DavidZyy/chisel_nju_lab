@@ -120,15 +120,15 @@ class EXU_pipeline extends Module {
     val to_WBU      = IO(Decoupled(new EXU2WBU_bus))
     val to_IFU      = IO(Decoupled(new EXU2IFU_bus)) // redirection
     val difftest    = IO(new DiffCsr)
-    // val lsu_to_mem  = IO(new SimpleBus)
-    val lsu_to_mem  = IO(new AXI4)
+    val lsu_to_mem  = IO(new SimpleBus)
+    // val lsu_to_mem  = IO(new AXI4)
     val to_ISU      = IO(new EXU2ISU_bus)
 
     val Alu_i             = Module(new Alu())
     val Mdu_i             = Module(new Mdu())
     val Bru_i             = Module(new Bru())
-    // val Lsu_i             = Module(new Lsu_simpleBus())
-    val Lsu_i             = Module(new Lsu_axi())
+    val Lsu_i             = Module(new Lsu_simpleBus())
+    // val Lsu_i             = Module(new Lsu_axi())
     val Csr_i             = Module(new Csr())
     val ebreak_moudle_i   = Module(new ebreak_moudle())
     val not_impl_moudle_i = Module(new not_impl_moudle())
@@ -155,8 +155,8 @@ class EXU_pipeline extends Module {
     Lsu_i.io.in.mem_wen := from_ISU.bits.ctrl_sig.mem_wen
     Lsu_i.io.in.op      := from_ISU.bits.ctrl_sig.lsu_op
     Lsu_i.io.in.valid   := from_ISU.bits.isLSU && from_ISU.valid
-    // lsu_to_mem          <> Lsu_i.to_mem
-    lsu_to_mem          <> Lsu_i.axi
+    lsu_to_mem          <> Lsu_i.to_mem
+    // lsu_to_mem          <> Lsu_i.axi
 
     // bru
     Bru_i.io.in.op     := from_ISU.bits.ctrl_sig.bru_op

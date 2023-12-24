@@ -29,7 +29,7 @@ class out_class extends Bundle {
     val nextExecPC  = Output(UInt(ADDR_WIDTH.W)) // the next execute pc after a wb signal, for difftest
     val ifu      = new PipelineDebugInfo
     val idu      = new PipelineDebugInfo
-    // val isu      = new PipelineDebugInfo
+    val isu      = new PipelineDebugInfo
     val exu      = new PipelineDebugInfo
     val wbu      = new PipelineDebugInfo
     val difftest = new DiffCsr
@@ -64,27 +64,26 @@ class top extends Module {
 
     val ram_i2 =   Module(new AXI4RAM())
 
-    // val addrSpace = List(
-    //     (pmemBase, pmemSize),
-    //     (mmioBase, mmioSize),
-    // )
-    // val memXbar = Module(new SimpleBusCrossBar1toN(addrSpace))
-    // val dcache  =   Module(new Dcache_SimpleBus())
-    // val mmio    =   Module(new MMIO())
-    // EXU_i.lsu_to_mem  <> memXbar.io.in
-    // memXbar.io.out(0) <> dcache.from_lsu
-    // memXbar.io.out(1) <> mmio.from_lsu
-    // dcache.to_sram    <> ram_i2.axi
+    val addrSpace = List(
+        (pmemBase, pmemSize),
+        (mmioBase, mmioSize),
+    )
+    val memXbar = Module(new SimpleBusCrossBar1toN(addrSpace))
+    val dcache  =   Module(new Dcache_SimpleBus())
+    val mmio    =   Module(new MMIO())
+    EXU_i.lsu_to_mem  <> memXbar.io.in
+    memXbar.io.out(0) <> dcache.from_lsu
+    memXbar.io.out(1) <> mmio.from_lsu
+    dcache.to_sram    <> ram_i2.axi
 
-    EXU_i.lsu_to_mem <> ram_i2.axi
+    // EXU_i.lsu_to_mem <> ram_i2.axi
 
 
     EXU_i.to_IFU <> IFU_i.from_EXU
-    // IFU_i.to_IDU <> IDU_i.from_IFU
     PipelineConnect(IFU_i.to_IDU, IDU_i.from_IFU, IDU_i.to_ISU.fire, EXU_i.to_IFU.bits.redirect && IFU_i.to_IDU.fire)
-    IDU_i.to_ISU <> ISU_i.from_IDU
-
+    PipelineConnect(IDU_i.to_ISU, ISU_i.from_IDU, ISU_i.to_EXU.fire, EXU_i.to_IFU.bits.redirect && IDU_i.to_ISU.fire)
     PipelineConnect(ISU_i.to_EXU, EXU_i.from_ISU, EXU_i.to_WBU.fire, EXU_i.to_IFU.bits.redirect && ISU_i.to_EXU.fire)
+    // PipelineConnect(EXU_i.to_WBU, WBU_i.from_EXU, WBU_i.to_ISU.fire, false.B)
     EXU_i.to_WBU <> WBU_i.from_EXU
     EXU_i.to_ISU <> ISU_i.from_EXU
     WBU_i.to_ISU <> ISU_i.from_WBU
@@ -99,6 +98,8 @@ class top extends Module {
         io.out.nextExecPC := EXU_i.to_WBU.bits.pc
     } .elsewhen(ISU_i.from_IDU.valid) {
         io.out.nextExecPC := ISU_i.to_EXU.bits.pc
+    } .elsewhen(IDU_i.from_IFU.valid) {
+        io.out.nextExecPC := IDU_i.to_ISU.bits.pc
     } .elsewhen(CacheStage2valid) {
         io.out.nextExecPC := CacheStage2PC
     } .otherwise {
@@ -108,17 +109,17 @@ class top extends Module {
     io.out.ifu.inst := IFU_i.to_IDU.bits.inst
     io.out.idu.pc   := IDU_i.to_ISU.bits.pc
     io.out.idu.inst := IDU_i.to_ISU.bits.inst
+    io.out.isu.pc   := ISU_i.to_EXU.bits.pc
+    io.out.isu.inst := ISU_i.to_EXU.bits.inst
     io.out.exu.pc   := EXU_i.to_WBU.bits.pc
     io.out.exu.inst := EXU_i.to_WBU.bits.inst
     io.out.wbu.pc   := WBU_i.from_EXU.bits.pc
     io.out.wbu.inst := WBU_i.from_EXU.bits.inst
     io.out.wb       := WBU_i.from_EXU.valid
     io.out.difftest <> EXU_i.difftest
-    // assert(DATA_WIDTH == 64, "it should be 64")
 }
 
 object top_main extends App {
-    // assert(DATA_WIDTH == 64, "it should be 64")
     def t = new top()
     val generator = Seq(
         chisel3.stage.ChiselGeneratorAnnotation(() => t),

@@ -5,4 +5,25 @@
 1. mill generate .sv codes.
 
 12-18
-1. - [ ] optimize cache pipeline logic.
+- [x] optimize cache pipeline logic.
+
+12-24
+
+**ToDo**
+
+small
+- [ ] EXU to WBU pipeline
+- [ ] optimize lsu and dcache
+- [ ] BPU
+- [ ] MDU
+- [ ] merge icache ram and dcache ram
+- [ ] debug, log and perf system
+- [ ] AXI4 burst wrap mode for cache
+- [ ] forward(bypass)
+
+big
+- [ ] SOC
+- [ ] TLB
+- [ ] superscala(multi-issue)
+- [ ] out-of-ouder
+
