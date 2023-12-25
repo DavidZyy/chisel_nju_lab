@@ -29,7 +29,8 @@ class WBU extends Module {
         ("b"+fu_bru).U -> true.B,
         ("b"+fu_csr).U -> true.B,
     ))
-    to_IFU.bits.redirect <> from_EXU.bits.redirect
+    to_IFU.bits.redirect.valid  := from_EXU.bits.redirect.valid && from_EXU.valid
+    to_IFU.bits.redirect.target := from_EXU.bits.redirect.target
 
     // to isu
     to_ISU.valid        := from_EXU.valid
@@ -42,4 +43,7 @@ class WBU extends Module {
         ("b"+fu_csr).U  ->  from_EXU.bits.csr_rdata,
         ("b"+fu_mdu).U  ->  from_EXU.bits.mdu_result,
     ))
+    to_ISU.bits.hazard.rd      := from_EXU.bits.rd
+    to_ISU.bits.hazard.have_wb := ~from_EXU.valid
+    to_ISU.bits.hazard.isBR    := from_EXU.bits.isBRU || from_EXU.bits.isCSR
 }

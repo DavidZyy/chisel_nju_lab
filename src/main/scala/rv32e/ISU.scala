@@ -14,7 +14,9 @@ class ISU extends Module {
     val to_EXU   = IO(Decoupled(new ISU2EXU_bus))
     val from_EXU = IO(Flipped(new EXU2ISU_bus))
 
-    val has_hazard = (from_EXU.rd === from_IDU.bits.rs1 || from_EXU.rd === from_IDU.bits.rs2) && ~from_EXU.have_wb && from_IDU.valid && ~from_EXU.isBR 
+    val exu_hazard = (from_EXU.hazard.rd === from_IDU.bits.rs1 || from_EXU.hazard.rd === from_IDU.bits.rs2) && ~from_EXU.hazard.have_wb && from_IDU.valid && ~from_EXU.hazard.isBR 
+    val wbu_hazard = (from_WBU.bits.hazard.rd === from_IDU.bits.rs1 || from_WBU.bits.hazard.rd === from_IDU.bits.rs2) && ~from_WBU.bits.hazard.have_wb && from_IDU.valid && ~from_WBU.bits.hazard.isBR 
+    val has_hazard = exu_hazard || wbu_hazard
 
     val RegFile_i           =  Module(new RegFile())
     RegFile_i.io.in.rs1     := from_IDU.bits.rs1

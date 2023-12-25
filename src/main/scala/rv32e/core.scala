@@ -83,7 +83,7 @@ class top extends Module {
     PipelineConnect(IFU_i.to_IDU, IDU_i.from_IFU, IDU_i.to_ISU.fire, WBU_i.to_IFU.bits.redirect.valid && IFU_i.to_IDU.fire)
     PipelineConnect(IDU_i.to_ISU, ISU_i.from_IDU, ISU_i.to_EXU.fire, WBU_i.to_IFU.bits.redirect.valid && IDU_i.to_ISU.fire)
     PipelineConnect(ISU_i.to_EXU, EXU_i.from_ISU, EXU_i.to_WBU.fire, WBU_i.to_IFU.bits.redirect.valid && ISU_i.to_EXU.fire)
-    // PipelineConnect(EXU_i.to_WBU, WBU_i.from_EXU, WBU_i.to_ISU.fire, false.B)
+    // PipelineConnect(EXU_i.to_WBU, WBU_i.from_EXU, WBU_i.wb, WBU_i.to_IFU.bits.redirect.valid && EXU_i.to_WBU.fire)
     EXU_i.to_WBU <> WBU_i.from_EXU
     EXU_i.to_ISU <> ISU_i.from_EXU
     WBU_i.to_ISU <> ISU_i.from_WBU
@@ -94,12 +94,15 @@ class top extends Module {
     BoringUtils.addSink(CacheStage2PC, "id2")
 
     io.out.ifu_fetchPc := IFU_i.fetch_PC
-    when(EXU_i.from_ISU.valid) {
-        io.out.nextExecPC := EXU_i.to_WBU.bits.pc
+
+    when(WBU_i.from_EXU.valid) {
+        io.out.nextExecPC := WBU_i.from_EXU.bits.pc
+    } .elsewhen(EXU_i.from_ISU.valid) {
+        io.out.nextExecPC := EXU_i.from_ISU.bits.pc
     } .elsewhen(ISU_i.from_IDU.valid) {
-        io.out.nextExecPC := ISU_i.to_EXU.bits.pc
+        io.out.nextExecPC := ISU_i.from_IDU.bits.pc
     } .elsewhen(IDU_i.from_IFU.valid) {
-        io.out.nextExecPC := IDU_i.to_ISU.bits.pc
+        io.out.nextExecPC := IDU_i.from_IFU.bits.pc
     } .elsewhen(CacheStage2valid) {
         io.out.nextExecPC := CacheStage2PC
     } .otherwise {

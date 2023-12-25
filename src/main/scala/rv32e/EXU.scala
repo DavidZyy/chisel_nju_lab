@@ -101,9 +101,9 @@ class EXU_pipeline extends Module {
     ))
 
     // to isu
-    to_ISU.rd      := from_ISU.bits.rd
-    to_ISU.have_wb := ~from_ISU.valid
-    to_ISU.isBR    := from_ISU.bits.isBRU || from_ISU.bits.isCSR
+    to_ISU.hazard.rd      := from_ISU.bits.rd
+    to_ISU.hazard.have_wb := ~from_ISU.valid
+    to_ISU.hazard.isBR    := from_ISU.bits.isBRU || from_ISU.bits.isCSR
 
     difftest <> Csr_i.io.out.difftest
 }
