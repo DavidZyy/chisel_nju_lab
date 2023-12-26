@@ -563,7 +563,6 @@ class Lsu_simpleBus extends Module {
     to_mem.req.bits.wlast    := true.B
 }
 
-// object decoder_main extends App {
-//     emitVerilog(new Ram())(List("--target-dir", "generated"))
-//     // emitVerilog(new WriteSmem())(List("--target-dir", "generated"))
-// }
+class LSUPipeline extends Module {
+
+}

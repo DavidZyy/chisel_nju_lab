@@ -20,6 +20,7 @@ small
 - [ ] debug, log and perf system
 - [ ] AXI4 burst wrap mode for cache
 - [ ] forward(bypass)
+- [ ] optimize csr codes
 
 big
 - [ ] SOC
@@ -28,6 +29,11 @@ big
 - [ ] out-of-ouder
 
 12-25
+
+**TODO LIST**
+1. - [ ] Profile, Debug
+2. - [ ] LSU
+3. - [ ] Pipeline
 
 **DONE**
 
