@@ -2,11 +2,12 @@
 import "DPI-C" function void exit_code();
 
 module EbreakBB (
-    input      is_ebreak
+    input      clock,
+    input      valid
 );
 
-always @(*) begin
-    if(is_ebreak) begin
+always @(posedge clock) begin
+    if(valid) begin
         exit_code();
     end
 end

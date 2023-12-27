@@ -67,10 +67,10 @@ class EXU_pipeline extends Module {
     Csr_i.io.in.wdata   :=  from_ISU.bits.rdata1
 
     // ebreak
-    ebreak_moudle_i.is_ebreak  := from_ISU.bits.ctrl_sig.is_ebreak && from_ISU.valid
+    ebreak_moudle_i.valid  := from_ISU.bits.ctrl_sig.is_ebreak && to_WBU.fire
 
     // not implemented
-    not_impl_moudle_i.not_impl := from_ISU.bits.ctrl_sig.not_impl && from_ISU.valid
+    not_impl_moudle_i.valid := from_ISU.bits.ctrl_sig.not_impl && to_WBU.fire
 
     // to isu, the logic here should be simplified
     from_ISU.ready := to_WBU.ready && MuxLookup(from_ISU.bits.ctrl_sig.fu_op, true.B)(List(

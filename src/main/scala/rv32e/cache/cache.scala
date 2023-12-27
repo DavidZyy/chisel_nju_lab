@@ -82,7 +82,7 @@ class CacheStage1(val dataWidth: Int) extends Module with HasCacheConst {
   val entryOff = RegInit(0.U(entryIdxWidth.W))
   val last     = entryOff === ((1 << entryIdxWidth)-1).U
 
-  val s_idle :: s_read_valid :: s_rq :: s_reading :: s_end :: Nil = Enum(5)
+  val s_idle :: s_rq :: s_reading :: s_writing :: s_end :: Nil = Enum(5)
   val stateCache = RegInit(s_idle)
   switch (stateCache) {
     is (s_idle) {

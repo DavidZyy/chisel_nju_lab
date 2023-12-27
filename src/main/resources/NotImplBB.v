@@ -1,11 +1,12 @@
 import "DPI-C" function void not_impl_exception();
 
 module NotImplBB(
-    input not_impl
+    input clock,
+    input valid
 );
 
-always @(*) begin
-    if(not_impl) begin
+always @(posedge clock) begin
+    if(valid) begin
         not_impl_exception();
     end
 end

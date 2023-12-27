@@ -48,5 +48,6 @@ class WBU extends Module {
     to_ISU.bits.hazard.have_wb := ~from_EXU.valid
     to_ISU.bits.hazard.isBR    := from_EXU.bits.isBRU || from_EXU.bits.isCSR
 
-    Debug(false.B, "pc:%x, inst:%x\n", from_EXU.bits.pc, from_EXU.bits.inst)
+    // Debug(false.B, "pc:%x, inst:%x\n", from_EXU.bits.pc, from_EXU.bits.inst)
+    Debug(wb, "pc:%x, inst:%x\n", from_EXU.bits.pc, from_EXU.bits.inst)
 }

@@ -10,15 +10,17 @@ import rv32e.define.Inst._
 
 class NotImplBB extends BlackBox with HasBlackBoxResource {
     val io = IO(new Bundle{
-        val not_impl = Input(Bool())
+        val clock    = Input(Clock())
+        val valid = Input(Bool())
     })
     addResource("/NotImplBB.v")
 }
 
 class not_impl_moudle extends Module {
-    val not_impl = IO(Input(Bool()))
+    val valid = IO(Input(Bool()))
 
     val NotImplBB_i1 = Module(new NotImplBB())
 
-    NotImplBB_i1.io.not_impl := not_impl
+    NotImplBB_i1.io.clock    := clock
+    NotImplBB_i1.io.valid := valid
 }
