@@ -10,6 +10,8 @@ import rv32e.define.Inst._
 import rv32e.define.CSR_Info._
 import rv32e.utils.DiffCsr
 import rv32e.bus._
+import rv32e.utils._
+import chisel3.util.experimental.BoringUtils
 
 class D_Cache extends Module {
     val from_LSU = IO(Flipped(Decoupled(new LSU2Cache_bus)))
@@ -263,6 +265,10 @@ class Dcache_SimpleBus extends Module {
         }
     }
 
+    val EXUPC    = WireInit(0.U(DATA_WIDTH.W))
+    val EXUINST  = WireInit(0.U(DATA_WIDTH.W))
+    BoringUtils.addSink(EXUPC, "id3")
+    BoringUtils.addSink(EXUINST, "id4")
     // wrting to cache, 3 cycles: 1 issue address, 2 read cache, 3 write cache.
     // we can also use the minimal unit of cache is 1 byte, not 4 fytes, than we can only use 2 cycles:
     //  1 issue address, 2 write cache
@@ -270,6 +276,7 @@ class Dcache_SimpleBus extends Module {
     val wmask   = from_lsu.req.bits.wmask
     val indata  = (((wdata << (BYTE_WIDTH.U * ByteId)) & wmask) | (outdata & ~wmask))
     when ((state_dcache === s_wresp)) {
+        // Debug("pc: %x, inst: %x, addr:%x, data:%x\n", EXUPC, EXUINST, hitCacheAddr, indata)
         dataArray(hitCacheAddr) := indata
         dirtyArray(SetId)(CacheLineId)       := true.B
     }

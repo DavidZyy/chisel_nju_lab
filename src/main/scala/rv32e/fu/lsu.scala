@@ -564,5 +564,98 @@ class Lsu_simpleBus extends Module {
 }
 
 class LSUPipeline extends Module {
+    val io = IO(new Bundle {
+        val in  = (new ram_in_class )
+        val out = (new ram_out_class)
+    })
+    val to_mem     = IO(new SimpleBus)
 
+    val lsu_op = io.in.op
+    val true_addr = io.in.addr
+
+    val addr_low_2 = true_addr(1, 0)
+
+    val valid = io.in.valid
+
+    val rdata_align_4 = Wire(UInt(DATA_WIDTH.W))
+    rdata_align_4 := to_mem.resp.bits.rdata
+
+    val lb_rdata  = Wire(UInt(DATA_WIDTH.W))
+    val lbu_rdata = Wire(UInt(DATA_WIDTH.W))
+    val lh_rdata  = Wire(UInt(DATA_WIDTH.W))
+    val lhu_rdata = Wire(UInt(DATA_WIDTH.W))
+    val lw_rdata  = Wire(UInt(DATA_WIDTH.W))
+
+    lb_rdata := MuxLookup(addr_low_2, 0.U)(List(
+        0.U -> Cat(Fill(24, rdata_align_4(7 )), rdata_align_4(7, 0)),
+        1.U -> Cat(Fill(24, rdata_align_4(15)), rdata_align_4(15, 8)),
+        2.U -> Cat(Fill(24, rdata_align_4(23)), rdata_align_4(23, 16)),
+        3.U -> Cat(Fill(24, rdata_align_4(31)), rdata_align_4(31, 24)),
+    ))
+
+    lbu_rdata := MuxLookup(addr_low_2, 0.U)(List(
+        0.U -> Cat(Fill(24, 0.U), rdata_align_4(7, 0)),
+        1.U -> Cat(Fill(24, 0.U), rdata_align_4(15, 8)),
+        2.U -> Cat(Fill(24, 0.U), rdata_align_4(23, 16)),
+        3.U -> Cat(Fill(24, 0.U), rdata_align_4(31, 24)),
+    ))
+
+    lh_rdata := MuxLookup(addr_low_2, 0.U)(List(
+        0.U -> Cat(Fill(16, rdata_align_4(15)), rdata_align_4(15, 0 )),
+        2.U -> Cat(Fill(16, rdata_align_4(31)), rdata_align_4(31, 16)),
+    ))
+
+    lhu_rdata := MuxLookup(addr_low_2, 0.U)(List(
+        0.U -> Cat(Fill(16, 0.U), rdata_align_4(15, 0 )),
+        2.U -> Cat(Fill(16, 0.U), rdata_align_4(31, 16)),
+    ))
+
+    lw_rdata := rdata_align_4
+
+    // store inst
+    val sb_wmask = Wire(UInt((DATA_WIDTH).W))
+    val sh_wmask = Wire(UInt((DATA_WIDTH).W))
+    val sw_wmask = Wire(UInt((DATA_WIDTH).W))
+
+    sb_wmask    :=  MuxLookup(addr_low_2, 0.U)(List(
+        0.U -> 0x000000ffL.U,
+        1.U -> 0x0000ff00L.U,
+        2.U -> 0x00ff0000L.U,
+        3.U -> 0xff000000L.U,
+    ))
+
+    sh_wmask    :=  MuxLookup(addr_low_2, 0.U)(List(
+        0.U -> 0x0000ffffL.U,
+        2.U -> 0xffff0000L.U,
+    ))
+
+    sw_wmask    :=  0xffffffffL.U
+
+    val wmask   =  MuxLookup(lsu_op, 0.U)(List(
+        ("b" + lsu_sb).U -> sb_wmask,
+        ("b" + lsu_sh).U -> sh_wmask,
+        ("b" + lsu_sw).U -> sw_wmask,
+    ))
+
+    io.out.idle  := to_mem.resp.valid
+    io.out.end   := to_mem.resp.valid
+    io.out.rdata    :=  MuxLookup(lsu_op, 0.U)(List(
+        ("b" + lsu_x  ).U -> 0.U,
+        ("b" + lsu_lb ).U -> lb_rdata,
+        ("b" + lsu_lbu).U -> lbu_rdata,
+        ("b" + lsu_lh ).U -> lh_rdata,
+        ("b" + lsu_lhu).U -> lhu_rdata,
+        ("b" + lsu_lw ).U -> lw_rdata,
+    ))
+
+    to_mem.resp.ready        := true.B
+
+    // axi master signals
+    to_mem.req.valid         := io.in.valid
+    to_mem.req.bits.addr     := io.in.addr
+    to_mem.req.bits.wdata    := io.in.wdata
+    to_mem.req.bits.wmask    := wmask
+    to_mem.req.bits.cmd      := Mux(io.in.mem_wen, SimpleBusCmd.write, SimpleBusCmd.read)
+    to_mem.req.bits.len      := 0.U
+    to_mem.req.bits.wlast    := true.B
 }

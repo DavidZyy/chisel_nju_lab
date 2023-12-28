@@ -10,6 +10,8 @@ import rv32e.device.SRAM
 import rv32e.bus.Arbiter
 import rv32e.bus.AXILiteIO_master
 import rv32e.bus.AXILiteIO_slave
+import chisel3.util.experimental.BoringUtils
+
 
 // if have no new inst come in the regs before exu, should clear it.
 class EXU_pipeline extends Module {
@@ -24,8 +26,8 @@ class EXU_pipeline extends Module {
     val Alu_i             = Module(new Alu())
     val Mdu_i             = Module(new Mdu())
     val Bru_i             = Module(new Bru())
-    val Lsu_i             = Module(new Lsu_simpleBus())
-    // val Lsu_i             = Module(new Lsu_axi())
+    // val Lsu_i             = Module(new Lsu_simpleBus())
+    val Lsu_i             = Module(new LSUPipeline())
     val Csr_i             = Module(new Csr())
     val ebreak_moudle_i   = Module(new ebreak_moudle())
     val not_impl_moudle_i = Module(new not_impl_moudle())
@@ -106,4 +108,7 @@ class EXU_pipeline extends Module {
     to_ISU.hazard.isBR    := from_ISU.bits.isBRU || from_ISU.bits.isCSR
 
     difftest <> Csr_i.io.out.difftest
+
+    BoringUtils.addSource(from_ISU.bits.pc, "id3")
+    BoringUtils.addSource(from_ISU.bits.inst, "id4")
 }
