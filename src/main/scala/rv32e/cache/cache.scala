@@ -52,6 +52,7 @@ class CacheStage1(val dataWidth: Int) extends Module with HasCacheConst {
     val out = Decoupled(new Stage1IO) // to Cachestage2
     val dataReadBus  = Decoupled(new SRAMBundleReadReq(addrWidth)) // to sram
     val dataWriteBus = Flipped(new SRAMWriteBus(addrWidth, dataWidth)) // to sram
+    val flush = Input(Bool())
   })
 
   val replaceWayReg = RegInit(0.U)
@@ -71,6 +72,8 @@ class CacheStage1(val dataWidth: Int) extends Module with HasCacheConst {
 
   val hit = hitArray.reduce(_ | _) // use or on all elem in hitArray
 
+  // if have more than one tagArray have the same tag, there only 1 is valid, we can choose the valid 1 
+  // or do not let more than one tagArray have the same tag.
   val tagSeq = for (i <- 0 until wayCnt) yield {
     tagArray(i)(setIdx) -> i.U
   }
@@ -102,9 +105,18 @@ class CacheStage1(val dataWidth: Int) extends Module with HasCacheConst {
     }
   }
 
+  // discard the remaining burst transport
+  when(io.flush) {
+    stateCache := s_idle
+    entryOff   := 0.U
+  }
+
   when(last) {
     validArray(replaceWayReg)(setIdx) := true.B // when read the last make it valid
     tagArray(replaceWayReg)(setIdx)   := tag
+  } .elsewhen(io.dataWriteBus.req.valid && entryOff === 0.U) {
+    validArray(replaceWayReg)(setIdx) := false.B
+    tagArray(replaceWayReg)(setIdx)   := 0.U // clear tag!
   }
 
   val writeCacheAddr = Cat(replaceWayReg, setIdx, entryOff)
@@ -165,6 +177,7 @@ class Cache(val dataWidth: Int) extends Module with HasCacheConst {
   // s1
   s1.io.in  <> io.in.req
   s1.io.mem <> io.mem
+  s1.io.flush := io.flush
   s1.io.dataReadBus  <> dataArray.io.r.req
   s1.io.dataWriteBus <> dataArray.io.w
   PipelineConnect(s1.io.out, s2.io.in, s2.io.out.resp.fire, io.flush)

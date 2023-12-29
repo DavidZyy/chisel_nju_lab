@@ -202,6 +202,7 @@ class Dcache_SimpleBus extends Module {
     val state_dcache = RegInit(s_idle)
     switch (state_dcache) {
         is (s_idle) {
+            // && ~flush !!
             when (from_lsu.req.fire) {
                 when (hit) {
                     state_dcache := Mux(from_lsu.isWrite, s_wresp, s_rresp)

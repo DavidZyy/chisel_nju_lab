@@ -14,10 +14,7 @@ class WBU extends Module {
     val to_IFU   = IO(Decoupled(new WBU2IFU_bus))
     val wb       = IO(Output(Bool()))
 
-    wb := MuxLookup(from_EXU.bits.fu_op, from_EXU.valid)(List(
-        ("b"+fu_bru).U -> to_IFU.fire,
-        ("b"+fu_csr).U -> to_IFU.fire,
-    ))
+    wb := from_EXU.valid
 
     // to exu
     from_EXU.ready := MuxLookup(from_EXU.bits.fu_op, true.B)(List(
