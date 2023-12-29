@@ -72,6 +72,8 @@ class EXU2WBU_bus extends Bundle {
     val rd         = Output(UInt(REG_OP_WIDTH.W))
     val fu_op      = Output(UInt(FU_TYPEOP_WIDTH.W)) // used in wb stage
     val redirect   = new RedirectIO
+    val is_ebreak  = Output(Bool())
+    val not_impl   = Output(Bool())
 
     val inst    =   Output(UInt(ADDR_WIDTH.W)) // for debug    def isLSU    = ctrl_sig.fu_op === ("b"+fu_lsu).U
     def isBRU   = fu_op === ("b"+fu_bru).U

@@ -17,7 +17,6 @@ import chisel3.util.experimental.BoringUtils
 class EXU_pipeline extends Module {
     val from_ISU    = IO(Flipped(Decoupled(new ISU2EXU_bus)))
     val to_WBU      = IO(Decoupled(new EXU2WBU_bus))
-    // val to_IFU      = IO(Decoupled(new EXU2IFU_bus)) // redirection
     val difftest    = IO(new DiffCsr)
     val lsu_to_mem  = IO(new SimpleBus)
     // val lsu_to_mem  = IO(new AXI4)
@@ -29,8 +28,6 @@ class EXU_pipeline extends Module {
     // val Lsu_i             = Module(new Lsu_simpleBus())
     val Lsu_i             = Module(new LSUPipeline())
     val Csr_i             = Module(new Csr())
-    val ebreak_moudle_i   = Module(new ebreak_moudle())
-    val not_impl_moudle_i = Module(new not_impl_moudle())
 
     // alu
     Alu_i.io.in.op := from_ISU.bits.ctrl_sig.alu_op
@@ -68,12 +65,6 @@ class EXU_pipeline extends Module {
     Csr_i.io.in.csr_id  :=  from_ISU.bits.imm
     Csr_i.io.in.wdata   :=  from_ISU.bits.rdata1
 
-    // ebreak
-    ebreak_moudle_i.valid  := from_ISU.bits.ctrl_sig.is_ebreak && to_WBU.fire
-
-    // not implemented
-    not_impl_moudle_i.valid := from_ISU.bits.ctrl_sig.not_impl && to_WBU.fire
-
     // to isu, the logic here should be simplified
     from_ISU.ready := to_WBU.ready && MuxLookup(from_ISU.bits.ctrl_sig.fu_op, true.B)(List(
         /**
@@ -101,6 +92,8 @@ class EXU_pipeline extends Module {
         ("b"+fu_bru).U -> Alu_i.io.out.result,
         ("b"+fu_csr).U -> Csr_i.io.out.csr_addr
     ))
+    to_WBU.bits.is_ebreak  := from_ISU.bits.ctrl_sig.is_ebreak
+    to_WBU.bits.not_impl   := from_ISU.bits.ctrl_sig.not_impl
 
     // to isu
     to_ISU.hazard.rd      := from_ISU.bits.rd

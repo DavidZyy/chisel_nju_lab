@@ -7,6 +7,7 @@ import rv32e.bus._
 import rv32e.utils._
 import rv32e.define.Dec_Info._
 import rv32e.config.Configs._
+import rv32e.fu._
 
 class WBU extends Module {
     val from_EXU = IO(Flipped(Decoupled(new EXU2WBU_bus)))
@@ -45,5 +46,14 @@ class WBU extends Module {
     to_ISU.bits.hazard.have_wb := ~from_EXU.valid
     to_ISU.bits.hazard.isBR    := from_EXU.bits.isBRU || from_EXU.bits.isCSR
 
-    Debug(wb, "pc:%x, inst:%x\n", from_EXU.bits.pc, from_EXU.bits.inst)
+    val ebreak_moudle_i   = Module(new ebreak_moudle())
+    val not_impl_moudle_i = Module(new not_impl_moudle())
+
+    // ebreak
+    ebreak_moudle_i.valid   := from_EXU.bits.is_ebreak
+
+    // not implemented
+    not_impl_moudle_i.valid := from_EXU.bits.not_impl
+
+    // Debug(wb, "pc:%x, inst:%x\n", from_EXU.bits.pc, from_EXU.bits.inst)
 }

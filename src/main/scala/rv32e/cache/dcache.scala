@@ -197,13 +197,15 @@ class Dcache_SimpleBus extends Module {
 
     val cacheAddr = Cat(SetId, CacheLineId, EntId) // 
 
+    val flush = WireInit(false.B)
+    BoringUtils.addSink(flush, "id5")
     //  0         1          2          3            4        5            6         7        8            9
     val s_idle :: s_rresp :: s_wresp :: s_replace :: s_wrq :: s_writing :: s_wend :: s_rrq :: s_reading :: s_rend :: Nil = Enum(10)
     val state_dcache = RegInit(s_idle)
     switch (state_dcache) {
         is (s_idle) {
             // && ~flush !!
-            when (from_lsu.req.fire) {
+            when (from_lsu.req.fire && ~flush) {
                 when (hit) {
                     state_dcache := Mux(from_lsu.isWrite, s_wresp, s_rresp)
                 } .otherwise {

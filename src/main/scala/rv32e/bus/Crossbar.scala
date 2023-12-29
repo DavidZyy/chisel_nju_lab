@@ -13,6 +13,7 @@ class SimpleBusCrossBar1toN(addressSpace: List[(Long, Long)]) extends Module {
     val io = IO(new Bundle {
         val in  = Flipped(new SimpleBus)
         val out = Vec(addressSpace.length, new SimpleBus)
+        val flush = Input(Bool())
     })
 
     val s_idle :: s_resp :: s_error :: Nil = Enum(3)
@@ -31,8 +32,8 @@ class SimpleBusCrossBar1toN(addressSpace: List[(Long, Long)]) extends Module {
 
     switch (state) {
         is (s_idle) {
-            when (io.in.req.fire) { state := s_resp}
-            when (reqInvalidAddr) { state := s_error}
+            when (io.in.req.fire && ~io.flush) { state := s_resp}
+            when (reqInvalidAddr && ~io.flush) { state := s_error}
         }
         is (s_resp)  {when (io.in.resp.fire) {state := s_idle}}
         is (s_error) {when (io.in.resp.fire) {state := s_idle}}

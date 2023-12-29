@@ -72,19 +72,21 @@ class top extends Module {
     val dcache  =   Module(new Dcache_SimpleBus())
     val mmio    =   Module(new MMIO())
     EXU_i.lsu_to_mem  <> memXbar.io.in
+    memXbar.io.flush  := WBU_i.to_IFU.bits.redirect.valid
     memXbar.io.out(0) <> dcache.from_lsu
     memXbar.io.out(1) <> mmio.from_lsu
     dcache.to_sram    <> ram_i2.axi
 
     // EXU_i.lsu_to_mem <> ram_i2.axi
 
+    BoringUtils.addSource(WBU_i.to_IFU.bits.redirect.valid, "id5")
 
     WBU_i.to_IFU <> IFU_i.from_WBU
-    PipelineConnect(IFU_i.to_IDU, IDU_i.from_IFU, IDU_i.to_ISU.fire, WBU_i.to_IFU.bits.redirect.valid && IFU_i.to_IDU.fire)
-    PipelineConnect(IDU_i.to_ISU, ISU_i.from_IDU, ISU_i.to_EXU.fire, WBU_i.to_IFU.bits.redirect.valid && IDU_i.to_ISU.fire)
-    PipelineConnect(ISU_i.to_EXU, EXU_i.from_ISU, EXU_i.to_WBU.fire, WBU_i.to_IFU.bits.redirect.valid && ISU_i.to_EXU.fire)
-    // PipelineConnect(EXU_i.to_WBU, WBU_i.from_EXU, WBU_i.wb, WBU_i.to_IFU.bits.redirect.valid && EXU_i.to_WBU.fire)
-    EXU_i.to_WBU <> WBU_i.from_EXU
+    PipelineConnect(IFU_i.to_IDU, IDU_i.from_IFU, IDU_i.to_ISU.fire, WBU_i.to_IFU.bits.redirect.valid)// && IFU_i.to_IDU.fire)
+    PipelineConnect(IDU_i.to_ISU, ISU_i.from_IDU, ISU_i.to_EXU.fire, WBU_i.to_IFU.bits.redirect.valid)// && IDU_i.to_ISU.fire)
+    PipelineConnect(ISU_i.to_EXU, EXU_i.from_ISU, EXU_i.to_WBU.fire, WBU_i.to_IFU.bits.redirect.valid)// && ISU_i.to_EXU.fire)
+    PipelineConnect(EXU_i.to_WBU, WBU_i.from_EXU, WBU_i.wb, WBU_i.to_IFU.bits.redirect.valid)// && EXU_i.to_WBU.fire)
+    // EXU_i.to_WBU <> WBU_i.from_EXU
     EXU_i.to_ISU <> ISU_i.from_EXU
     WBU_i.to_ISU <> ISU_i.from_WBU
 
