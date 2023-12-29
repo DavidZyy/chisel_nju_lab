@@ -74,6 +74,7 @@ class EXU2WBU_bus extends Bundle {
     val redirect   = new RedirectIO
     val is_ebreak  = Output(Bool())
     val not_impl   = Output(Bool())
+    val is_mmio    = Output(Bool()) // for difftest dev
 
     val inst    =   Output(UInt(ADDR_WIDTH.W)) // for debug    def isLSU    = ctrl_sig.fu_op === ("b"+fu_lsu).U
     def isBRU   = fu_op === ("b"+fu_bru).U

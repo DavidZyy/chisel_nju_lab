@@ -33,6 +33,7 @@ class out_class extends Bundle {
     val exu      = new PipelineDebugInfo
     val wbu      = new PipelineDebugInfo
     val difftest = new DiffCsr
+    val is_mmio  = Output(Bool())
     val wb       = Output(Bool())
 }
 
@@ -122,6 +123,7 @@ class top extends Module {
     io.out.wbu.inst := WBU_i.from_EXU.bits.inst
     io.out.wb       := WBU_i.wb
     io.out.difftest <> EXU_i.difftest
+    io.out.is_mmio  := WBU_i.is_mmio
 }
 
 object top_main extends App {

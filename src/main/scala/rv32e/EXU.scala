@@ -11,6 +11,7 @@ import rv32e.bus.Arbiter
 import rv32e.bus.AXILiteIO_master
 import rv32e.bus.AXILiteIO_slave
 import chisel3.util.experimental.BoringUtils
+import rv32e.define.Mem._
 
 
 // if have no new inst come in the regs before exu, should clear it.
@@ -94,6 +95,7 @@ class EXU_pipeline extends Module {
     ))
     to_WBU.bits.is_ebreak  := from_ISU.bits.ctrl_sig.is_ebreak
     to_WBU.bits.not_impl   := from_ISU.bits.ctrl_sig.not_impl
+    to_WBU.bits.is_mmio    := from_ISU.bits.isLSU && Lsu_i.io.in.addr >= mmioBase.U
 
     // to isu
     to_ISU.hazard.rd      := from_ISU.bits.rd
