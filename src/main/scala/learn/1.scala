@@ -1,7 +1,7 @@
 package learn
 
 import chisel3._
-import chisel3.util.Counter
+import chisel3.util._
 import scala.math._
 
 object aamain  extends App {
@@ -69,12 +69,20 @@ object addmain extends App {
   println(outMatchVec)
 }
 
-class Person(name: String, age: Int) {
-  def apply(): String = s"Name: $name, Age: $age"
-}
+// object MaskExpand {
+//  def apply(m: UInt) = Cat(m.asBools.map(Fill(8, _)).reverse)
+// }
 
-object applymain extends App {
-  val p = new Person("John Doe", 30)
-  val details = p.apply()
-  println(details)
-}
+// class pand extends Module {
+//   val io = IO(new Bundle {
+//     val in  = Input(UInt(4.W))
+//     val out = Output(UInt(32.W))
+//   })
+// 
+//   io.out := MaskExpand(io.in)
+// }
+
+// object pand_main extends App {
+//     emitVerilog(new pand(), Array("--target-dir", "generated"))
+// }
+
