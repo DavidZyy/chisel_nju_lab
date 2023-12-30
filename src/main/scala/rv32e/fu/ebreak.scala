@@ -10,15 +10,17 @@ import rv32e.define.Inst._
 
 class EbreakBB extends BlackBox with HasBlackBoxResource {
     val io = IO(new Bundle{
-        val is_ebreak = Input(Bool())
+        val clock     = Input(Clock())
+        val valid = Input(Bool())
     })
     addResource("/EbreakBB.v")
 }
 
 class ebreak_moudle extends Module {
-    val is_ebreak = IO(Input(Bool()))
+    val valid = IO(Input(Bool()))
 
     val EbreakBB_i1 = Module(new EbreakBB())
 
-    EbreakBB_i1.io.is_ebreak := is_ebreak
+    EbreakBB_i1.io.clock     := clock
+    EbreakBB_i1.io.valid := valid
 }

@@ -1,4 +1,4 @@
-package rv32e.dev
+package rv32e.device
 
 // A sram with axi-lite bus, it acts as a slave, and IFU is it's master.
 // wrapper for DPI-C verilog, connected to IFU, LSU

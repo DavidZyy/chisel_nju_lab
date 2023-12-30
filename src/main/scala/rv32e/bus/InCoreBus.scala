@@ -36,6 +36,8 @@ class IDU2ISU_bus extends Bundle {
     val rs2      = Output(UInt(REG_OP_WIDTH.W))
     val rd       = Output(UInt(REG_OP_WIDTH.W))
     val ctrl_sig = new IDU_CtrlSig
+
+    val inst    =   Output(UInt(ADDR_WIDTH.W)) // for debug
 }
 
 class ISU2EXU_bus extends Bundle {
@@ -45,6 +47,19 @@ class ISU2EXU_bus extends Bundle {
     val rdata2   = Output(UInt(DATA_WIDTH.W))
     val rd       = Output(UInt(REG_OP_WIDTH.W))
     val ctrl_sig = new IDU_CtrlSig
+
+    val inst     = Output(UInt(ADDR_WIDTH.W)) // for debug
+
+    def isLSU    = ctrl_sig.fu_op === ("b"+fu_lsu).U
+    def isBRU    = ctrl_sig.fu_op === ("b"+fu_bru).U
+    def isCSR    = ctrl_sig.fu_op === ("b"+fu_csr).U
+    def isALU    = ctrl_sig.fu_op === ("b"+fu_alu).U
+    def isMDU    = ctrl_sig.fu_op === ("b"+fu_mdu).U
+}
+
+class RedirectIO extends Bundle {
+    val valid  = Output(Bool())
+    val target = Output(UInt(ADDR_WIDTH.W))
 }
 
 class EXU2WBU_bus extends Bundle {
@@ -56,23 +71,33 @@ class EXU2WBU_bus extends Bundle {
     val reg_wen    = Output(Bool()) // idu -> isu -> exu -> wbu -> isu
     val rd         = Output(UInt(REG_OP_WIDTH.W))
     val fu_op      = Output(UInt(FU_TYPEOP_WIDTH.W)) // used in wb stage
+    val redirect   = new RedirectIO
+    val is_ebreak  = Output(Bool())
+    val not_impl   = Output(Bool())
+    val is_mmio    = Output(Bool()) // for difftest dev
+
+    val inst    =   Output(UInt(ADDR_WIDTH.W)) // for debug    def isLSU    = ctrl_sig.fu_op === ("b"+fu_lsu).U
+    def isBRU   = fu_op === ("b"+fu_bru).U
+    def isCSR   = fu_op === ("b"+fu_csr).U
+    def isALU   = fu_op === ("b"+fu_alu).U
+    def isMDU   = fu_op === ("b"+fu_mdu).U
 }
 
-class EXU2IFU_bus extends Bundle {
-    val bru_ctrl_br     = Output(Bool()) 
-    val bru_addr        = Output(UInt(ADDR_WIDTH.W)) // from alu
-    val csr_ctrl_br     = Output(Bool())
-    val csr_addr        = Output(UInt(ADDR_WIDTH.W))
+class HazardIO extends Bundle {
+    val rd      = Output(UInt(REG_OP_WIDTH.W))
+    val have_wb = Output(Bool())
+    val isBR    = Output(Bool())
 }
 
 class WBU2ISU_bus extends Bundle {
     val reg_wen   = Output(Bool())
     val wdata     = Output(UInt(DATA_WIDTH.W))
     val rd        = Output(UInt(REG_OP_WIDTH.W))
+    val hazard    = new HazardIO
 }
 
 class WBU2IFU_bus extends Bundle {
-
+    val redirect = new RedirectIO
 }
 
 class IFU2Cache_bus extends Bundle {
@@ -95,4 +120,13 @@ class Cache2LSU_bus extends Bundle {
     val data = Output(UInt(DATA_WIDTH.W))
 
     val bresp = Output(Bool())  // write response
+}
+
+class EXU2ISU_bus extends Bundle {
+    val hazard = new HazardIO
+}
+
+class PipelineDebugInfo extends Bundle {
+    val inst    =   Output(UInt(ADDR_WIDTH.W))
+    val pc      =   Output(UInt(ADDR_WIDTH.W))      
 }

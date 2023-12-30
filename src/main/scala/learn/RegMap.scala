@@ -45,9 +45,6 @@ object MaskedRegMap {
     wen: Bool, wdata: UInt):Unit = generate(mapping, addr, rdata, addr, wen, wdata)
 }
 
-object MaskExpand {
-  def apply(x: UInt) = Cat(x.asBools.map(Fill(8, _)).reverse)
-}
 
 // object MaskData {
 //   def apply(oldData: UInt, newData: UInt, mask: UInt) = {
