@@ -7,7 +7,6 @@ import rv32e.fu._
 import rv32e.bus._
 import rv32e.utils.DiffCsr
 import rv32e.device.SRAM
-import rv32e.bus.Arbiter
 import rv32e.bus.AXILiteIO_master
 import rv32e.bus.AXILiteIO_slave
 import chisel3.util.experimental.BoringUtils
@@ -47,10 +46,10 @@ class EXU_pipeline extends Module {
     Mdu_i.io.in.src2 := from_ISU.bits.rdata2
 
     // lsu
-    Lsu_i.io.in.addr    := Alu_i.io.out.result
-    Lsu_i.io.in.wdata   := from_ISU.bits.rdata2
-    Lsu_i.io.in.mem_wen := from_ISU.bits.ctrl_sig.mem_wen
-    Lsu_i.io.in.op      := from_ISU.bits.ctrl_sig.lsu_op
+    Lsu_i.io.in.bits.addr    := Alu_i.io.out.result
+    Lsu_i.io.in.bits.wdata   := from_ISU.bits.rdata2
+    Lsu_i.io.in.bits.mem_wen := from_ISU.bits.ctrl_sig.mem_wen
+    Lsu_i.io.in.bits.op      := from_ISU.bits.ctrl_sig.lsu_op
     Lsu_i.io.in.valid   := from_ISU.bits.isLSU && from_ISU.valid
     lsu_to_mem          <> Lsu_i.to_mem
     // lsu_to_mem          <> Lsu_i.axi
@@ -65,6 +64,13 @@ class EXU_pipeline extends Module {
     Csr_i.io.in.cur_pc  :=  from_ISU.bits.pc
     Csr_i.io.in.csr_id  :=  from_ISU.bits.imm
     Csr_i.io.in.wdata   :=  from_ISU.bits.rdata1
+
+    val lsuStore = MuxLookup(from_ISU.bits.ctrl_sig.fu_op, false.B)(List(
+        ("b"+lsu_sb).U -> true.B,
+        ("b"+lsu_sh).U -> true.B,
+        ("b"+lsu_sw).U -> true.B,
+        ("b"+lsu_sd).U -> true.B,
+    ))
 
     // to isu, the logic here should be simplified
     from_ISU.ready := to_WBU.ready && MuxLookup(from_ISU.bits.ctrl_sig.fu_op, true.B)(List(
@@ -95,7 +101,7 @@ class EXU_pipeline extends Module {
     ))
     to_WBU.bits.is_ebreak  := from_ISU.bits.ctrl_sig.is_ebreak
     to_WBU.bits.not_impl   := from_ISU.bits.ctrl_sig.not_impl
-    to_WBU.bits.is_mmio    := from_ISU.bits.isLSU && Lsu_i.io.in.addr >= mmioBase.U
+    to_WBU.bits.is_mmio    := from_ISU.bits.isLSU && Lsu_i.io.in.bits.addr >= mmioBase.U
 
     // to isu
     to_ISU.hazard.rd      := from_ISU.bits.rd
@@ -104,6 +110,6 @@ class EXU_pipeline extends Module {
 
     difftest <> Csr_i.io.out.difftest
 
-    BoringUtils.addSource(from_ISU.bits.pc, "id3")
-    BoringUtils.addSource(from_ISU.bits.inst, "id4")
+    // BoringUtils.addSource(from_ISU.bits.pc, "id3")
+    // BoringUtils.addSource(from_ISU.bits.inst, "id4")
 }

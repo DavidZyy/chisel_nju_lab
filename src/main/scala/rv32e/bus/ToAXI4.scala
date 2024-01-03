@@ -20,19 +20,23 @@ class SimpleBus2AXI4Converter extends Module {
     axi.ar.bits.len   := mem.req.bits.len
     axi.ar.bits.burst := INCR.U
     axi.r.ready       := mem.resp.ready
-    axi.aw.valid      := mem.req.valid && mem.isWrite
+    axi.aw.valid      := mem.req.valid && mem.isAWrite
     axi.aw.bits.addr  := mem.req.bits.addr
     axi.aw.bits.size  := DATA_WIDTH.U
     axi.aw.bits.len   := mem.req.bits.len // if from cache to mem, if to device, the length is not this.
     axi.aw.bits.burst := INCR.U
     axi.w.valid       := mem.req.valid && mem.isWrite
     axi.w.bits.data   := mem.req.bits.wdata
-    axi.w.bits.strb   := "b1111".U
+    axi.w.bits.strb   := mem.req.bits.wmask
     axi.w.bits.last   := mem.req.bits.wlast
     axi.b.ready       := mem.resp.ready
 
-    mem.req.ready     := Mux(mem.isRead, axi.ar.ready, axi.aw.ready)
-    mem.resp.valid    := Mux(mem.isRead, axi.r.valid, axi.b.valid)
+    mem.req.ready     := MuxLookup(mem.req.bits.cmd, false.B)(List(
+        SimpleBusCmd.read    -> axi.ar.ready,
+        SimpleBusCmd.awrite  -> axi.aw.ready,
+        SimpleBusCmd.write   -> axi.w.ready,
+    ))
+    mem.resp.valid      := axi.r.valid
     mem.resp.bits.rdata := axi.r.bits.data
     mem.resp.bits.wresp := axi.b.bits.resp
 }

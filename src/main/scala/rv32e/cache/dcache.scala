@@ -52,7 +52,7 @@ class Dcache_SimpleBus extends Module {
     val cacheAddr = Cat(SetId, CacheLineId, EntId) // 
 
     val flush = WireInit(false.B)
-    BoringUtils.addSink(flush, "id5")
+    // BoringUtils.addSink(flush, "id5")
     //  0         1          2          3            4        5            6         7        8            9
     val s_idle :: s_rresp :: s_wresp :: s_replace :: s_wrq :: s_writing :: s_wend :: s_rrq :: s_reading :: s_rend :: Nil = Enum(10)
     val state_dcache = RegInit(s_idle)
@@ -124,8 +124,8 @@ class Dcache_SimpleBus extends Module {
 
     val EXUPC    = WireInit(0.U(DATA_WIDTH.W))
     val EXUINST  = WireInit(0.U(DATA_WIDTH.W))
-    BoringUtils.addSink(EXUPC, "id3")
-    BoringUtils.addSink(EXUINST, "id4")
+    // BoringUtils.addSink(EXUPC, "id3")
+    // BoringUtils.addSink(EXUINST, "id4")
     // wrting to cache, 3 cycles: 1 issue address, 2 read cache, 3 write cache.
     // we can also use the minimal unit of cache is 1 byte, not 4 fytes, than we can only use 2 cycles:
     //  1 issue address, 2 write cache

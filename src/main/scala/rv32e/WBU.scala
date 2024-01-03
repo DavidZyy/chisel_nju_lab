@@ -57,5 +57,5 @@ class WBU extends Module {
     not_impl_moudle_i.valid := from_EXU.bits.not_impl
 
     is_mmio := from_EXU.bits.is_mmio
-    Debug(wb, "pc:%x, inst:%x\n", from_EXU.bits.pc, from_EXU.bits.inst)
+    Debug(wb, "[wbu], pc:%x, inst:%x\n", from_EXU.bits.pc, from_EXU.bits.inst)
 }

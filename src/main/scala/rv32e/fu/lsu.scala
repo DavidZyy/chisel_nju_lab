@@ -11,11 +11,11 @@ import rv32e.config.Axi_Configs._
 import rv32e.bus._
 
 class ram_in_class extends Bundle {
-    val valid   =   Input(Bool())
-    val mem_wen =   Input(Bool())
-    val addr    =   Input(UInt(ADDR_WIDTH.W))
-    val wdata   =   Input(UInt(DATA_WIDTH.W))
-    val op      =   Input(UInt(LSUOP_WIDTH.W))
+    // val valid   =   Input(Bool())
+    val mem_wen =   Output(Bool())
+    val addr    =   Output(UInt(ADDR_WIDTH.W))
+    val wdata   =   Output(UInt(DATA_WIDTH.W))
+    val op      =   Output(UInt(LSUOP_WIDTH.W))
 }
 
 class ram_out_class extends Bundle {
@@ -26,17 +26,15 @@ class ram_out_class extends Bundle {
 
 class LSUPipeline extends Module {
     val io = IO(new Bundle {
-        val in  = (new ram_in_class )
+        val in  = Flipped(Decoupled(new ram_in_class ))
         val out = (new ram_out_class)
     })
     val to_mem     = IO(new SimpleBus)
 
-    val lsu_op = io.in.op
-    val true_addr = io.in.addr
+    val lsu_op    = io.in.bits.op
+    val true_addr = io.in.bits.addr
 
     val addr_low_2 = true_addr(1, 0)
-
-    val valid = io.in.valid
 
     val rdata_align_4 = Wire(UInt(DATA_WIDTH.W))
     rdata_align_4 := to_mem.resp.bits.rdata
@@ -74,9 +72,9 @@ class LSUPipeline extends Module {
     lw_rdata := rdata_align_4
 
     // store inst
-    val sb_wmask = Wire(UInt((DATA_WIDTH).W))
-    val sh_wmask = Wire(UInt((DATA_WIDTH).W))
-    val sw_wmask = Wire(UInt((DATA_WIDTH).W))
+    val sb_wmask = Wire(UInt(wmaskWidth.W))
+    val sh_wmask = Wire(UInt(wmaskWidth.W))
+    val sw_wmask = Wire(UInt(wmaskWidth.W))
 
     sb_wmask    :=  MuxLookup(addr_low_2, 0.U)(List(
         0.U -> "b0001".U,
@@ -98,6 +96,8 @@ class LSUPipeline extends Module {
         ("b" + lsu_sw).U -> sw_wmask,
     ))
 
+    io.in.ready  := true.B
+
     io.out.idle  := to_mem.resp.valid
     io.out.end   := to_mem.resp.valid
     io.out.rdata    :=  MuxLookup(lsu_op, 0.U)(List(
@@ -111,12 +111,11 @@ class LSUPipeline extends Module {
 
     to_mem.resp.ready        := true.B
 
-    // axi master signals
     to_mem.req.valid         := io.in.valid
-    to_mem.req.bits.addr     := io.in.addr
-    to_mem.req.bits.wdata    := io.in.wdata
+    to_mem.req.bits.addr     := io.in.bits.addr
+    to_mem.req.bits.wdata    := io.in.bits.wdata
     to_mem.req.bits.wmask    := wmask
-    to_mem.req.bits.cmd      := Mux(io.in.mem_wen, SimpleBusCmd.write, SimpleBusCmd.read)
+    to_mem.req.bits.cmd      := Mux(io.in.bits.mem_wen, SimpleBusCmd.write, SimpleBusCmd.read)
     to_mem.req.bits.len      := 0.U
     to_mem.req.bits.wlast    := true.B
 }

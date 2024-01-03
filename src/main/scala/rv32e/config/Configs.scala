@@ -19,7 +19,9 @@ object Configs {
     val START_ADDR: Long =  0x80000000L
 
     /* 2^4 = 16 general registers */
-    val REG_OP_WIDTH = 5
+    val REG_OP_WIDTH    = 5
+
+    val wmaskWidth      = DATA_WIDTH / BYTE_WIDTH
 }
 
 object Cache_Configs {

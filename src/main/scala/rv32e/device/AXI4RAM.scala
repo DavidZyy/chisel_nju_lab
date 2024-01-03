@@ -26,13 +26,13 @@ class AXI4RAM extends Module {
     val reg_addr  = RegInit(0.U)
     val reg_burst = RegInit(3.U)
 
-    // state machine s_fill : sram wait a cycle to wait dcahe fill pipeline, for it read data need two cycles
     //  0         1               2             3             4                5         6              7
     val s_idle :: s_read_delay :: s_read_mid :: s_read_end :: s_write_delay :: s_fill :: s_write_mid :: s_write_end :: Nil = Enum(8)
     val state_sram = RegInit(s_idle)
     switch (state_sram) {
         is (s_idle) {
-            delay := 0.U
+            delay := 10.U
+            // delay := 0.U
             // delay := lfsr.io.out;
             when (axi.ar.fire) {
                 state_sram := s_read_delay
@@ -82,6 +82,8 @@ class AXI4RAM extends Module {
             delay := delay - 1.U
         }
         is (s_fill) {
+            // or remove this state to cache?
+            //  s_fill : sram wait a cycle to wait dcahe fill pipeline, for it read data need two cycles
             state_sram  := Mux(reg_AxLen === 0.U, s_write_end, s_write_mid)
         }
         is (s_write_mid) {

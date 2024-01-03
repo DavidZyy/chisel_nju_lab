@@ -10,7 +10,6 @@ import rv32e.utils.DiffCsr
 import java.awt.MouseInfo
 import utils.RegFile
 import rv32e.device.SRAM
-import rv32e.bus.Arbiter
 import rv32e.device.AXI4RAM
 import rv32e.cache._
 import rv32e.define.Mem._
@@ -57,7 +56,7 @@ class top extends Module {
     // icache.to_sram  <> ram_i.axi
     // icache.redirect := EXU_i.to_IFU.bits.redirect
     
-    val icache  =   Module(new Cache(DATA_WIDTH))
+    val icache  =   Module(new Cache(DATA_WIDTH, "icache"))
     IFU_i.to_mem  <> icache.io.in
     IFU_i.to_IDU_PC := icache.io.stage2Addr
     icache.io.mem.toAXI4() <> ram_i.axi
@@ -70,17 +69,21 @@ class top extends Module {
         (mmioBase, mmioSize),
     )
     val memXbar = Module(new SimpleBusCrossBar1toN(addrSpace))
-    val dcache  =   Module(new Dcache_SimpleBus())
+    // val dcache  =   Module(new Dcache_SimpleBus())
+    val dcache  =   Module(new Cache(DATA_WIDTH, "dcache"))
     val mmio    =   Module(new MMIO())
     EXU_i.lsu_to_mem  <> memXbar.io.in
     memXbar.io.flush  := WBU_i.to_IFU.bits.redirect.valid
-    memXbar.io.out(0) <> dcache.from_lsu
+    // memXbar.io.out(0) <> dcache.from_lsu
+    memXbar.io.out(0) <> dcache.io.in
     memXbar.io.out(1) <> mmio.from_lsu
-    dcache.to_sram    <> ram_i2.axi
+    // dcache.to_sram    <> ram_i2.axi
+    dcache.io.mem.toAXI4() <> ram_i2.axi
+    dcache.io.flush := WBU_i.to_IFU.bits.redirect.valid
 
     // EXU_i.lsu_to_mem <> ram_i2.axi
 
-    BoringUtils.addSource(WBU_i.to_IFU.bits.redirect.valid, "id5")
+    // BoringUtils.addSource(WBU_i.to_IFU.bits.redirect.valid, "id5")
 
     WBU_i.to_IFU <> IFU_i.from_WBU
     PipelineConnect(IFU_i.to_IDU, IDU_i.from_IFU, IDU_i.to_ISU.fire, WBU_i.to_IFU.bits.redirect.valid)// && IFU_i.to_IDU.fire)

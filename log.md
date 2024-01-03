@@ -12,7 +12,7 @@
 **ToDo**
 
 small
-- [ ] EXU to WBU pipeline
+- [x] EXU to WBU pipeline
 - [ ] optimize lsu and dcache
 - [ ] BPU
 - [ ] MDU
@@ -31,9 +31,14 @@ big
 12-25
 
 **TODO LIST**
-1. - [ ] Profile, Debug
-2. - [ ] LSU
-3. - [ ] Pipeline
+1. - [x] Profile, Debug
+2. - [x] LSU
+3. - [x] Pipeline
 
 **DONE**
 
+
+12-31
+
+**TODO LIST**
+1. - [ ] complete SimpleBus to AXI4
