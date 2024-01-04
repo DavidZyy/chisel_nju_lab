@@ -90,14 +90,25 @@ class SimpleBusCrossBar1toN(addressSpace: List[(Long, Long)]) extends Module {
             state := s_error
           }
         }
-        is (s_resp)  {
+        is (s_resp) {
+          // when(io.in.req.fire && io.in.resp.fire) {
+          //   state := s_resp
+          // } .elsewhen(io.in.resp.fire) {
+          //   state := s_idle
+          // } .otherwise {
+          //   state := s_resp
+          // }
           state := Mux(io.in.resp.fire, s_idle, s_resp)
         }
         is (s_error) {state := s_idle}
     }
 
     // in.req, only receive access in idle
-    io.in.req.ready  := Mux1H(outSelVec, io.out.map(_.req.ready)) && state === s_idle
+    // io.in.req.ready  := MuxLookup(state, false.B)(List(
+    //   s_idle -> Mux1H(outSelVec, io.out.map(_.req.ready)),
+    //   s_resp -> Mux1H(outSelRespVec, io.out.map(_.req.ready)),
+    // ))
+    io.in.req.ready := Mux1H(outSelVec, io.out.map(_.req.ready)) && state === s_idle
 
     // in.resp
     io.in.resp.valid := MuxLookup(state, false.B)(List(

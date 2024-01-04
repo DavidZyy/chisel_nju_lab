@@ -66,7 +66,7 @@ class EXU_pipeline extends Module {
     Csr_i.io.in.csr_id  :=  from_ISU.bits.imm
     Csr_i.io.in.wdata   :=  from_ISU.bits.rdata1
 
-    val lsuStore = MuxLookup(from_ISU.bits.ctrl_sig.fu_op, false.B)(List(
+    val lsuStore = MuxLookup(from_ISU.bits.ctrl_sig.lsu_op, false.B)(List(
         ("b"+lsu_sb).U -> true.B,
         ("b"+lsu_sh).U -> true.B,
         ("b"+lsu_sw).U -> true.B,
@@ -79,13 +79,16 @@ class EXU_pipeline extends Module {
           * from_ISU is not valid means the result has been committed to WB, so we are ready to receive the
           * next inst.
           */ 
+        // ("b"+fu_lsu).U -> Mux(lsuStore, Lsu_i.io.in.req.ready, (~from_ISU.valid || Lsu_i.io.in.resp.valid)),
         ("b"+fu_lsu).U -> (~from_ISU.valid || Lsu_i.io.in.resp.valid),
     ))
 
     // to wbu, logical not right here.
     to_WBU.valid := from_ISU.valid && MuxLookup(from_ISU.bits.ctrl_sig.fu_op, true.B)(List(
+        // ("b"+fu_lsu).U -> Mux(lsuStore, true.B, Lsu_i.io.in.resp.valid),
         ("b"+fu_lsu).U -> Lsu_i.io.in.resp.valid,
     ))
+
     to_WBU.bits.alu_result := Alu_i.io.out.result
     to_WBU.bits.mdu_result := Mdu_i.io.out.result
     to_WBU.bits.lsu_rdata  := Lsu_i.io.in.resp.bits.rdata
