@@ -12,8 +12,6 @@ import rv32e.bus.AXILiteIO_slave
 import chisel3.util.experimental.BoringUtils
 import rv32e.define.Mem._
 
-
-// if have no new inst come in the regs before exu, should clear it.
 class EXU_pipeline extends Module {
     val from_ISU    = IO(Flipped(Decoupled(new ISU2EXU_bus)))
     val to_WBU      = IO(Decoupled(new EXU2WBU_bus))
@@ -46,13 +44,16 @@ class EXU_pipeline extends Module {
     Mdu_i.io.in.src2 := from_ISU.bits.rdata2
 
     // lsu
-    Lsu_i.io.in.bits.addr    := Alu_i.io.out.result
-    Lsu_i.io.in.bits.wdata   := from_ISU.bits.rdata2
-    Lsu_i.io.in.bits.mem_wen := from_ISU.bits.ctrl_sig.mem_wen
-    Lsu_i.io.in.bits.op      := from_ISU.bits.ctrl_sig.lsu_op
-    Lsu_i.io.in.valid   := from_ISU.bits.isLSU && from_ISU.valid
-    lsu_to_mem          <> Lsu_i.to_mem
-    // lsu_to_mem          <> Lsu_i.axi
+    Lsu_i.io.in.req.valid      := from_ISU.bits.isLSU && from_ISU.valid
+    Lsu_i.io.in.req.bits.addr  := Alu_i.io.out.result
+    Lsu_i.io.in.req.bits.wdata := from_ISU.bits.rdata2
+    Lsu_i.io.in.req.bits.wmask := "b1111".U
+    Lsu_i.io.in.req.bits.cmd   := Mux(from_ISU.bits.ctrl_sig.mem_wen, SimpleBusCmd.write, SimpleBusCmd.read)
+    Lsu_i.io.in.req.bits.len   := 0.U
+    Lsu_i.io.in.req.bits.wlast := true.B
+    Lsu_i.io.in.resp.ready     := from_ISU.bits.isLSU
+    Lsu_i.io.lsu_op            := from_ISU.bits.ctrl_sig.lsu_op
+    lsu_to_mem                 <> Lsu_i.io.mem
 
     // bru
     Bru_i.io.in.op     := from_ISU.bits.ctrl_sig.bru_op
@@ -78,16 +79,16 @@ class EXU_pipeline extends Module {
           * from_ISU is not valid means the result has been committed to WB, so we are ready to receive the
           * next inst.
           */ 
-        ("b"+fu_lsu).U -> (~from_ISU.valid || Lsu_i.io.out.end),
+        ("b"+fu_lsu).U -> (~from_ISU.valid || Lsu_i.io.in.resp.valid),
     ))
 
     // to wbu, logical not right here.
     to_WBU.valid := from_ISU.valid && MuxLookup(from_ISU.bits.ctrl_sig.fu_op, true.B)(List(
-        ("b"+fu_lsu).U -> Lsu_i.io.out.end,
+        ("b"+fu_lsu).U -> Lsu_i.io.in.resp.valid,
     ))
     to_WBU.bits.alu_result := Alu_i.io.out.result
     to_WBU.bits.mdu_result := Mdu_i.io.out.result
-    to_WBU.bits.lsu_rdata  := Lsu_i.io.out.rdata
+    to_WBU.bits.lsu_rdata  := Lsu_i.io.in.resp.bits.rdata
     to_WBU.bits.csr_rdata  := Csr_i.io.out.r_csr
     to_WBU.bits.pc         := from_ISU.bits.pc
     to_WBU.bits.inst       := from_ISU.bits.inst
@@ -101,7 +102,7 @@ class EXU_pipeline extends Module {
     ))
     to_WBU.bits.is_ebreak  := from_ISU.bits.ctrl_sig.is_ebreak
     to_WBU.bits.not_impl   := from_ISU.bits.ctrl_sig.not_impl
-    to_WBU.bits.is_mmio    := from_ISU.bits.isLSU && Lsu_i.io.in.bits.addr >= mmioBase.U
+    to_WBU.bits.is_mmio    := from_ISU.bits.isLSU && Lsu_i.io.in.req.bits.addr >= mmioBase.U
 
     // to isu
     to_ISU.hazard.rd      := from_ISU.bits.rd
@@ -109,7 +110,4 @@ class EXU_pipeline extends Module {
     to_ISU.hazard.isBR    := from_ISU.bits.isBRU || from_ISU.bits.isCSR
 
     difftest <> Csr_i.io.out.difftest
-
-    // BoringUtils.addSource(from_ISU.bits.pc, "id3")
-    // BoringUtils.addSource(from_ISU.bits.inst, "id4")
 }
