@@ -5,8 +5,8 @@ import chisel3.util._
 
 object GTimer {
   def apply() = {
-    val c = RegInit(0.U(64.W))
-    c := c + 1.U
+    val c = RegInit(4.U(32.W))
+    c := c + 2.U              // gtkwave's one cycle use two seconds, for debug conveniently, add 2.
     c
   }
 }

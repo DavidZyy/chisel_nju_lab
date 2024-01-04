@@ -18,11 +18,23 @@ object LogUtil {
             printf(pable)
         }
     }
+    
+    def apply(time: UInt, cond: Bool, pable: Printable): Any = {
+        val commonInfo = p"[${GTimer()-time}]: "
+        when(cond) {
+            printf(commonInfo)
+            printf(pable)
+        }
+    }
 }
 
 object Debug {
     def apply(fmt: String, data: Bits*): Any = apply(true.B, fmt, data:_*)
     def apply(cond: Bool, fmt: String, data: Bits*): Any = apply(cond, Printable.pack(fmt, data:_*))
     def apply(cond: Bool, pable: Printable): Any = LogUtil(cond, pable)
+
+
+    def apply(time: UInt, cond: Bool, fmt: String, data: Bits*): Any = apply(time, cond, Printable.pack(fmt, data:_*))
+    def apply(time: UInt, cond: Bool, pable: Printable): Any = LogUtil(time, cond, pable)
 }
 
