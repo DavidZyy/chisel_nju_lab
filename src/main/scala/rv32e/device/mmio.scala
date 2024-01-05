@@ -2,7 +2,7 @@ package rv32e.device
 
 import chisel3._
 import chisel3.util._
-import rv32e.bus._
+import rv32e.bus.simplebus.SimpleBus
 
 class MMIO extends Module {
     val from_lsu = IO(Flipped(new SimpleBus))

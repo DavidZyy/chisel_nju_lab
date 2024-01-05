@@ -4,7 +4,7 @@ rm -rf ./generated/*
 # generate verilog file
 # sbt "runMain rv32e.top_main"
 # ./mill.sh myProject.runMain rv32e.top_main
-./mill.sh -i myProject.runMain rv32e.top_main -td /home/zhuyangyang/project/CPU/chisel-empty/generated
+./mill.sh -i myProject.runMain rv32e.core.top_main -td /home/zhuyangyang/project/CPU/chisel-empty/generated
 # Define the file name
 file_name="generated/top.v"
 

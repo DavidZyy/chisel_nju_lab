@@ -2,7 +2,7 @@ package rv32e.utils
 
 import chisel3._
 import chisel3.util._
-import rv32e.config.Configs._
+
 
 // class level 1
 class SRAMBundleReadReq(val addrWidth: Int) extends Bundle {
@@ -52,7 +52,7 @@ class SRAMTemplate(val addrWidth: Int, val dataWidth: Int, val Name: String) ext
     // use RegNext to wait for rdata, rdata is not get in the cycle it read, so we get it in the next cycle, and modiry time
     Debug(2.U, RegNext(realRen), s"[SRAM][${Name}], raddr:%x, rdata:%x\n", RegNext(io.r.req.bits.raddr), rdata)
     Debug(wen, s"[SRAM][${Name}], waddr:%x, wdata:%x\n", io.w.req.bits.waddr, io.w.req.bits.wdata)
-    assert(DATA_WIDTH == 32, "if cpu is 64 bits, this should be modify, in 32 bits cpu, both data and inst is 32 bits, but in " +
+    assert(dataWidth == 32, "if cpu is 64 bits, this should be modify, in 32 bits cpu, both data and inst is 32 bits, but in " +
       "64 bit cpu, inst is 32 bits and data is 64 bits. So dataWidth can be 32 in icache and be 64 in dcache")
 }
 

@@ -8,14 +8,17 @@ import chisel3._
 import chisel3.util._
 import chisel3.util.BitPat
 import chisel3.util.experimental.decode._
-import rv32e.config.Configs._
-import rv32e.config.Axi_Configs._
-import rv32e.define.Dec_Info._
-import rv32e.define.Inst._
-import rv32e.bus._
+
+import rv32e.bus.axi4.AXI4
+import rv32e.bus.axi4.axiConf 
+
+import rv32e.core.config._
+import rv32e.core.define.Dec_Info._
+import rv32e.core.define.Inst._
+
 import rv32e.utils.LFSR
 
-class AXI4RAM extends Module {
+class AXI4RAM extends Module with axiConf{
     val axi = IO(Flipped(new AXI4))
 
     val lfsr = Module(new LFSR())

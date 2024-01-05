@@ -3,9 +3,9 @@ package rv32e.bus
 
 import chisel3._
 import chisel3.util._
-import rv32e.config.Configs._
-import rv32e.define.Dec_Info._
-import rv32e.config.Axi_Configs._
+
+import rv32e.core.config._
+import rv32e.core.define.Dec_Info._
 
 // ifu to idu bus
 class IFU2IDU_bus extends Bundle {

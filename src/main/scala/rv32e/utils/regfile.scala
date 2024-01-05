@@ -4,10 +4,10 @@ import chisel3._
 import chisel3.util._
 import chisel3.util.BitPat
 import chisel3.util.experimental.decode._
-import rv32e.config.Configs._
-import rv32e.define.Dec_Info._
-import rv32e.define.Inst._
-import chisel3.util.HasBlackBoxResource
+
+import rv32e.core.config._
+import rv32e.core.define.Dec_Info._
+import rv32e.core.define.Inst._
 
 class rf_in_class extends Bundle {
     val rs1     =   Input(UInt(REG_OP_WIDTH.W))
