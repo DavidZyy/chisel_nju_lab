@@ -1,3 +1,8 @@
+/**
+  * dataWidth in cache module is so ugly, this parameter is finally tansfer to DataBundle, 
+  * but I have no method to remove it, for in a 64 bit cpu, the data in icache is instructions, is 32 bits,
+  * and the data in dcache is data, is 64 bits.
+  */
 package rv32e.core.mem.cache
 
 import chisel3._
@@ -39,6 +44,13 @@ trait HasCacheConst {
   val entryCnt    = 1<<entryIdxWidth
 
   val addrWidth   = wayIdxWidth + setIdxWidth + entryIdxWidth // entry's addr in sram
+
+  def CacheDataArrayReadBus(dataWidth: Int)  = new SRAMReadBus(new DataBudle(dataWidth), addrWidth)
+  def CacheDataArrayWriteBus(dataWidth: Int) = new SRAMWriteBus(new DataBudle(dataWidth), addrWidth)
+}
+
+class DataBudle(dataWidth: Int) extends Bundle {
+  val data = UInt(dataWidth.W)
 }
 
 class Stage1IO extends Bundle with HasCacheConst {
@@ -54,16 +66,13 @@ class Stage2IO extends Bundle with HasCacheConst {
   val resp  = Decoupled(new SimpleBusRespBundle)
 }
 
-/**
-  * simplebus + two staged pipeline, can used by icache and dcache.
-  */
 class CacheStage1(val dataWidth: Int) extends Module with HasCacheConst {
   val io = IO(new Bundle {
     val in  = Flipped(Decoupled(new SimpleBusReqBundle)) // from cache.in.req
     val mem = new SimpleBus // to and from mem
     val out = Decoupled(new Stage1IO) // to Cachestage2
-    val dataReadBus  = Flipped(new SRAMReadBus(addrWidth, dataWidth)) // to sram
-    val dataWriteBus = Flipped(new SRAMWriteBus(addrWidth, dataWidth)) // to sram, data refill
+    val dataReadBus  = Flipped(CacheDataArrayReadBus(dataWidth)) // to sram
+    val dataWriteBus = Flipped(CacheDataArrayWriteBus(dataWidth)) // to sram, data refill
     val flush = Input(Bool())
   })
 
@@ -202,9 +211,9 @@ class CacheStage1(val dataWidth: Int) extends Module with HasCacheConst {
 class CacheStage2(val dataWidth: Int, val cacheName: String) extends Module with HasCacheConst {
   val io = IO(new Bundle {
     val in           = Flipped(Decoupled(new Stage1IO)) // from stage 1
-    val dataReadBus  = Flipped(new SRAMBundleReadResp(dataWidth)) // from sram
+    val dataReadBus  = Flipped(new SRAMBundleReadResp(new DataBudle(dataWidth))) // from sram
     val out          = new Stage2IO // to cache.in.resp
-    val dataWriteBus = Flipped(new SRAMWriteBus(addrWidth, dataWidth)) // when store inst hit, write to sram, data hit
+    val dataWriteBus = Flipped(CacheDataArrayWriteBus(dataWidth)) // when store inst hit, write to sram, data hit
   })
 
   if(cacheName == "icache") {
@@ -228,10 +237,6 @@ class CacheStage2(val dataWidth: Int, val cacheName: String) extends Module with
   }
 }
 
-class DataBudle(dataWidth: Int) extends Bundle {
-  val data = UInt(dataWidth.W)
-}
-
 class Cache(val dataWidth: Int, val cacheName: String) extends Module with HasCacheConst {
   val io = IO(new Bundle {
     val in    = Flipped(new SimpleBus) // from ifu, lsu
@@ -240,7 +245,7 @@ class Cache(val dataWidth: Int, val cacheName: String) extends Module with HasCa
     val stage2Addr = Output(UInt(ADDR_WIDTH.W))
   })
 
-  val dataArray = Module(new SRAMTemplate(new DataBudle(dataWidth), addrWidth, dataWidth, cacheName))
+  val dataArray = Module(new SRAMTemplate(new DataBudle(dataWidth), addrWidth, cacheName))
   val s1 = Module(new CacheStage1(dataWidth))
   val s2 = Module(new CacheStage2(dataWidth, cacheName))
 
@@ -255,7 +260,7 @@ class Cache(val dataWidth: Int, val cacheName: String) extends Module with HasCa
   s2.io.dataReadBus <> dataArray.io.r.resp
 
   // dataArray
-  val dataWriteArb = Module(new Arbiter(new SRAMBundleWriteReq(addrWidth, dataWidth), 2))
+  val dataWriteArb = Module(new Arbiter(new SRAMBundleWriteReq(new DataBudle(dataWidth), addrWidth), 2))
   s1.io.dataWriteBus.req <> dataWriteArb.io.in(0)
   s2.io.dataWriteBus.req <> dataWriteArb.io.in(1)
   dataWriteArb.io.out <> dataArray.io.w.req
