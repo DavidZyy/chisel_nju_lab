@@ -228,6 +228,10 @@ class CacheStage2(val dataWidth: Int, val cacheName: String) extends Module with
   }
 }
 
+class DataBudle(dataWidth: Int) extends Bundle {
+  val data = UInt(dataWidth.W)
+}
+
 class Cache(val dataWidth: Int, val cacheName: String) extends Module with HasCacheConst {
   val io = IO(new Bundle {
     val in    = Flipped(new SimpleBus) // from ifu, lsu
@@ -236,7 +240,7 @@ class Cache(val dataWidth: Int, val cacheName: String) extends Module with HasCa
     val stage2Addr = Output(UInt(ADDR_WIDTH.W))
   })
 
-  val dataArray = Module(new SRAMTemplate(addrWidth, dataWidth, cacheName))
+  val dataArray = Module(new SRAMTemplate(new DataBudle(dataWidth), addrWidth, dataWidth, cacheName))
   val s1 = Module(new CacheStage1(dataWidth))
   val s2 = Module(new CacheStage2(dataWidth, cacheName))
 

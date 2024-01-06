@@ -33,7 +33,7 @@ class SRAMWriteBus(val addrWidth: Int, val dataWidth: Int) extends Bundle {
   * Sram template that can hold data, when pipeline block happens.
   *
   */
-class SRAMTemplate(val addrWidth: Int, val dataWidth: Int, val Name: String) extends Module {
+class SRAMTemplate[T <: Data](val gen: T, val addrWidth: Int, val dataWidth: Int, val Name: String) extends Module {
     val io = IO(new Bundle {
         val r = new SRAMReadBus(addrWidth, dataWidth)
         val w = new SRAMWriteBus(addrWidth, dataWidth)
@@ -41,7 +41,9 @@ class SRAMTemplate(val addrWidth: Int, val dataWidth: Int, val Name: String) ext
 
     io.r.req.ready := true.B
     io.w.req.ready := true.B
-    val array = SyncReadMem(1<<addrWidth, UInt(dataWidth.W))
+
+    val wordType = UInt(gen.getWidth.W)
+    val array = SyncReadMem(1<<addrWidth, wordType)
     val (ren, wen) = (io.r.req.valid, io.w.req.valid)
     val realRen = ren && !wen // assume is single port sram
     val rdata = array.read(io.r.req.bits.raddr, realRen)
