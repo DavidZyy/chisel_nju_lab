@@ -98,6 +98,7 @@ class WBU2ISU_bus extends Bundle {
 
 class WBU2IFU_bus extends Bundle {
     val redirect = new RedirectIO
+    val pc       = Output(UInt(ADDR_WIDTH.W))
 }
 
 class IFU2Cache_bus extends Bundle {

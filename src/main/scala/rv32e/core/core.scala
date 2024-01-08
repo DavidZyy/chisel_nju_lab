@@ -95,7 +95,9 @@ class top extends Module {
     PipelineConnect(EXU_i.to_WBU, WBU_i.from_EXU, WBU_i.wb, WBU_i.to_IFU.bits.redirect.valid)// && EXU_i.to_WBU.fire)
     // EXU_i.to_WBU <> WBU_i.from_EXU
     EXU_i.to_ISU <> ISU_i.from_EXU
+    EXU_i.npc    := ISU_i.to_EXU.bits.pc
     WBU_i.to_ISU <> ISU_i.from_WBU
+    ISU_i.flush  := WBU_i.to_IFU.bits.redirect.valid
 
     val CacheStage2PC    = WireInit(0.U(DATA_WIDTH.W))
     val CacheStage2valid = WireInit(true.B)

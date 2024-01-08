@@ -14,10 +14,10 @@ object PipelineConnect {
     when (left.valid && right.ready) { valid := true.B } // new data in, so set it to true
     when (isFlush) { valid := false.B } // data is be flushed, so set it false
 
-    // if is invalid(be flushed), put 0 in regs.
+    // if is invalid(be flushed), put 0 in regs, for debug convenient when seeing wave.
     val zero = 0.U.asTypeOf(left.bits)
     left.ready := right.ready
-    right.bits := RegEnable(Mux(isFlush, zero, left.bits), left.valid && right.ready)
+    right.bits := RegEnable(Mux(isFlush, zero, left.bits), (left.valid && right.ready) || isFlush)
     // right.bits := RegEnable(left.bits, left.valid && right.ready)
     right.valid := valid //&& !isFlush
   }

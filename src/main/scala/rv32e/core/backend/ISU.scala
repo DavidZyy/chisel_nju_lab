@@ -13,10 +13,11 @@ class ISU extends Module {
     val from_WBU = IO(Flipped(Decoupled(new WBU2ISU_bus)))
     val to_EXU   = IO(Decoupled(new ISU2EXU_bus))
     val from_EXU = IO(Flipped(new EXU2ISU_bus))
+    val flush    = IO(Input(Bool()))
 
-    val exu_hazard = (from_EXU.hazard.rd === from_IDU.bits.rs1 || from_EXU.hazard.rd === from_IDU.bits.rs2) && ~from_EXU.hazard.have_wb && from_IDU.valid && ~from_EXU.hazard.isBR 
-    val wbu_hazard = (from_WBU.bits.hazard.rd === from_IDU.bits.rs1 || from_WBU.bits.hazard.rd === from_IDU.bits.rs2) && ~from_WBU.bits.hazard.have_wb && from_IDU.valid && ~from_WBU.bits.hazard.isBR 
-    val has_hazard = exu_hazard || wbu_hazard
+    val exu_hazard = (from_EXU.hazard.rd === from_IDU.bits.rs1 || from_EXU.hazard.rd === from_IDU.bits.rs2) && !from_EXU.hazard.have_wb && from_IDU.valid
+    val wbu_hazard = (from_WBU.bits.hazard.rd === from_IDU.bits.rs1 || from_WBU.bits.hazard.rd === from_IDU.bits.rs2) && !from_WBU.bits.hazard.have_wb && from_IDU.valid
+    val has_hazard = (exu_hazard || wbu_hazard) && !flush
 
     val RegFile_i           =  Module(new RegFile())
     RegFile_i.io.in.rs1     := from_IDU.bits.rs1
@@ -27,14 +28,14 @@ class ISU extends Module {
 
     // to idu
     // from_IDU.ready := to_EXU.ready
-    from_IDU.ready := ~has_hazard && to_EXU.ready
+    from_IDU.ready := !has_hazard && to_EXU.ready
 
     // to wbu
     from_WBU.ready := true.B
 
     // to EXU
     // to_EXU.valid         := from_IDU.valid
-    to_EXU.valid         := ~has_hazard && from_IDU.valid
+    to_EXU.valid         := !has_hazard && from_IDU.valid
     to_EXU.bits.ctrl_sig <> from_IDU.bits.ctrl_sig
     to_EXU.bits.imm      := from_IDU.bits.imm
     to_EXU.bits.pc       := from_IDU.bits.pc

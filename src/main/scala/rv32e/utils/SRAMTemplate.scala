@@ -49,10 +49,14 @@ class SRAMTemplate[T <: Data](val gen: T, val addrWidth: Int, val Name: String) 
     val rdata = array.read(io.r.req.bits.raddr, realRen)
     when(wen) (array(io.w.req.bits.waddr) := io.w.req.bits.wdata)
 
+    // for cache, the sram is the part of pipeline, the pipeline maybe blocked, so we need HoldUnless structure to 
+    // hold the data we have read until the pipeline is continue.
     io.r.resp.rdata := HoldUnless(rdata, RegNext(io.r.req.fire))
 
     // use RegNext to wait for rdata, rdata is not get in the cycle it read, so we get it in the next cycle, and modiry time
-    Debug(2.U, RegNext(realRen), s"[SRAM][${Name}], raddr:%x, rdata:%x\n", RegNext(io.r.req.bits.raddr), rdata)
-    Debug(wen, s"[SRAM][${Name}], waddr:%x, wdata:%x\n", io.w.req.bits.waddr, io.w.req.bits.wdata)
+    if(Name == "BTB") {
+        Debug(2.U, RegNext(realRen), s"[SRAM][${Name}], raddr:%x, rdata:%x\n", RegNext(io.r.req.bits.raddr), rdata)
+        Debug(wen, s"[SRAM][${Name}], waddr:%x, wdata:%x\n", io.w.req.bits.waddr, io.w.req.bits.wdata)
+    }
 }
 

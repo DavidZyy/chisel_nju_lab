@@ -33,8 +33,8 @@ import os.list
 // 
 //     switch (state) {
 //         is (s_idle) {
-//             when (io.in.req.fire && ~io.flush) { state := s_resp}
-//             when (reqInvalidAddr && ~io.flush) { state := s_error}
+//             when (io.in.req.fire && !io.flush) { state := s_resp}
+//             when (reqInvalidAddr && !io.flush) { state := s_error}
 //         }
 //         is (s_resp)  {when (io.in.resp.fire) {state := s_idle}}
 //         is (s_error) {when (io.in.resp.fire) {state := s_idle}}

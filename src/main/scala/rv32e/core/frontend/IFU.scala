@@ -35,11 +35,26 @@ class IFU_pipeline extends Module {
     val to_IDU_PC  = IO(Input(UInt(ADDR_WIDTH.W))) // from icache
 
     val reg_PC   = RegInit(UInt(ADDR_WIDTH.W), START_ADDR.U)
-
     val pcUpdate = to_mem.req.fire || from_WBU.bits.redirect.valid
+    val npc      = WireInit(0.U(ADDR_WIDTH.W))
 
-    when(pcUpdate) {
-        reg_PC := Mux(from_WBU.bits.redirect.valid, from_WBU.bits.redirect.target, reg_PC + ADDR_BYTE.U)
+    // val BPU_i = Module(new BPUdummy())
+    val BPU_i = Module(new BPU())
+    BPU_i.io.in.pc.valid := to_mem.req.fire ||  from_WBU.bits.redirect.valid // only predict when Icache accepts a request
+    BPU_i.io.in.pc.bits  := npc  // predict one cycle early
+    BPU_i.io.in.redirect <> from_WBU.bits.redirect
+    BPU_i.io.in.missPC   := from_WBU.bits.pc
+
+    when (from_WBU.bits.redirect.valid) {
+        npc := from_WBU.bits.redirect.target
+    } .elsewhen (BPU_i.io.out.valid) {
+        npc := BPU_i.io.out.target
+    } .otherwise {
+        npc := reg_PC + ADDR_BYTE.U
+    }
+
+    when (pcUpdate) {
+        reg_PC := npc
     }
 
     // to mem signals

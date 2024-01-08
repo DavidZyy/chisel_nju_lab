@@ -33,6 +33,7 @@ class WBU extends Module {
     ))
     to_IFU.bits.redirect.valid  := from_EXU.bits.redirect.valid && from_EXU.valid
     to_IFU.bits.redirect.target := from_EXU.bits.redirect.target
+    to_IFU.bits.pc              := from_EXU.bits.pc
 
     // to isu
     to_ISU.valid        := from_EXU.valid
@@ -46,7 +47,7 @@ class WBU extends Module {
         ("b"+fu_mdu).U  ->  from_EXU.bits.mdu_result,
     ))
     to_ISU.bits.hazard.rd      := from_EXU.bits.rd
-    to_ISU.bits.hazard.have_wb := ~from_EXU.valid
+    to_ISU.bits.hazard.have_wb := !from_EXU.valid
     to_ISU.bits.hazard.isBR    := from_EXU.bits.isBRU || from_EXU.bits.isCSR
 
     val ebreak_moudle_i   = Module(new ebreak_moudle())

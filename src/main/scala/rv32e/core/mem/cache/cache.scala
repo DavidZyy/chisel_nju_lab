@@ -116,7 +116,7 @@ class CacheStage1(val dataWidth: Int) extends Module with HasCacheConst {
   val stateCache = RegInit(s_idle)
   switch (stateCache) {
     is (s_idle) {
-      when(~hit && io.in.valid) {
+      when(!hit && io.in.valid) {
         stateCache    := Mux(cacheSetDirty, s_wrq, s_rrq)
         replaceWayReg := randomNum
       } .otherwise {
@@ -233,7 +233,7 @@ class CacheStage2(val dataWidth: Int, val cacheName: String) extends Module with
   io.dataWriteBus.req.bits.wdata := MaskData(io.dataReadBus.rdata, io.in.bits.wdata, MaskExpand(io.in.bits.wmask))
   
   if(cacheName == "dcache") {
-    Debug(io.dataWriteBus.req.valid, "[dcache][stage2], waddr:%x, wdata:%x\n", io.dataWriteBus.req.bits.waddr, io.dataWriteBus.req.bits.wdata)
+    // Debug(io.dataWriteBus.req.valid, "[dcache][stage2], waddr:%x, wdata:%x\n", io.dataWriteBus.req.bits.waddr, io.dataWriteBus.req.bits.wdata)
   }
 }
 

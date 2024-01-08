@@ -21,6 +21,7 @@ class EXU_pipeline extends Module {
     val lsu_to_mem  = IO(new SimpleBus)
     // val lsu_to_mem  = IO(new AXI4)
     val to_ISU      = IO(new EXU2ISU_bus)
+    val npc         = IO(Input(UInt(ADDR_WIDTH.W)))
 
     val Alu_i             = Module(new Alu())
     val Mdu_i             = Module(new Mdu())
@@ -81,8 +82,8 @@ class EXU_pipeline extends Module {
           * from_ISU is not valid means the result has been committed to WB, so we are ready to receive the
           * next inst.
           */ 
-        // ("b"+fu_lsu).U -> Mux(lsuStore, Lsu_i.io.in.req.ready, (~from_ISU.valid || Lsu_i.io.in.resp.valid)),
-        ("b"+fu_lsu).U -> (~from_ISU.valid || Lsu_i.io.in.resp.valid),
+        // ("b"+fu_lsu).U -> Mux(lsuStore, Lsu_i.io.in.req.ready, (!from_ISU.valid || Lsu_i.io.in.resp.valid)),
+        ("b"+fu_lsu).U -> (!from_ISU.valid || Lsu_i.io.in.resp.valid),
     ))
 
     // to wbu, logical not right here.
@@ -90,6 +91,11 @@ class EXU_pipeline extends Module {
         // ("b"+fu_lsu).U -> Mux(lsuStore, true.B, Lsu_i.io.in.resp.valid),
         ("b"+fu_lsu).U -> Lsu_i.io.in.resp.valid,
     ))
+
+    // branch prediction judge
+    val taken = (Bru_i.io.out.ctrl_br || Csr_i.io.out.csr_br) // jump is taken
+    val predictWrong = (taken && npc =/= Alu_i.io.out.result && npc =/= Csr_i.io.out.csr_addr) ||
+                        (!taken && (npc =/= from_ISU.bits.pc+ADDR_BYTE.U))
 
     to_WBU.bits.alu_result := Alu_i.io.out.result
     to_WBU.bits.mdu_result := Mdu_i.io.out.result
@@ -100,10 +106,10 @@ class EXU_pipeline extends Module {
     to_WBU.bits.reg_wen    := from_ISU.bits.ctrl_sig.reg_wen
     to_WBU.bits.fu_op      := from_ISU.bits.ctrl_sig.fu_op
     to_WBU.bits.rd         := from_ISU.bits.rd
-    to_WBU.bits.redirect.valid  := (Bru_i.io.out.ctrl_br || Csr_i.io.out.csr_br) && from_ISU.valid
+    to_WBU.bits.redirect.valid  := predictWrong && (from_ISU.bits.isBRU || from_ISU.bits.isCSR) && from_ISU.valid 
     to_WBU.bits.redirect.target := MuxLookup(from_ISU.bits.ctrl_sig.fu_op, 0.U)(List(
-        ("b"+fu_bru).U -> Alu_i.io.out.result,
-        ("b"+fu_csr).U -> Csr_i.io.out.csr_addr
+        ("b"+fu_bru).U -> Mux(taken, Alu_i.io.out.result, from_ISU.bits.pc+ADDR_BYTE.U),
+        ("b"+fu_csr).U -> Mux(taken, Csr_i.io.out.csr_addr, from_ISU.bits.pc+ADDR_BYTE.U),
     ))
     to_WBU.bits.is_ebreak  := from_ISU.bits.ctrl_sig.is_ebreak
     to_WBU.bits.not_impl   := from_ISU.bits.ctrl_sig.not_impl
@@ -111,7 +117,7 @@ class EXU_pipeline extends Module {
 
     // to isu
     to_ISU.hazard.rd      := from_ISU.bits.rd
-    to_ISU.hazard.have_wb := ~from_ISU.valid
+    to_ISU.hazard.have_wb := !from_ISU.valid
     to_ISU.hazard.isBR    := from_ISU.bits.isBRU || from_ISU.bits.isCSR
 
     difftest <> Csr_i.io.out.difftest
