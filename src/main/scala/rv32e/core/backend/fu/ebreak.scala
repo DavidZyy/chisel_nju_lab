@@ -4,6 +4,7 @@ import chisel3._
 import chisel3.util._
 import chisel3.util.BitPat
 import chisel3.util.experimental.decode._
+import chisel3.util.experimental.BoringUtils
 
 import rv32e.core.config._
 import rv32e.core.define.Dec_Info._
@@ -21,6 +22,12 @@ class ebreak_moudle extends Module {
 
     val EbreakBB_i1 = Module(new EbreakBB())
 
-    EbreakBB_i1.io.clock     := clock
+    // print perf cnt information
+
+    EbreakBB_i1.io.clock := clock
     EbreakBB_i1.io.valid := valid
+
+    if(EnablePerfCnt) {
+        BoringUtils.addSource(valid, "BoringEbreak")
+    }
 }

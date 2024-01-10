@@ -106,6 +106,10 @@ class top extends Module {
 
     io.out.ifu_fetchPc := IFU_i.fetch_PC
 
+    if(EnablePerfCnt) {
+        val PerfCnt_i = Module(new perfCnt())
+    }
+
     when(WBU_i.from_EXU.valid) {
         io.out.nextExecPC := WBU_i.from_EXU.bits.pc
     } .elsewhen(EXU_i.from_ISU.valid) {

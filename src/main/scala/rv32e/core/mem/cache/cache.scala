@@ -22,7 +22,7 @@ import rv32e.utils._
 
 trait HasCacheConst {
   val byteIdxWidth  = 2 // one entry contains 1<<$ bytes
-  val entryIdxWidth = 4 // one cache line contains 1<<$ entries
+  val entryIdxWidth = 2 // one cache line contains 1<<$ entries
   val setIdxWidth   = 4 // one cache way contains 1<<$ sets
   val tagWidth      = ADDR_WIDTH - setIdxWidth - entryIdxWidth - byteIdxWidth
 
@@ -66,7 +66,7 @@ class Stage2IO extends Bundle with HasCacheConst {
   val resp  = Decoupled(new SimpleBusRespBundle)
 }
 
-class CacheStage1(val dataWidth: Int) extends Module with HasCacheConst {
+class CacheStage1(val dataWidth: Int, val cacheName: String) extends Module with HasCacheConst {
   val io = IO(new Bundle {
     val in  = Flipped(Decoupled(new SimpleBusReqBundle)) // from cache.in.req
     val mem = new SimpleBus // to and from mem
@@ -206,6 +206,14 @@ class CacheStage1(val dataWidth: Int) extends Module with HasCacheConst {
   io.dataWriteBus.req.valid      := (stateCache === s_reading) && io.mem.resp.fire
   io.dataWriteBus.req.bits.waddr := writeCacheAddr
   io.dataWriteBus.req.bits.wdata := io.mem.resp.bits.rdata
+
+  if (EnablePerfCnt) {
+    BoringUtils.addSource(WireInit(io.in.fire), perfPrefix+cacheName+"Time")
+    // if "io.in.fire" is true in last cycle, it means in this cycle, the new pc will come in, if "hit" is true 
+    // in this pc, it means a query is hit.
+    // BoringUtils.addSource(WireInit(hit && RegNext(io.in.fire)), perfPrefix+cacheName+"Hit")
+    BoringUtils.addSource(WireInit(hit && stateCache === s_end), perfPrefix+cacheName+"Miss")
+  }
 }
 
 class CacheStage2(val dataWidth: Int, val cacheName: String) extends Module with HasCacheConst {
@@ -246,7 +254,7 @@ class Cache(val dataWidth: Int, val cacheName: String) extends Module with HasCa
   })
 
   val dataArray = Module(new SRAMTemplate(new DataBudle(dataWidth), addrWidth, cacheName))
-  val s1 = Module(new CacheStage1(dataWidth))
+  val s1 = Module(new CacheStage1(dataWidth, cacheName))
   val s2 = Module(new CacheStage2(dataWidth, cacheName))
 
   // s1

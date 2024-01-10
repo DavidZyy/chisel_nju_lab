@@ -1,13 +1,13 @@
-9-27
+# 9-27
 1. download `sbt-launch-1.9.4.jar` manully and put it under dir to make sbt run.
 
-12-1
+# 12-1
 1. mill generate .sv codes.
 
-12-18
+# 12-18
 - [x] optimize cache pipeline logic.
 
-12-24
+# 12-24
 
 **ToDo**
 
@@ -28,7 +28,7 @@ big
 - [ ] superscala(multi-issue)
 - [ ] out-of-ouder
 
-12-25
+# 12-25
 
 **TODO LIST**
 1. - [x] Profile, Debug
@@ -38,18 +38,24 @@ big
 **DONE**
 
 
-12-31
+# 12-31
 
 **TODO LIST**
 1. - [ ] complete SimpleBus to AXI4
 
-1-5
+# 1-5
 
 **TODO LIST**
 1. - [ ] BPU
 
-1-7
+# 1-7
 
 **TODO LIST**
 1. - [ ] BPU
 2. - [ ] MDU
+
+# 1-8
+
+**TODO LIST**
+1. - [ ] Perf System
+

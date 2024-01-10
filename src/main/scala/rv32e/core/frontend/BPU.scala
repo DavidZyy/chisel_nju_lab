@@ -3,6 +3,7 @@ package rv32e.core.frontend
 
 import chisel3._
 import chisel3.util._
+import chisel3.util.experimental.BoringUtils
 
 import rv32e.bus._
 
@@ -56,6 +57,10 @@ class BPU extends Module with HasBPUConst {
     btb.io.w.req.bits.waddr := io.in.missPC(setMSB, setLSB) // pc from exu setidx
     btb.io.w.req.bits.wdata := btbWrite.asUInt
 
+    if(EnablePerfCnt) {
+        BoringUtils.addSource(io.in.pc.valid, perfPrefix+"BPUTime")
+        BoringUtils.addSource(io.in.redirect.valid, perfPrefix+"BPUWrong")
+    }
 }
 
 /**

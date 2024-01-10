@@ -4,6 +4,7 @@ import chisel3._
 import scala.math._
 
 object config {
+    // parameters
     val BYTE_WIDTH      =   8
 
     val ADDR_WIDTH      =   32
@@ -23,5 +24,9 @@ object config {
 
     val wmaskWidth      = DATA_WIDTH / BYTE_WIDTH
 
+    val PerfRegWidth    = 32
 
+    // config
+    val EnablePerfCnt   = true
+    val perfPrefix      = "perfCntCond"
 }

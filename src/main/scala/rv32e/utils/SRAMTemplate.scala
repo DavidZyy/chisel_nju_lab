@@ -55,8 +55,8 @@ class SRAMTemplate[T <: Data](val gen: T, val addrWidth: Int, val Name: String) 
 
     // use RegNext to wait for rdata, rdata is not get in the cycle it read, so we get it in the next cycle, and modiry time
     if(Name == "BTB") {
-        Debug(2.U, RegNext(realRen), s"[SRAM][${Name}], raddr:%x, rdata:%x\n", RegNext(io.r.req.bits.raddr), rdata)
-        Debug(wen, s"[SRAM][${Name}], waddr:%x, wdata:%x\n", io.w.req.bits.waddr, io.w.req.bits.wdata)
+        // Debug(2.U, RegNext(realRen), s"[SRAM][${Name}], raddr:%x, rdata:%x\n", RegNext(io.r.req.bits.raddr), rdata)
+        // Debug(wen, s"[SRAM][${Name}], waddr:%x, wdata:%x\n", io.w.req.bits.waddr, io.w.req.bits.wdata)
     }
 }
 
