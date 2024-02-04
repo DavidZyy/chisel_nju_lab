@@ -106,8 +106,13 @@ class top extends Module {
 
     io.out.ifu_fetchPc := IFU_i.fetch_PC
 
-    if(EnablePerfCnt) {
+    if (EnablePerfCnt) {
         val PerfCnt_i = Module(new perfCnt())
+        BoringUtils.addSource(WireInit(ISU_i.to_EXU.fire && ISU_i.to_EXU.bits.isLSU), perfPrefix+"nrLSU")
+        BoringUtils.addSource(WireInit(ISU_i.to_EXU.fire && ISU_i.to_EXU.bits.isBRU), perfPrefix+"nrBRU")
+        BoringUtils.addSource(WireInit(ISU_i.to_EXU.fire && ISU_i.to_EXU.bits.isCSR), perfPrefix+"nrCSR")
+        BoringUtils.addSource(WireInit(ISU_i.to_EXU.fire && ISU_i.to_EXU.bits.isALU), perfPrefix+"nrALU")
+        BoringUtils.addSource(WireInit(ISU_i.to_EXU.fire && ISU_i.to_EXU.bits.isMDU), perfPrefix+"nrMDU")
     }
 
     when(WBU_i.from_EXU.valid) {

@@ -27,6 +27,7 @@ object config {
     val PerfRegWidth    = 32
 
     // config
-    val EnablePerfCnt   = true
+    // val EnablePerfCnt   = true
+    val EnablePerfCnt   = false
     val perfPrefix      = "perfCntCond"
 }

@@ -14,9 +14,15 @@ class perfCnt extends Module {
         "BPUWrong" -> (0x01, perfPrefix+"BPUWrong"),
         // cache
         "icacheTime" -> (0x02, perfPrefix+"icacheTime"),
-        "icacheMiss"  -> (0x03, perfPrefix+"icacheMiss"),
+        "icacheMiss" -> (0x03, perfPrefix+"icacheMiss"),
         "dcacheTime" -> (0x04, perfPrefix+"dcacheTime"),
-        "dcacheMiss"  -> (0x05, perfPrefix+"dcacheMiss"),
+        "dcacheMiss" -> (0x05, perfPrefix+"dcacheMiss"),
+        // exu
+        "nrLSU" -> (0x06, perfPrefix+"nrLSU"),
+        "nrBRU" -> (0x07, perfPrefix+"nrBRU"),
+        "nrCSR" -> (0x08, perfPrefix+"nrCSR"),
+        "nrALU" -> (0x09, perfPrefix+"nrALU"),
+        "nrMDU" -> (0x0a, perfPrefix+"nrMDU"),
     )
 
     val nrPerfCnts = perfCntList.size

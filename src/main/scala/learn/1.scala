@@ -3,6 +3,7 @@ package learn
 import chisel3._
 import chisel3.util._
 import scala.math._
+import scala.collection.mutable.ListBuffer
 
 object aamain  extends App {
     val m = VecInit(1.U, 2.U, 4.U, 8.U)
@@ -67,6 +68,57 @@ object addmain extends App {
   val outMatchVec = devAddrSpace.map(
     range => (addr >= range._1 && addr < (range._1 + range._2)))
   println(outMatchVec)
+}
+
+object wallaceMain extends App {
+  val srcWidth = 17
+  
+  var curSrcWidth = srcWidth // current layer input width
+  var remainSrcWidth = 0
+  var casCntLevel: Int = 0 // current level's csa counts
+  var list: ListBuffer[Int] = ListBuffer.empty[Int]
+
+  while (curSrcWidth != 2) {
+    casCntLevel =  curSrcWidth / 3
+    remainSrcWidth =  curSrcWidth % 3
+    list.addOne(casCntLevel)
+
+    curSrcWidth = 2*casCntLevel + remainSrcWidth // next layer input wire count
+  }
+
+  val csaCntTotal = list.sum
+
+  // println(list.length)
+  for(i <- 0 until list.length) {
+    println(list(i))
+  }
+  println(csaCntTotal)
+}
+
+object testSeqMain extends App {
+  var seq = Seq[Int]()
+
+  seq = (seq.appended(0))
+  seq = (seq.appended(1))
+  seq = (seq.appended(2))
+  seq = (seq.appended(3))
+  seq = (seq.appended(4))
+  seq = (seq.appended(5))
+  seq = (seq.appended(6))
+  seq = (seq.appended(7))
+  
+  // println("size: " + seq.size)
+  // for(i <- 0 until seq.size) {
+  //   println(seq(i))
+  // }
+
+  // var seq0 = seq.slice(0, 3).reverse
+  var seq0 = seq.slice(0, 3)
+  seq0 = seq ++ seq0
+  println("size: " + seq0.size)
+  for(i <- 0 until seq0.size) {
+    println(seq0(i))
+  }
 }
 
 // object MaskExpand {
