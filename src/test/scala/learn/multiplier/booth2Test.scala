@@ -3,8 +3,11 @@ package learn.multiplier
 import chisel3._
 import chisel3.util._
 import chiseltest._
+
 import org.scalatest.flatspec.AnyFlatSpec
+
 import learn.adder.Constants._
+
 import java.util.Random
 
 class booth2Test extends AnyFlatSpec with ChiselScalatestTester {

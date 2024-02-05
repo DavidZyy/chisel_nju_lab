@@ -2,14 +2,15 @@ package learn.multiplier
 
 import chisel3._
 import chisel3.util._
+
 import scala.collection.mutable.ListBuffer
 
 import _root_.circt.stage.ChiselStage
 import _root_.circt.stage.CIRCTTargetAnnotation
 import _root_.circt.stage.CIRCTTarget
 import _root_.circt.stage.FirtoolOption
-import rv32e.utils.SignExt
-import rv32e.utils.ZeroExt
+
+import rv32e.utils._
 
 class booth2bit(bitWidth: Int) extends Module {
   val io = IO(new Bundle {
@@ -251,7 +252,7 @@ class wallaceGenerator(srcWidth: Int) extends Module {
 
   val firstLayerInput = io.src_in.asBools
 
-  // one layer one recursive
+  // one recursive can generate one layer's csas
   def recursiveAdd(layerInput: Seq[Bool], cin: Seq[Bool], csaCntSumUp: Int, depth: Int): (Seq[Bool], Seq[Bool], Seq[Bool]) = {
     var cout_group = Seq[Bool]()
     var cout       = Seq[Bool]()
@@ -279,7 +280,7 @@ class wallaceGenerator(srcWidth: Int) extends Module {
 
     val (cout_groupNext, coutNext, sNext) =  
     if(NextlayerInput.size <= 2) {
-      (Seq[Bool](), Seq(csaInstances(0).io.cout), Seq(csaInstances(0).io.s))
+      (Seq[Bool](), Seq(csaInstances(0).io.cout), Seq(csaInstances(0).io.s)) // the top csa of tree, return (empty seq, cout, s)
     } else {
       recursiveAdd(NextlayerInput, cin, csaCntSumUp+csaCnt, depth+1)
     }
