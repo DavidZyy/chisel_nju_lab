@@ -77,16 +77,16 @@ class Csr extends Module {
   ))
   reg_mstatus := MuxLookup(io.in.op, reg_mstatus)(List(
     ("b" + csr_ecall ).U  ->   Cat( reg_mstatus(sd_MSB, fs_LSB),
-                                    "b11".U,
+                                    "b11".U, // mpp
                                     reg_mstatus(wpri3_MSB, spp_LSB),
                                     reg_mstatus(mie_MSB, mie_LSB),
                                     reg_mstatus(wpri2_MSB, upie_LSB),
-                                    0.U,
+                                    0.U, // mie
                                     reg_mstatus(wpri1_MSB, uie_LSB)),
     ("b" + csr_mret  ).U  ->    Cat( reg_mstatus(sd_MSB, fs_LSB),
-                                     0.U,
+                                     0.U, //mpp
                                      reg_mstatus(wpri3_MSB, spp_LSB),
-                                     1.U,
+                                     1.U, // mpie
                                      reg_mstatus(wpri2_MSB, upie_LSB),
                                      reg_mstatus(mpie_MSB, mpie_LSB),
                                      reg_mstatus(wpri1_MSB, uie_LSB)),

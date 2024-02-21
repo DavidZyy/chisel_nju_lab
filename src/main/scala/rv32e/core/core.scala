@@ -69,17 +69,21 @@ class top extends Module {
 
     val addrSpace = List(
         (pmemBase, pmemSize),
-        (mmioBase, mmioSize),
+        (RTC_ADDR, 8L),
+        (RTC_ADDR+8L, mmioSize),
+        // (mmioBase, mmioSize),
     )
     val memXbar = Module(new SimpleBusCrossBar1toN(addrSpace))
     // val dcache  =   Module(new Dcache_SimpleBus())
     val dcache  =   Module(new Cache(DATA_WIDTH, "dcache"))
     val mmio    =   Module(new MMIO())
+    val clint   =   Module(new CLINT())
     EXU_i.lsu_to_mem  <> memXbar.io.in
     memXbar.io.flush  := WBU_i.to_IFU.bits.redirect.valid
     // memXbar.io.out(0) <> dcache.from_lsu
     memXbar.io.out(0) <> dcache.io.in
-    memXbar.io.out(1) <> mmio.from_lsu
+    memXbar.io.out(1) <> clint.io.in
+    memXbar.io.out(2) <> mmio.from_lsu
     // dcache.to_sram    <> ram_i2.axi
     dcache.io.mem.toAXI4() <> ram_i2.axi
     dcache.io.flush := WBU_i.to_IFU.bits.redirect.valid

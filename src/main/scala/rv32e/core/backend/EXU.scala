@@ -121,4 +121,7 @@ class EXU_pipeline extends Module {
     to_ISU.hazard.isBR    := from_ISU.bits.isBRU || from_ISU.bits.isCSR
 
     difftest <> Csr_i.io.out.difftest
+    
+    BoringUtils.addSource(WireInit(from_ISU.bits.pc), "EXUPC")
+    BoringUtils.addSource(WireInit(from_ISU.bits.inst), "EXUInst")
 }

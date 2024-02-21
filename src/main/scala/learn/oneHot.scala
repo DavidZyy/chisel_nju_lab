@@ -3,6 +3,11 @@ package learn
 import chisel3._
 import chisel3.util._
 
+import _root_.circt.stage.ChiselStage
+import _root_.circt.stage.CIRCTTargetAnnotation
+import _root_.circt.stage.CIRCTTarget
+import _root_.circt.stage.FirtoolOption
+
 class TestOneHot extends Module {
   val io = IO(new Bundle {
     val selector = Input(UInt(4.W))
@@ -10,10 +15,10 @@ class TestOneHot extends Module {
   })
 
   io.hotValue := Mux1H(Seq(
-    io.selector(0) -> 1.U,
-    io.selector(1) -> 2.U,
-    io.selector(2) -> 3.U,
-    io.selector(3) -> 4.U
+    io.selector(0) -> 2.U,
+    io.selector(1) -> 4.U,
+    io.selector(2) -> 8.U,
+    io.selector(3) -> 11.U
   ))
 }
 
@@ -28,11 +33,13 @@ class TestOneHot1 extends Module {
   io.hotValue := Mux1H(io.selector, a)
 }
 
-object TestOneHotmain extends App {
-    // emitVerilog(new TestOneHot(),  Array("--target-dir", "generated"))
-    // emitVerilog(new TestOneHot1(), Array("--target-dir", "generated"))
-    // emitVerilog(new WriteSmem(),   Array("--target-dir", "generated"))
-    val out = Vec(4, UInt(2.W))
-
-    // println(out.map())
+object myMultipierMain extends App {
+  val path = "/home/zhuyangyang/project/CPU/chisel-empty/generated"
+  val firtoolOptions = Seq (
+      FirtoolOption("--disable-all-randomization"),
+      FirtoolOption("--lowering-options=disallowLocalVariables, locationInfoStyle=none"),
+      // FirtoolOption("--lowering-options=locationInfoStyle=none")
+  )
+  emitVerilog(new TestOneHot(), Array("--target-dir", path), firtoolOptions)
 }
+
