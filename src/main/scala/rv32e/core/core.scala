@@ -53,11 +53,6 @@ class top extends Module {
     val IFU_i   =   Module(new IFU_pipeline())
     val ram_i   =   Module(new AXI4RAM())
 
-    // val icache  =   Module(new Icache_pipeline())
-    // IFU_i.to_mem    <> icache.from_ifu
-    // IFU_i.to_IDU_PC := icache.instPC
-    // icache.to_sram  <> ram_i.axi
-    // icache.redirect := EXU_i.to_IFU.bits.redirect
     
     val icache  =   Module(new Cache(DATA_WIDTH, "icache"))
     IFU_i.to_mem  <> icache.io.in
@@ -74,30 +69,26 @@ class top extends Module {
         // (mmioBase, mmioSize),
     )
     val memXbar = Module(new SimpleBusCrossBar1toN(addrSpace))
-    // val dcache  =   Module(new Dcache_SimpleBus())
+
     val dcache  =   Module(new Cache(DATA_WIDTH, "dcache"))
     val mmio    =   Module(new MMIO())
-    val clint   =   Module(new CLINT())
+    val clint   =   Module(new AXI4CLINT())
+
     EXU_i.lsu_to_mem  <> memXbar.io.in
     memXbar.io.flush  := WBU_i.to_IFU.bits.redirect.valid
-    // memXbar.io.out(0) <> dcache.from_lsu
     memXbar.io.out(0) <> dcache.io.in
-    memXbar.io.out(1) <> clint.io.in
+    memXbar.io.out(1).toAXI4Lite() <> clint.io.in
     memXbar.io.out(2) <> mmio.from_lsu
-    // dcache.to_sram    <> ram_i2.axi
+
     dcache.io.mem.toAXI4() <> ram_i2.axi
     dcache.io.flush := WBU_i.to_IFU.bits.redirect.valid
 
-    // EXU_i.lsu_to_mem <> ram_i2.axi
-
-    // BoringUtils.addSource(WBU_i.to_IFU.bits.redirect.valid, "id5")
 
     WBU_i.to_IFU <> IFU_i.from_WBU
     PipelineConnect(IFU_i.to_IDU, IDU_i.from_IFU, IDU_i.to_ISU.fire, WBU_i.to_IFU.bits.redirect.valid)// && IFU_i.to_IDU.fire)
     PipelineConnect(IDU_i.to_ISU, ISU_i.from_IDU, ISU_i.to_EXU.fire, WBU_i.to_IFU.bits.redirect.valid)// && IDU_i.to_ISU.fire)
     PipelineConnect(ISU_i.to_EXU, EXU_i.from_ISU, EXU_i.to_WBU.fire, WBU_i.to_IFU.bits.redirect.valid)// && ISU_i.to_EXU.fire)
     PipelineConnect(EXU_i.to_WBU, WBU_i.from_EXU, WBU_i.wb, WBU_i.to_IFU.bits.redirect.valid)// && EXU_i.to_WBU.fire)
-    // EXU_i.to_WBU <> WBU_i.from_EXU
     EXU_i.to_ISU <> ISU_i.from_EXU
     EXU_i.npc    := ISU_i.to_EXU.bits.pc
     WBU_i.to_ISU <> ISU_i.from_WBU

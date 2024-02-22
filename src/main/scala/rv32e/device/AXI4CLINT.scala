@@ -4,6 +4,7 @@ import chisel3._
 import chisel3.util._
 
 import rv32e.bus._
+import rv32e.bus.axi4._
 import rv32e.bus.simplebus._
 
 import rv32e.utils._
@@ -14,11 +15,12 @@ import _root_.circt.stage.ChiselStage
 import _root_.circt.stage.CIRCTTargetAnnotation
 import _root_.circt.stage.CIRCTTarget
 import _root_.circt.stage.FirtoolOption
+
 import chisel3.util.experimental.BoringUtils
 
-class CLINT extends Module {
+class AXI4CLINT extends Module {
     val io = IO(new Bundle {
-        val in = Flipped(new SimpleBus)
+        val in = Flipped(new AXI4Lite)
     })
 
     val mtime = RegInit(0.U((2*DATA_WIDTH).W))
@@ -31,19 +33,22 @@ class CLINT extends Module {
 
     def getOffset(addr: UInt) = addr(7,0)
 
-    RegMap.generate(mapping, getOffset(io.in.req.bits.addr), io.in.resp.bits.rdata, 
-    getOffset(io.in.req.bits.addr), io.in.isWrite, io.in.req.bits.wdata, io.in.req.bits.wmask)
+    RegMap.generate(mapping, getOffset(io.in.ar.bits.addr), io.in.r.bits.data, 
+    getOffset(io.in.aw.bits.addr), io.in.w.fire, io.in.w.bits.data, MaskExpand(io.in.w.bits.strb))
 
-    io.in.req.ready  := true.B
-
-    io.in.resp.valid := true.B
-    io.in.resp.bits.wresp := true.B
+    io.in.ar.ready  := true.B
+    io.in.r.valid   := true.B
+    io.in.r.bits.resp := true.B
+    io.in.aw.ready  := true.B
+    io.in.w.ready   := true.B
+    io.in.b.valid   := true.B
+    io.in.b.bits.resp := true.B
 
     val EXUPC = Wire(UInt(ADDR_WIDTH.W))
     val EXUInst = Wire(UInt(ADDR_WIDTH.W))
     BoringUtils.addSink(EXUPC, "EXUPC")
     BoringUtils.addSink(EXUInst, "EXUInst")
-    Debug(io.in.req.valid, "[clint], pc:%x, inst:%x\n", EXUPC, EXUInst)
+    Debug(io.in.ar.fire, "[clint], pc:%x, inst:%x\n", EXUPC, EXUInst)
 }
 
 object myMultipierMain extends App {
@@ -53,5 +58,5 @@ object myMultipierMain extends App {
       FirtoolOption("--lowering-options=disallowLocalVariables, locationInfoStyle=none"),
       // FirtoolOption("--lowering-options=locationInfoStyle=none")
   )
-  emitVerilog(new CLINT(), Array("--target-dir", path), firtoolOptions)
+  emitVerilog(new AXI4CLINT(), Array("--target-dir", path), firtoolOptions)
 }
