@@ -7,7 +7,7 @@ import rv32e.bus.axi4._
 
 import rv32e.core.config._
 
-class SimpleBus2AXI4Converter extends Module with axiConf{
+class SimpleBus2AXI4Converter extends Module with AXI4Parameters {
     val io = IO(new Bundle {
         val in  = Flipped(new SimpleBus)
         val out = new AXI4
@@ -19,13 +19,13 @@ class SimpleBus2AXI4Converter extends Module with axiConf{
     axi.ar.bits.addr  := mem.req.bits.addr
     axi.ar.bits.size  := DATA_WIDTH.U
     axi.ar.bits.len   := mem.req.bits.len
-    axi.ar.bits.burst := INCR.U
+    axi.ar.bits.burst := BURST_INCR
     axi.r.ready       := mem.resp.ready
     axi.aw.valid      := mem.req.valid && mem.isAWrite
     axi.aw.bits.addr  := mem.req.bits.addr
     axi.aw.bits.size  := DATA_WIDTH.U
     axi.aw.bits.len   := mem.req.bits.len // if from cache to mem, if to device, the length is not this.
-    axi.aw.bits.burst := INCR.U
+    axi.aw.bits.burst := BURST_INCR
     axi.w.valid       := mem.req.valid && mem.isWrite
     axi.w.bits.data   := mem.req.bits.wdata
     axi.w.bits.strb   := mem.req.bits.wmask

@@ -9,8 +9,7 @@ import chisel3.util._
 import chisel3.util.BitPat
 import chisel3.util.experimental.decode._
 
-import rv32e.bus.axi4.AXI4
-import rv32e.bus.axi4.axiConf 
+import rv32e.bus.axi4._
 
 import rv32e.core.config._
 import rv32e.core.define.Dec_Info._
@@ -18,7 +17,7 @@ import rv32e.core.define.Inst._
 
 import rv32e.utils.LFSR
 
-class AXI4RAM extends Module with axiConf{
+class AXI4RAM extends Module with AXI4Parameters {
     val axi = IO(Flipped(new AXI4))
 
     val lfsr = Module(new LFSR())
@@ -69,7 +68,7 @@ class AXI4RAM extends Module with axiConf{
             // ))
             reg_AxLen   := reg_AxLen-1.U
             reg_addr    := MuxLookup(reg_burst, reg_addr)(List(
-                INCR.U -> (reg_addr + ADDR_BYTE.U)
+                BURST_INCR -> (reg_addr + ADDR_BYTE.U)
             ))
         }
         is (s_read_end) {
@@ -94,7 +93,7 @@ class AXI4RAM extends Module with axiConf{
             // state_sram  := Mux(axi.w.bits.last, s_write_end, s_write_mid)
             reg_AxLen   := Mux(axi.w.fire, reg_AxLen-1.U, reg_AxLen)
             reg_addr    := MuxLookup(reg_burst, reg_addr)(List(
-                INCR.U -> Mux(axi.w.fire, (reg_addr + ADDR_BYTE.U), reg_addr)
+                BURST_INCR -> Mux(axi.w.fire, (reg_addr + ADDR_BYTE.U), reg_addr)
             ))
         }
         is (s_write_end) {
