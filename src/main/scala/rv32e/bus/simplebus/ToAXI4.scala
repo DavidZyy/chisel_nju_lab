@@ -15,6 +15,10 @@ class SimpleBus2AXI4Converter[OT <: AXI4Lite](outType: OT) extends Module with A
 
     val (mem, axi) = (io.in, io.out)
 
+    /**
+      * NOTE: For axi-lite, aw and w can in one clock, but for axi burst mode, 
+      * the first clock is aw, and the following clocks are w.
+      */
     // for AXI4Lite
     axi.ar.valid      := mem.req.valid && mem.isRead
     axi.ar.bits.addr  := mem.req.bits.addr

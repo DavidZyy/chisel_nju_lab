@@ -48,7 +48,7 @@ class AXI4CLINT extends Module {
     val EXUInst = Wire(UInt(ADDR_WIDTH.W))
     BoringUtils.addSink(EXUPC, "EXUPC")
     BoringUtils.addSink(EXUInst, "EXUInst")
-    Debug(io.in.ar.fire, "[clint], pc:%x, inst:%x\n", EXUPC, EXUInst)
+    // Debug(io.in.ar.fire, "[clint], pc:%x, inst:%x\n", EXUPC, EXUInst)
 }
 
 object myMultipierMain extends App {

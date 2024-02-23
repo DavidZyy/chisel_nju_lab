@@ -78,7 +78,9 @@ class top extends Module {
     memXbar.io.flush  := WBU_i.to_IFU.bits.redirect.valid
     memXbar.io.out(0) <> dcache.io.in
     memXbar.io.out(1).toAXI4Lite() <> clint.io.in
-    memXbar.io.out(2) <> mmio.from_lsu
+    // memXbar.io.out(2) <> mmio.from_lsu
+    memXbar.io.out(2) <> mmio.io.in
+    mmio.io.flush := WBU_i.to_IFU.bits.redirect.valid
 
     dcache.io.mem.toAXI4() <> ram_i2.axi
     dcache.io.flush := WBU_i.to_IFU.bits.redirect.valid
