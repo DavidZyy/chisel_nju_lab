@@ -10,5 +10,7 @@ target/
 test_run_dir/
 project/
 out/
-
+.*/
+dependencies/
+rocket-chip/
 # !src/
