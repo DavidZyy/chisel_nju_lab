@@ -32,7 +32,7 @@ class IFU_pipeline extends Module {
     val from_WBU   = IO(Flipped(Decoupled(new WBU2IFU_bus)))
     val to_mem     = IO(new SimpleBus)
     val fetch_PC   = IO(Output(UInt(ADDR_WIDTH.W)))
-    val to_IDU_PC  = IO(Input(UInt(ADDR_WIDTH.W))) // from icache
+    val to_IDU_PC  = IO(Input(UInt(ADDR_WIDTH.W))) // from icache, if the topo is "IFU --req--> icache --resp--> IDU", this can be removed.
 
     val reg_PC   = RegInit(UInt(ADDR_WIDTH.W), START_ADDR.U)
     val pcUpdate = to_mem.req.fire || from_WBU.bits.redirect.valid

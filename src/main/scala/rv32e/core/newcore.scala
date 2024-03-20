@@ -20,6 +20,8 @@ class core extends Module {
     val io = IO(new Bundle{
         val ifu = (new SimpleBus)
         val lsu = (new SimpleBus)
+        val icachePC = Input(UInt(DATA_WIDTH.W)) 
+        val flush    = Output(Bool())
     })
 
     val IFU_i   =   Module(new IFU_pipeline())
@@ -29,6 +31,7 @@ class core extends Module {
     val WBU_i   =   Module(new WBU())
 
     WBU_i.to_IFU <> IFU_i.from_WBU
+    IFU_i.to_IDU_PC := io.icachePC
     PipelineConnect(IFU_i.to_IDU, IDU_i.from_IFU, IDU_i.to_ISU.fire, WBU_i.to_IFU.bits.redirect.valid)// && IFU_i.to_IDU.fire)
     PipelineConnect(IDU_i.to_ISU, ISU_i.from_IDU, ISU_i.to_EXU.fire, WBU_i.to_IFU.bits.redirect.valid)// && IDU_i.to_ISU.fire)
     PipelineConnect(ISU_i.to_EXU, EXU_i.from_ISU, EXU_i.to_WBU.fire, WBU_i.to_IFU.bits.redirect.valid)// && ISU_i.to_EXU.fire)
@@ -49,4 +52,5 @@ class core extends Module {
 
     io.ifu <> IFU_i.to_mem
     io.lsu <> EXU_i.lsu_to_mem
+    io.flush := WBU_i.to_IFU.bits.redirect.valid
 }
