@@ -28,7 +28,7 @@ import rv32e.utils._
 
 class out_class extends Bundle {
     val ifu_fetchPc = Output(UInt(ADDR_WIDTH.W))
-    val nextExecPC  = Output(UInt(ADDR_WIDTH.W)) // the next execute pc after a wb signal, for difftest
+    val nextExecPC  = Output(UInt(ADDR_WIDTH.W)) // the next execute pc after a wb signal, for difftest(actually the next wb pc?)
     val ifu      = new PipelineDebugInfo
     val idu      = new PipelineDebugInfo
     val isu      = new PipelineDebugInfo
@@ -96,13 +96,7 @@ class top extends Module {
     WBU_i.to_ISU <> ISU_i.from_WBU
     ISU_i.flush  := WBU_i.to_IFU.bits.redirect.valid
 
-    val CacheStage2PC    = WireInit(0.U(DATA_WIDTH.W))
-    val CacheStage2valid = WireInit(true.B)
-    BoringUtils.addSink(CacheStage2valid, "id1")
-    BoringUtils.addSink(CacheStage2PC, "id2")
-
-    io.out.ifu_fetchPc := IFU_i.fetch_PC
-
+    ////////////// for perf ///////////////
     if (EnablePerfCnt) {
         val PerfCnt_i = Module(new perfCnt())
         BoringUtils.addSource(WireInit(ISU_i.to_EXU.fire && ISU_i.to_EXU.bits.isLSU), perfPrefix+"nrLSU")
@@ -111,7 +105,8 @@ class top extends Module {
         BoringUtils.addSource(WireInit(ISU_i.to_EXU.fire && ISU_i.to_EXU.bits.isALU), perfPrefix+"nrALU")
         BoringUtils.addSource(WireInit(ISU_i.to_EXU.fire && ISU_i.to_EXU.bits.isMDU), perfPrefix+"nrMDU")
     }
-
+    
+    ////////////// for output ///////////////
     when(WBU_i.from_EXU.valid) {
         io.out.nextExecPC := WBU_i.from_EXU.bits.pc
     } .elsewhen(EXU_i.from_ISU.valid) {
@@ -120,21 +115,24 @@ class top extends Module {
         io.out.nextExecPC := ISU_i.from_IDU.bits.pc
     } .elsewhen(IDU_i.from_IFU.valid) {
         io.out.nextExecPC := IDU_i.from_IFU.bits.pc
-    } .elsewhen(CacheStage2valid) {
-        io.out.nextExecPC := CacheStage2PC
+    } .elsewhen(IFU_i.to_IDU.valid) {
+        io.out.nextExecPC := IFU_i.to_IDU.bits.pc
     } .otherwise {
         io.out.nextExecPC := IFU_i.fetch_PC
     }
-    io.out.ifu.pc   := IFU_i.to_IDU.bits.pc
+
+    io.out.ifu_fetchPc := IFU_i.fetch_PC
+    io.out.ifu.pc   := IFU_i.to_IDU.bits.pc       // actually icache pc
     io.out.ifu.inst := IFU_i.to_IDU.bits.inst
-    io.out.idu.pc   := IDU_i.to_ISU.bits.pc
-    io.out.idu.inst := IDU_i.to_ISU.bits.inst
-    io.out.isu.pc   := ISU_i.to_EXU.bits.pc
-    io.out.isu.inst := ISU_i.to_EXU.bits.inst
-    io.out.exu.pc   := EXU_i.to_WBU.bits.pc
-    io.out.exu.inst := EXU_i.to_WBU.bits.inst
+    io.out.idu.pc   := IDU_i.from_IFU.bits.pc
+    io.out.idu.inst := IDU_i.from_IFU.bits.inst
+    io.out.isu.pc   := ISU_i.from_IDU.bits.pc
+    io.out.isu.inst := ISU_i.from_IDU.bits.inst
+    io.out.exu.pc   := EXU_i.from_ISU.bits.pc
+    io.out.exu.inst := EXU_i.from_ISU.bits.inst
     io.out.wbu.pc   := WBU_i.from_EXU.bits.pc
     io.out.wbu.inst := WBU_i.from_EXU.bits.inst
+
     io.out.wb       := WBU_i.wb
     io.out.difftest <> EXU_i.difftest
     io.out.is_mmio  := WBU_i.is_mmio

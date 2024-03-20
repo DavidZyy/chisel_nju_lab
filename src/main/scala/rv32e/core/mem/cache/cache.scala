@@ -224,10 +224,6 @@ class CacheStage2(val dataWidth: Int, val cacheName: String) extends Module with
     val dataWriteBus = Flipped(CacheDataArrayWriteBus(dataWidth)) // when store inst hit, write to sram, data hit
   })
 
-  if(cacheName == "icache") {
-    BoringUtils.addSource(io.in.valid, "id1")
-    BoringUtils.addSource(io.in.bits.addr, "id2")
-  }
 
   io.in.ready            := io.out.resp.ready
   
