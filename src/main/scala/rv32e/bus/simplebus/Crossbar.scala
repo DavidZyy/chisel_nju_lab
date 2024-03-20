@@ -59,6 +59,7 @@ import os.list
 //     }
 // }
 
+// how the axi4 burst is dealed? I forget it ...
 class SimpleBusCrossBar1toN(addressSpace: List[(Long, Long)]) extends Module {
     val io = IO(new Bundle {
         val in  = Flipped(new SimpleBus)
@@ -126,7 +127,8 @@ class SimpleBusCrossBar1toN(addressSpace: List[(Long, Long)]) extends Module {
       io.out(i).req.bits  := io.in.req.bits
     }
 
-    // out.resp
+    // out.resp, outSelVec is one hot, so if outSelVec(i) is true, it means the device i is
+    // ready to get response.
     for (i <- 0 until io.out.length) {
       io.out(i).resp.ready := io.in.resp.ready && MuxLookup(state, false.B)(List(
         s_idle -> outSelVec(i),
@@ -137,7 +139,7 @@ class SimpleBusCrossBar1toN(addressSpace: List[(Long, Long)]) extends Module {
 
 /**
   * USAGE:
-  * dcache & icache -> mem
+  * dcache & icache & mmio -> Xbar -> Soc
   */
 class SimpleBusCrossBarNto1 extends Module {
 
