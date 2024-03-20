@@ -12,6 +12,7 @@ import rv32e.core.define.Dec_Info._
 import rv32e.core.define.Inst._
 
 class IDU extends Module {
+    // actually is from icache in pipeline, consider to modify to make it more clear in logic
     val from_IFU  = IO(Flipped(Decoupled(new IFU2IDU_bus))) // only to IFU signal
     val to_ISU    = IO(Decoupled(new IDU2ISU_bus))
 
