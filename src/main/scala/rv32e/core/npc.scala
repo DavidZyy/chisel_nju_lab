@@ -27,9 +27,11 @@ import rv32e.device._
 import rv32e.utils._
 
 // npc module
-class npc extends Module {
+// class npc extends Module {
+class top extends Module {
     val io = IO(new Bundle {
-        val master = (new AXI4)
+        // val master = (new AXI4)
+        val out = (new out_class)
     })
 
     val core_i   = Module(new core())
@@ -65,11 +67,11 @@ class npc extends Module {
     xbar1toN.io.flush := core_i.io.flush
 
     // input of dcache
-    dcache.io.in <> core_i.io.lsu
-    dcache.io.flush := xbar1toN.io.out(0)
+    dcache.io.in <> xbar1toN.io.out(0)
+    dcache.io.flush := core_i.io.flush
     
     // client
-    clint.io.in := xbar1toN.io.out(1).toAXI4Lite()
+    clint.io.in <> xbar1toN.io.out(1).toAXI4Lite()
 
     // input of xbarNto1
     xbarNto1.io.in(0) <> icache.io.mem
@@ -79,7 +81,20 @@ class npc extends Module {
     // ram
     ram_i.axi <> xbarNto1.io.out.toAXI4()
 
+    ////////////// for output ///////////////
+    io.out <> core_i.io.out
+}
 
-
-    /////////////// for debug /////////////////
+object top_main extends App {
+    def t = new top()
+    val generator = Seq(
+        chisel3.stage.ChiselGeneratorAnnotation(() => t),
+        CIRCTTargetAnnotation(CIRCTTarget.Verilog)
+    )
+    val firtoolOptions = Seq(
+        FirtoolOption("--disable-all-randomization"),
+        FirtoolOption("--lowering-options=disallowLocalVariables, locationInfoStyle=none"),
+        // FirtoolOption("--lowering-options=locationInfoStyle=none")
+    )
+    (new ChiselStage).execute(args, generator ++ firtoolOptions)
 }

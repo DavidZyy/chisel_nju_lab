@@ -57,6 +57,7 @@ class BPU extends Module with HasBPUConst {
     btb.io.w.req.bits.waddr := io.in.missPC(setMSB, setLSB) // pc from exu setidx
     btb.io.w.req.bits.wdata := btbWrite.asUInt
 
+    ////////////// for perf ///////////////
     if(EnablePerfCnt) {
         BoringUtils.addSource(io.in.pc.valid, perfPrefix+"BPUTime")
         BoringUtils.addSource(io.in.redirect.valid, perfPrefix+"BPUWrong")

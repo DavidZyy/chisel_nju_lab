@@ -22,6 +22,7 @@ class core extends Module {
         val lsu = (new SimpleBus)
         val icachePC = Input(UInt(DATA_WIDTH.W)) 
         val flush    = Output(Bool())
+        val out = (new out_class)
     })
 
     val IFU_i   =   Module(new IFU_pipeline())
@@ -41,6 +42,11 @@ class core extends Module {
     WBU_i.to_ISU <> ISU_i.from_WBU
     ISU_i.flush  := WBU_i.to_IFU.bits.redirect.valid
 
+    io.ifu <> IFU_i.to_mem
+    io.lsu <> EXU_i.lsu_to_mem
+    io.flush := WBU_i.to_IFU.bits.redirect.valid
+
+    ////////////// for perf ///////////////
     if (EnablePerfCnt) {
         val PerfCnt_i = Module(new perfCnt())
         BoringUtils.addSource(WireInit(ISU_i.to_EXU.fire && ISU_i.to_EXU.bits.isLSU), perfPrefix+"nrLSU")
@@ -50,7 +56,34 @@ class core extends Module {
         BoringUtils.addSource(WireInit(ISU_i.to_EXU.fire && ISU_i.to_EXU.bits.isMDU), perfPrefix+"nrMDU")
     }
 
-    io.ifu <> IFU_i.to_mem
-    io.lsu <> EXU_i.lsu_to_mem
-    io.flush := WBU_i.to_IFU.bits.redirect.valid
+    ////////////// for output ///////////////
+    when(WBU_i.from_EXU.valid) {
+        io.out.nextExecPC := WBU_i.from_EXU.bits.pc
+    } .elsewhen(EXU_i.from_ISU.valid) {
+        io.out.nextExecPC := EXU_i.from_ISU.bits.pc
+    } .elsewhen(ISU_i.from_IDU.valid) {
+        io.out.nextExecPC := ISU_i.from_IDU.bits.pc
+    } .elsewhen(IDU_i.from_IFU.valid) {
+        io.out.nextExecPC := IDU_i.from_IFU.bits.pc
+    } .elsewhen(IFU_i.to_IDU.valid) {
+        io.out.nextExecPC := IFU_i.to_IDU.bits.pc
+    } .otherwise {
+        io.out.nextExecPC := IFU_i.fetch_PC
+    }
+
+    io.out.ifu_fetchPc := IFU_i.fetch_PC
+    io.out.ifu.pc   := IFU_i.to_IDU.bits.pc       // actually icache pc
+    io.out.ifu.inst := IFU_i.to_IDU.bits.inst
+    io.out.idu.pc   := IDU_i.from_IFU.bits.pc
+    io.out.idu.inst := IDU_i.from_IFU.bits.inst
+    io.out.isu.pc   := ISU_i.from_IDU.bits.pc
+    io.out.isu.inst := ISU_i.from_IDU.bits.inst
+    io.out.exu.pc   := EXU_i.from_ISU.bits.pc
+    io.out.exu.inst := EXU_i.from_ISU.bits.inst
+    io.out.wbu.pc   := WBU_i.from_EXU.bits.pc
+    io.out.wbu.inst := WBU_i.from_EXU.bits.inst
+
+    io.out.wb       := WBU_i.wb
+    io.out.difftest <> EXU_i.difftest
+    io.out.is_mmio  := WBU_i.is_mmio
 }

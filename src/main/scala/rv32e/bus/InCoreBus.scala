@@ -7,6 +7,8 @@ import chisel3.util._
 import rv32e.core.config._
 import rv32e.core.define.Dec_Info._
 
+import rv32e.utils.DiffCsr
+
 // ifu to idu bus
 class IFU2IDU_bus extends Bundle {
     val inst    =   Output(UInt(ADDR_WIDTH.W))
@@ -130,4 +132,19 @@ class EXU2ISU_bus extends Bundle {
 class PipelineDebugInfo extends Bundle {
     val inst    =   Output(UInt(ADDR_WIDTH.W))
     val pc      =   Output(UInt(ADDR_WIDTH.W))      
+}
+
+class out_class extends Bundle {
+    val nextExecPC  = Output(UInt(ADDR_WIDTH.W)) // the next execute pc after a wb signal, for difftest(actually the next wb pc?)
+
+    val ifu_fetchPc = Output(UInt(ADDR_WIDTH.W))
+    val ifu      = new PipelineDebugInfo
+    val idu      = new PipelineDebugInfo
+    val isu      = new PipelineDebugInfo
+    val exu      = new PipelineDebugInfo
+    val wbu      = new PipelineDebugInfo
+
+    val difftest = new DiffCsr
+    val is_mmio  = Output(Bool())
+    val wb       = Output(Bool())
 }
