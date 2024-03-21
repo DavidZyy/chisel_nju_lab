@@ -51,7 +51,8 @@ class EXU_pipeline extends Module {
     Lsu_i.io.in.req.bits.addr  := Alu_i.io.out.result
     Lsu_i.io.in.req.bits.wdata := from_ISU.bits.rdata2
     Lsu_i.io.in.req.bits.wmask := "b1111".U
-    Lsu_i.io.in.req.bits.cmd   := Mux(from_ISU.bits.ctrl_sig.mem_wen, SimpleBusCmd.write, SimpleBusCmd.read)
+    // use write_awrite to make aw valid and w valid high in one clock, it it need to access axi4 device
+    Lsu_i.io.in.req.bits.cmd   := Mux(from_ISU.bits.ctrl_sig.mem_wen, SimpleBusCmd.write_awrite, SimpleBusCmd.aread)
     Lsu_i.io.in.req.bits.len   := 0.U
     Lsu_i.io.in.req.bits.wlast := true.B
     Lsu_i.io.in.resp.ready     := from_ISU.bits.isLSU

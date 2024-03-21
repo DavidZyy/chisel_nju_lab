@@ -168,7 +168,7 @@ class CacheStage1(val dataWidth: Int, val cacheName: String) extends Module with
 
   io.out.valid         := hit && io.in.valid // if have no io.in.valid, dcache maybe request repeatedly
   io.out.bits.addr     := io.in.bits.addr
-  io.out.bits.is_write := (io.in.bits.cmd === SimpleBusCmd.write)
+  io.out.bits.is_write := (io.in.bits.cmd === SimpleBusCmd.write_awrite)
   io.out.bits.waddr    := hitCacheAddr
   io.out.bits.wmask    := io.in.bits.wmask
   io.out.bits.wdata    := io.in.bits.wdata << (BYTE_WIDTH.U * byteIdx) // move according to off, so in stage2 we not move.
@@ -189,9 +189,9 @@ class CacheStage1(val dataWidth: Int, val cacheName: String) extends Module with
                                       s_writing -> true.B,
                                       ))
   io.mem.req.bits.cmd   := MuxLookup(stateCache, 0.U)(List(
-                                      s_rrq -> SimpleBusCmd.read,
-                                      s_wrq -> SimpleBusCmd.awrite,
-                                      s_writing -> SimpleBusCmd.write,
+                                      s_rrq -> SimpleBusCmd.burst_aread,
+                                      s_wrq -> SimpleBusCmd.burst_awrite,
+                                      s_writing -> SimpleBusCmd.write_burst,
                                       ))
   io.mem.req.bits.addr  := MuxLookup(stateCache, 0.U)(List(
     s_rrq -> ((io.in.bits.addr>>(byteIdxWidth+entryIdxWidth).U)<<(byteIdxWidth+entryIdxWidth).U),
@@ -229,6 +229,7 @@ class CacheStage2(val dataWidth: Int, val cacheName: String) extends Module with
   
   io.out.resp.valid      := io.in.valid
   io.out.resp.bits.rdata := Mux(io.in.valid, io.dataReadBus.rdata, 0.U)
+  io.out.resp.bits.rlast := DontCare
   io.out.resp.bits.wresp := false.B
   io.out.addr            := io.in.bits.addr
 

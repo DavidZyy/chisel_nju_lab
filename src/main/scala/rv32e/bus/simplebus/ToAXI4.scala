@@ -20,7 +20,7 @@ class SimpleBus2AXI4Converter[OT <: AXI4Lite](outType: OT) extends Module with A
       * the first clock is aw, and the following clocks are w.
       */
     // for AXI4Lite
-    axi.ar.valid      := mem.req.valid && mem.isRead
+    axi.ar.valid      := mem.req.valid && mem.isARead
     axi.ar.bits.addr  := mem.req.bits.addr
     axi.r.ready       := mem.resp.ready
     axi.aw.valid      := mem.req.valid && mem.isAWrite
@@ -31,10 +31,27 @@ class SimpleBus2AXI4Converter[OT <: AXI4Lite](outType: OT) extends Module with A
     axi.b.ready       := mem.resp.ready
 
     mem.req.ready     := MuxLookup(mem.req.bits.cmd, false.B)(List(
-        SimpleBusCmd.read    -> axi.ar.ready,
-        SimpleBusCmd.awrite  -> axi.aw.ready,
-        SimpleBusCmd.write   -> axi.w.ready,
+        SimpleBusCmd.aread       -> axi.ar.ready,
+        SimpleBusCmd.burst_aread -> axi.ar.ready,
+
+        SimpleBusCmd.awrite       -> axi.aw.ready,
+        SimpleBusCmd.burst_awrite -> axi.aw.ready,
+
+        SimpleBusCmd.write        -> axi.w.ready,
+        SimpleBusCmd.write_burst  -> axi.w.ready,
+
+        SimpleBusCmd.write_awrite -> (axi.w.ready && axi.aw.ready),
+        SimpleBusCmd.write_burst_awrite -> (axi.w.ready && axi.aw.ready),
     ))
+    // mem.req.ready       := when(mem.isARead) {
+    //     axi.ar.ready
+    // } .elsewhen (mem.isAWrite && mem.isWrite) {
+    //     axi.aw.ready && axi.w.ready
+    // } .elsewhen (mem.isAWrite) {
+    //     axi.aw.ready
+    // } .elsewhen (mem.isWrite) {
+    //     axi.w.ready
+    // } .otherwise { false.B}
     mem.resp.valid      := axi.r.valid
     mem.resp.bits.rdata := axi.r.bits.data
     mem.resp.bits.wresp := axi.b.bits.resp
@@ -50,6 +67,10 @@ class SimpleBus2AXI4Converter[OT <: AXI4Lite](outType: OT) extends Module with A
         axi4.aw.bits.len   := mem.req.bits.len // if from cache to mem, if to device, the length is not this.
         axi4.aw.bits.burst := BURST_INCR
         axi4.w.bits.last   := mem.req.bits.wlast
+
+        mem.resp.bits.rlast := axi4.r.bits.last
+    } else {
+        mem.resp.bits.rlast := true.B
     }
 }
 
