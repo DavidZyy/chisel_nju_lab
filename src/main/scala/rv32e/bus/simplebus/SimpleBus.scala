@@ -19,13 +19,13 @@ import rv32e.core.config._
 object SimpleBusCmd {
     // read | write | burst | awrite | aread, some bits can be true togeter, but some not.
     def idle         = "b00000"
-    def aread        = "b00001".U // used for axi addr read channel and in core write, issue a read request
-    def awrite       = "b00010".U // used for axi addr write channel and in core write, issue a write request
+    def aread        = "b00001".U // used for axi addr read channel and IN CORE READ, issue a read request
+    def awrite       = "b00010".U // used for axi addr write channel
     def burst_aread  = "b00101".U // used for axi addr read channel with burst
     def burst_awrite = "b00110".U // used for axi addr write channel with burst
 
     def write        = "b01000".U  // used for axi write channel 
-    def write_awrite = "b01010".U  // used for aw and w valid in one cycle
+    def write_awrite = "b01010".U  // used for aw and w valid in one cycle and IN CORE WRITE, issue a write request
     def write_burst  = "b01100".U
     def write_burst_awrite = "b01110".U
 
@@ -55,7 +55,7 @@ class SimpleBusReqBundle extends Bundle {
 class SimpleBusRespBundle extends Bundle {
     // axi r channel
     val rdata = Output(UInt(DATA_WIDTH.W))
-    // val rlast = Output(Bool())
+    val rlast = Output(Bool())
 
     // axi b channel
     val wresp = Output(Bool())
