@@ -60,7 +60,7 @@ class IFU_pipeline extends Module {
     // to mem signals
     to_mem.req.valid      := to_IDU.ready
     to_mem.req.bits.addr  := reg_PC
-    to_mem.req.bits.cmd   := SimpleBusCmd.read
+    to_mem.req.bits.cmd   := SimpleBusCmd.aread
     to_mem.req.bits.wdata := DontCare
     to_mem.req.bits.wmask := DontCare
     to_mem.req.bits.len   := 0.U
