@@ -229,6 +229,7 @@ class CacheStage2(val dataWidth: Int, val cacheName: String) extends Module with
   
   io.out.resp.valid      := io.in.valid
   io.out.resp.bits.rdata := Mux(io.in.valid, io.dataReadBus.rdata, 0.U)
+  io.out.resp.bits.rlast := DontCare
   io.out.resp.bits.wresp := false.B
   io.out.addr            := io.in.bits.addr
 

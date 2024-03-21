@@ -61,6 +61,7 @@ class MMIO extends Module {
     mmioXbar.io.out(0).req.ready  := true.B
     mmioXbar.io.out(0).resp.valid := true.B
     mmioXbar.io.out(0).resp.bits.rdata := RamBB_i.io.rdata
+    mmioXbar.io.out(0).resp.bits.rlast := true.B
     mmioXbar.io.out(0).resp.bits.wresp := true.B
 
     mmioXbar.io.out(1).toAXI4Lite()  <>  uart.io.in
@@ -74,5 +75,6 @@ class MMIO extends Module {
     mmioXbar.io.out(2).req.ready  := true.B
     mmioXbar.io.out(2).resp.valid := true.B
     mmioXbar.io.out(2).resp.bits.rdata := RamBB_i1.io.rdata
+    mmioXbar.io.out(2).resp.bits.rlast := true.B
     mmioXbar.io.out(2).resp.bits.wresp := true.B
 }

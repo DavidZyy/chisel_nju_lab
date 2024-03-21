@@ -67,6 +67,10 @@ class SimpleBus2AXI4Converter[OT <: AXI4Lite](outType: OT) extends Module with A
         axi4.aw.bits.len   := mem.req.bits.len // if from cache to mem, if to device, the length is not this.
         axi4.aw.bits.burst := BURST_INCR
         axi4.w.bits.last   := mem.req.bits.wlast
+
+        mem.resp.bits.rlast := axi4.r.bits.last
+    } else {
+        mem.resp.bits.rlast := true.B
     }
 }
 

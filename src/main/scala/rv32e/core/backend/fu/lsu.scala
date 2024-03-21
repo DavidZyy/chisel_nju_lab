@@ -94,6 +94,7 @@ class LSUPipeline extends Module {
     io.in.req.ready          := io.mem.req.ready
     io.in.resp.valid         := io.mem.resp.valid
     io.in.resp.bits.rdata    := rdata
+    io.in.resp.bits.rlast    := DontCare
     io.in.resp.bits.wresp    := DontCare
 
     // io.mem
