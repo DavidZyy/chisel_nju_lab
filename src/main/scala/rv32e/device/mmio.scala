@@ -37,42 +37,65 @@ class MMIO extends Module {
         val flush = Input(Bool())
     })
 
-    val addrSpace = List(
-        (RTC_ADDR+8L, SERIAL_PORT-RTC_ADDR-8L),
-        (SERIAL_PORT, 4L),
-        (SERIAL_PORT+4L, mmioSize),
-    )
-
-    val mmioXbar = Module(new SimpleBusCrossBar1toN(addrSpace))
-
-    val RamBB_i  = Module(new RamBB())
-    val uart     = Module(new AXI4UART())
     val RamBB_i1 = Module(new RamBB())
-
-    io.in <> mmioXbar.io.in
-    mmioXbar.io.flush := io.flush
-
-    RamBB_i.io.clock   := clock
-    RamBB_i.io.addr    := mmioXbar.io.out(0).req.bits.addr
-    RamBB_i.io.mem_wen := mmioXbar.io.out(0).isWrite
-    RamBB_i.io.valid   := mmioXbar.io.out(0).req.valid
-    RamBB_i.io.wdata   := mmioXbar.io.out(0).req.bits.wdata
-    RamBB_i.io.wmask   := mmioXbar.io.out(0).req.bits.wmask
-    mmioXbar.io.out(0).req.ready  := true.B
-    mmioXbar.io.out(0).resp.valid := true.B
-    mmioXbar.io.out(0).resp.bits.rdata := RamBB_i.io.rdata
-    mmioXbar.io.out(0).resp.bits.wresp := true.B
-
-    mmioXbar.io.out(1).toAXI4Lite()  <>  uart.io.in
-
     RamBB_i1.io.clock   := clock
-    RamBB_i1.io.addr    := mmioXbar.io.out(2).req.bits.addr
-    RamBB_i1.io.mem_wen := mmioXbar.io.out(2).isWrite
-    RamBB_i1.io.valid   := mmioXbar.io.out(2).req.valid
-    RamBB_i1.io.wdata   := mmioXbar.io.out(2).req.bits.wdata
-    RamBB_i1.io.wmask   := mmioXbar.io.out(2).req.bits.wmask
-    mmioXbar.io.out(2).req.ready  := true.B
-    mmioXbar.io.out(2).resp.valid := true.B
-    mmioXbar.io.out(2).resp.bits.rdata := RamBB_i1.io.rdata
-    mmioXbar.io.out(2).resp.bits.wresp := true.B
+    RamBB_i1.io.addr    := io.in.req.bits.addr
+    RamBB_i1.io.mem_wen := io.in.isWrite
+    RamBB_i1.io.valid   := io.in.req.valid && !io.flush
+    RamBB_i1.io.wdata   := io.in.req.bits.wdata
+    RamBB_i1.io.wmask   := io.in.req.bits.wmask
+
+    // req
+    io.in.req.ready  := true.B
+
+    // resp
+    io.in.resp.valid := true.B
+    io.in.resp.bits.rdata := RamBB_i1.io.rdata
+    io.in.resp.bits.wresp := io.in.isWrite
 }
+
+// class MMIO extends Module {
+//     val io = IO(new Bundle {
+//         val in = Flipped(new SimpleBus)
+//         val flush = Input(Bool())
+//     })
+// 
+//     val addrSpace = List(
+//         (RTC_ADDR+8L, SERIAL_PORT-RTC_ADDR-8L),
+//         (SERIAL_PORT, 4L),
+//         (SERIAL_PORT+4L, mmioSize),
+//     )
+// 
+//     val mmioXbar = Module(new SimpleBusCrossBar1toN(addrSpace))
+// 
+//     val RamBB_i  = Module(new RamBB())
+//     val uart     = Module(new AXI4UART())
+//     val RamBB_i1 = Module(new RamBB())
+// 
+//     io.in <> mmioXbar.io.in
+//     mmioXbar.io.flush := io.flush
+// 
+//     RamBB_i.io.clock   := clock
+//     RamBB_i.io.addr    := mmioXbar.io.out(0).req.bits.addr
+//     RamBB_i.io.mem_wen := mmioXbar.io.out(0).isWrite
+//     RamBB_i.io.valid   := mmioXbar.io.out(0).req.valid
+//     RamBB_i.io.wdata   := mmioXbar.io.out(0).req.bits.wdata
+//     RamBB_i.io.wmask   := mmioXbar.io.out(0).req.bits.wmask
+//     mmioXbar.io.out(0).req.ready  := true.B
+//     mmioXbar.io.out(0).resp.valid := true.B
+//     mmioXbar.io.out(0).resp.bits.rdata := RamBB_i.io.rdata
+//     mmioXbar.io.out(0).resp.bits.wresp := true.B
+// 
+//     mmioXbar.io.out(1).toAXI4Lite()  <>  uart.io.in
+// 
+//     RamBB_i1.io.clock   := clock
+//     RamBB_i1.io.addr    := mmioXbar.io.out(2).req.bits.addr
+//     RamBB_i1.io.mem_wen := mmioXbar.io.out(2).isWrite
+//     RamBB_i1.io.valid   := mmioXbar.io.out(2).req.valid
+//     RamBB_i1.io.wdata   := mmioXbar.io.out(2).req.bits.wdata
+//     RamBB_i1.io.wmask   := mmioXbar.io.out(2).req.bits.wmask
+//     mmioXbar.io.out(2).req.ready  := true.B
+//     mmioXbar.io.out(2).resp.valid := true.B
+//     mmioXbar.io.out(2).resp.bits.rdata := RamBB_i1.io.rdata
+//     mmioXbar.io.out(2).resp.bits.wresp := true.B
+// }

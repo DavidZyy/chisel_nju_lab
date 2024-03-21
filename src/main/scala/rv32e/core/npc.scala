@@ -50,7 +50,6 @@ class top extends Module {
     )
     val xbar1toN = Module(new SimpleBusCrossBar1toN(addrSpace))
     val xbarNto1 = Module(new SimpleBusCrossBarNto1(3))
-    val ram_i    = Module(new AXI4RAM)
 
     /* connect wires according to input, because input only have
         one, and output maybe have many. */
@@ -77,9 +76,25 @@ class top extends Module {
     xbarNto1.io.in(0) <> icache.io.mem
     xbarNto1.io.in(1) <> dcache.io.mem
     xbarNto1.io.in(2) <> xbar1toN.io.out(2)
+    xbarNto1.io.flush := core_i.io.flush
 
-    // ram
-    ram_i.axi <> xbarNto1.io.out.toAXI4()
+    //////////////// out of npc ////////////////
+    val ramAddrRange = (pmemBase, pmemSize)
+    val addrSpace2 = List(
+        mmioAddrRange,
+        ramAddrRange,
+    )
+    val ram_i    = Module(new AXI4RAM)
+    val mmio_i   = Module(new MMIO)
+    val xbar1toNout = Module(new SimpleBusCrossBar1toN(addrSpace2))
+
+    xbar1toNout.io.in <> xbarNto1.io.out
+    xbar1toNout.io.flush := core_i.io.flush
+
+    mmio_i.io.in <> xbar1toNout.io.out(0) 
+    mmio_i.io.flush := core_i.io.flush
+    
+    ram_i.axi <> xbar1toNout.io.out(1).toAXI4()
 
     ////////////// for output ///////////////
     io.out <> core_i.io.out

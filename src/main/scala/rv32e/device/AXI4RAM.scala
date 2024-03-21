@@ -17,6 +17,7 @@ import rv32e.core.define.Inst._
 
 import rv32e.utils.LFSR
 
+// actually is an soc
 class AXI4RAM extends Module with AXI4Parameters {
     val axi = IO(Flipped(new AXI4))
 
@@ -33,8 +34,8 @@ class AXI4RAM extends Module with AXI4Parameters {
     val state_sram = RegInit(s_idle)
     switch (state_sram) {
         is (s_idle) {
-            delay := 10.U
-            // delay := 0.U
+            // delay := 10.U
+            delay := 0.U
             // delay := lfsr.io.out;
             when (axi.ar.fire) {
                 state_sram := s_read_delay
@@ -66,6 +67,7 @@ class AXI4RAM extends Module with AXI4Parameters {
             // reg_addr    := MuxLookup(reg_burst, reg_addr)(List(
             //     INCR.U -> Mux(axi.r.fire, (reg_addr + ADDR_BYTE.U), reg_addr)
             // ))
+            // read operation may be omited because of flush, so no need axi.r.fire in case of dead lock
             reg_AxLen   := reg_AxLen-1.U
             reg_addr    := MuxLookup(reg_burst, reg_addr)(List(
                 BURST_INCR -> (reg_addr + ADDR_BYTE.U)

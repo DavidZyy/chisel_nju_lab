@@ -8,10 +8,13 @@ import rv32e.bus.axi4._
 
 import rv32e.core.config._
 
+// 0b111 bits means: last | burst | write
+// 0b000 bits means: not last | not burst | read
+
 object SimpleBusCmd {
     def read    = "b0001".U
     def write   = "b0010".U // for axi w
-    def awrite  = "b0100".U // for axi aw
+    def awrite  = "b0100".U // for axi aw, only used by "write burst" ??
 
     def apply() = UInt(4.W)
 }

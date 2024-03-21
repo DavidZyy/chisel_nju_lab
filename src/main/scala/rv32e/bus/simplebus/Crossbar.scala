@@ -29,6 +29,8 @@ class SimpleBusCrossBar1toN(addressSpace: List[(Long, Long)]) extends Module {
 
     val reqInvalidAddr = io.in.req.valid && !outSelVec.asUInt.orR
 
+    val cmdReg = RegInit(0.U(4.W))
+
     switch (state) {
         is (s_idle) {
           when (io.in.resp.fire || io.flush) {
@@ -93,6 +95,7 @@ class SimpleBusCrossBarNto1(n: Int) extends Module {
   val io = IO(new Bundle {
     val in  = Flipped(Vec(n, new SimpleBus))
     val out = new SimpleBus
+    val flush = Input(Bool())
   })
 
   val s_idle :: s_resp :: Nil = Enum(2)
@@ -101,6 +104,8 @@ class SimpleBusCrossBarNto1(n: Int) extends Module {
   // i think it's not necessary use the lib arbiter
   val inputArb = Module(new Arbiter(chiselTypeOf(io.in(0).req.bits), n))
 
+  val inflightSrc = RegInit(0.U(log2Up(n).W))
+
   //////// bind req channel /////////////
   for(i <- 0 until n) {
     inputArb.io.in(i) <> io.in(i).req
@@ -108,12 +113,10 @@ class SimpleBusCrossBarNto1(n: Int) extends Module {
 
   val thisReq = inputArb.io.out
 
-  io.out.req.valid := thisReq.valid && (state === s_idle)
+  io.out.req.valid := thisReq.valid && ((state === s_idle) || inputArb.io.chosen === inflightSrc) // the later condition for write burst, it issue aw valid and then w valid
   io.out.req.bits  := thisReq.bits
-  thisReq.ready    := io.out.req.ready && (state === s_idle)
+  thisReq.ready    := io.out.req.ready && ((state === s_idle) || inputArb.io.chosen === inflightSrc)
   //////// bind req channel /////////////
-
-  val inflightSrc = RegInit(0.U(log2Up(n).W))
 
 
   //////// bind resp channel /////////////
@@ -129,13 +132,13 @@ class SimpleBusCrossBarNto1(n: Int) extends Module {
 
   switch (state) {
     is (s_idle) {
-      when(thisReq.fire) {
+      when(thisReq.fire && !io.flush) {
         inflightSrc := inputArb.io.chosen
         state := s_resp
       }
     }
     is (s_resp) {
-      when(io.out.resp.fire) {
+      when(io.out.resp.fire || io.flush) {
         state := s_idle
       }
     }
