@@ -147,4 +147,5 @@ class out_class extends Bundle {
     val difftest = new DiffCsr
     val is_mmio  = Output(Bool())
     val wb       = Output(Bool())
+    val GTimer   = Output(UInt(32.W))
 }

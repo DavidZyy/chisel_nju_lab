@@ -17,6 +17,7 @@ import rv32e.core.config._
 // }
 
 object SimpleBusCmd {
+    def cmdWidth     = 5
     // read | write | burst | awrite | aread, some bits can be true togeter, but some not.
     def idle         = "b00000"
     def aread        = "b00001".U // used for axi addr read channel and IN CORE READ, issue a read request
@@ -32,7 +33,7 @@ object SimpleBusCmd {
     def read         = "b10000".U // used for axi read channel, maybe useless with the following one...
     def read_burst   = "b10100".U
 
-    def apply() = UInt(5.W)
+    def apply() = UInt(cmdWidth.W)
 }
 
 class SimpleBusReqBundle extends Bundle {

@@ -111,8 +111,8 @@ class CacheStage1(val dataWidth: Int, val cacheName: String) extends Module with
   val cacheSetDirty = dirtyArray(randomNum)(setIdx)
 
   // maybe should add a s_fillPipe state to move the s_fill in RAM to here cache.
-  //  0         1        2        3            4            5
-  val s_idle :: s_rrq :: s_wrq :: s_reading :: s_writing :: s_end :: Nil = Enum(6)
+  //  0         1        2        3            4            5        6
+  val s_idle :: s_rrq :: s_wrq :: s_reading :: s_writing :: s_end :: s_wend :: Nil = Enum(7)
   val stateCache = RegInit(s_idle)
   switch (stateCache) {
     is (s_idle) {
@@ -136,10 +136,13 @@ class CacheStage1(val dataWidth: Int, val cacheName: String) extends Module with
       entryOff   := Mux(io.mem.resp.fire, entryOff+1.U, entryOff) // axi r fire
     }
     is (s_writing) {
-      stateCache := Mux(last, s_end, s_writing)
+      stateCache := Mux(last, s_wend, s_writing)
       entryOff   := Mux(io.mem.req.fire, entryOff+1.U, entryOff) // axi r fire
     }
     is (s_end) {
+      stateCache := Mux(hit, s_idle, s_rrq) // if not hit, is come from s_writing, or is come from s_reading.
+    }
+    is (s_wend) {
       stateCache := Mux(hit, s_idle, s_rrq) // if not hit, is come from s_writing, or is come from s_reading.
     }
   }
@@ -164,7 +167,7 @@ class CacheStage1(val dataWidth: Int, val cacheName: String) extends Module with
     dirtyArray(wayIdx)(setIdx) := true.B
   }
 
-  io.in.ready      := hit && (stateCache === s_idle || stateCache === s_end)
+  io.in.ready      := hit && (stateCache === s_idle || stateCache === s_end || stateCache === s_wend)
 
   io.out.valid         := hit && io.in.valid // if have no io.in.valid, dcache maybe request repeatedly
   io.out.bits.addr     := io.in.bits.addr
@@ -187,6 +190,7 @@ class CacheStage1(val dataWidth: Int, val cacheName: String) extends Module with
                                       s_rrq -> true.B,
                                       s_wrq -> true.B,
                                       s_writing -> true.B,
+                                      s_wend -> true.B,
                                       ))
   io.mem.req.bits.cmd   := MuxLookup(stateCache, 0.U)(List(
                                       s_rrq -> SimpleBusCmd.burst_aread,
@@ -201,8 +205,9 @@ class CacheStage1(val dataWidth: Int, val cacheName: String) extends Module with
   io.mem.req.bits.wdata := io.dataReadBus.resp.rdata
   io.mem.req.bits.wmask := "b1111".U
   io.mem.req.bits.wlast := false.B
-  io.mem.resp.ready     := MuxLookup(stateCache, false.B)(List(s_reading ->  true.B))
+  io.mem.resp.ready     := MuxLookup(stateCache, false.B)(List(s_reading ->  true.B, s_wend -> true.B)) // axi4 r ready and b ready
 
+  // from mem write to cache
   io.dataWriteBus.req.valid      := (stateCache === s_reading) && io.mem.resp.fire
   io.dataWriteBus.req.bits.waddr := writeCacheAddr
   io.dataWriteBus.req.bits.wdata := io.mem.resp.bits.rdata
@@ -212,7 +217,10 @@ class CacheStage1(val dataWidth: Int, val cacheName: String) extends Module with
     // if "io.in.fire" is true in last cycle, it means in this cycle, the new pc will come in, if "hit" is true 
     // in this pc, it means a query is hit.
     // BoringUtils.addSource(WireInit(hit && RegNext(io.in.fire)), perfPrefix+cacheName+"Hit")
-    BoringUtils.addSource(WireInit(hit && stateCache === s_end), perfPrefix+cacheName+"Miss")
+    BoringUtils.addSource(WireInit(hit && (stateCache === s_end || stateCache === s_wend)), perfPrefix+cacheName+"Miss")
+  }
+  if(cacheName == "dcache") {
+    // for debug write dirty.
   }
 }
 
@@ -237,8 +245,9 @@ class CacheStage2(val dataWidth: Int, val cacheName: String) extends Module with
   io.dataWriteBus.req.bits.waddr := io.in.bits.waddr
   io.dataWriteBus.req.bits.wdata := MaskData(io.dataReadBus.rdata, io.in.bits.wdata, MaskExpand(io.in.bits.wmask))
   
+  // from cpu write to cache
   if(cacheName == "dcache") {
-    // Debug(io.dataWriteBus.req.valid, "[dcache][stage2], waddr:%x, wdata:%x\n", io.dataWriteBus.req.bits.waddr, io.dataWriteBus.req.bits.wdata)
+    Debug(io.dataWriteBus.req.valid, "[dcache][stage2], waddr: %x, waddr2:%x, wdata:%x\n", io.in.bits.addr, io.dataWriteBus.req.bits.waddr, io.dataWriteBus.req.bits.wdata)
   }
 }
 

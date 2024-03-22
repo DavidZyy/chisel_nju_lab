@@ -86,4 +86,5 @@ class core extends Module {
     io.out.wb       := WBU_i.wb
     io.out.difftest <> EXU_i.difftest
     io.out.is_mmio  := WBU_i.is_mmio
+    io.out.GTimer   := GTimer()
 }

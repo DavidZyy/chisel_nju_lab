@@ -51,6 +51,7 @@ class MMIO extends Module {
     // resp
     io.in.resp.valid := true.B
     io.in.resp.bits.rdata := RamBB_i1.io.rdata
+    io.in.resp.bits.rlast := true.B
     io.in.resp.bits.wresp := io.in.isWrite
 }
 

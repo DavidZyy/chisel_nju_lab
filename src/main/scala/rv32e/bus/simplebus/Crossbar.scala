@@ -6,6 +6,7 @@ import chisel3._
 import chisel3.util._
 
 import rv32e.bus._
+import rv32e.bus.simplebus.SimpleBusCmd._
 import rv32e.bus.simplebus.SimpleBusReqBundle
  
 class SimpleBusCrossBar1toN(addressSpace: List[(Long, Long)]) extends Module {
@@ -29,14 +30,16 @@ class SimpleBusCrossBar1toN(addressSpace: List[(Long, Long)]) extends Module {
 
     val reqInvalidAddr = io.in.req.valid && !outSelVec.asUInt.orR
 
-    val cmdReg = RegInit(0.U(4.W))
+    val cmdReg = RegInit(0.U(cmdWidth.W))
 
     switch (state) {
         is (s_idle) {
-          when (io.in.resp.fire || io.flush) {
+          // req is canceled(flush) or finished at the same clock
+          when ((io.in.req.fire && io.in.resp.fire) || io.flush) {
             state := s_idle
           } .elsewhen(io.in.req.fire) {
-            state := s_resp
+            state  := s_resp
+            cmdReg := io.in.req.bits.cmd 
           } .elsewhen(reqInvalidAddr) {
             state := s_error
           }
@@ -49,7 +52,14 @@ class SimpleBusCrossBar1toN(addressSpace: List[(Long, Long)]) extends Module {
           // } .otherwise {
           //   state := s_resp
           // }
-          state := Mux(io.in.resp.fire, s_idle, s_resp)
+          // state := Mux(io.in.resp.fire, s_idle, s_resp)
+          when(io.flush) {
+            state := s_idle
+          } .elsewhen (cmdReg === burst_aread) {
+            state := Mux((io.in.resp.fire && io.in.resp.bits.rlast), s_idle, s_resp)
+          } .otherwise {
+            state := Mux(io.in.resp.fire, s_idle, s_resp)
+          }
         }
         is (s_error) {state := s_idle}
     }
@@ -59,8 +69,8 @@ class SimpleBusCrossBar1toN(addressSpace: List[(Long, Long)]) extends Module {
     //   s_idle -> Mux1H(outSelVec, io.out.map(_.req.ready)),
     //   s_resp -> Mux1H(outSelRespVec, io.out.map(_.req.ready)),
     // ))
-    io.in.req.ready := Mux1H(outSelVec, io.out.map(_.req.ready)) && state === s_idle
-
+    io.in.req.ready := (Mux1H(outSelVec, io.out.map(_.req.ready)) && state === s_idle) || 
+                        (Mux1H(outSelRespVec, io.out.map(_.req.ready)) && state === s_resp && io.in.req.bits.cmd === write_burst) // for write burst
     // in.resp
     io.in.resp.valid := MuxLookup(state, false.B)(List(
       s_idle -> Mux1H(outSelVec, io.out.map(_.resp.valid)),
@@ -73,7 +83,9 @@ class SimpleBusCrossBar1toN(addressSpace: List[(Long, Long)]) extends Module {
 
     // out.req
     for (i <- 0 until io.out.length) {
-      io.out(i).req.valid := outSelVec(i) && io.in.req.valid && state === s_idle
+      io.out(i).req.valid := ((outSelVec(i) && state === s_idle) || 
+                              (outSelRespVec(i) && state === s_resp && io.in.req.bits.cmd === write_burst)) &&  // for wirte burst
+                              io.in.req.valid 
       io.out(i).req.bits  := io.in.req.bits
     }
 
@@ -124,22 +136,38 @@ class SimpleBusCrossBarNto1(n: Int) extends Module {
 
   for (i <- 0 until n) {
     io.in(i).resp.bits := io.out.resp.bits
-    io.in(i).resp.valid := Mux(i.asUInt === inflightSrc, 
+    io.in(i).resp.valid := Mux(i.asUInt === inflightSrc,
                                 io.out.resp.valid,
                                 false.B)
   }
   //////// bind resp channel /////////////
 
+  val cmdReg = RegInit(0.U(cmdWidth.W))
+
   switch (state) {
     is (s_idle) {
-      when(thisReq.fire && !io.flush) {
+      // when(thisReq.fire && !io.flush) {
+      //   inflightSrc := inputArb.io.chosen
+      //   state := s_resp
+      // }
+      when ((thisReq.fire && io.out.resp.fire) || io.flush) {
+        state := s_idle
+      } .elsewhen (thisReq.fire) {
         inflightSrc := inputArb.io.chosen
         state := s_resp
+        cmdReg := thisReq.bits.cmd
       }
     }
     is (s_resp) {
-      when(io.out.resp.fire || io.flush) {
+      // when(io.out.resp.fire || io.flush) {
+      //   state := s_idle
+      // }
+      when(io.flush) {
         state := s_idle
+      } .elsewhen (cmdReg === burst_aread) {
+        state := Mux((io.out.resp.fire && io.out.resp.bits.rlast), s_idle, s_resp)
+      } .otherwise {
+        state := Mux(io.out.resp.fire, s_idle, s_resp)
       }
     }
   }

@@ -52,7 +52,8 @@ class SimpleBus2AXI4Converter[OT <: AXI4Lite](outType: OT) extends Module with A
     // } .elsewhen (mem.isWrite) {
     //     axi.w.ready
     // } .otherwise { false.B}
-    mem.resp.valid      := axi.r.valid
+    mem.resp.valid      := axi.r.valid || axi.b.valid
+
     mem.resp.bits.rdata := axi.r.bits.data
     mem.resp.bits.wresp := axi.b.bits.resp
 
