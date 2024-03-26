@@ -97,6 +97,8 @@ class top extends Module {
     ram_i.axi <> xbar1toNout.io.out(1).toAXI4()
 
     ////////////// for output ///////////////
+    // io.master <> xbarNto1.io.out.toAXI4()
+
     io.out <> core_i.io.out
 }
 

@@ -30,8 +30,8 @@ object SimpleBusCmd {
     def write_burst  = "b01100".U
     def write_burst_awrite = "b01110".U
 
-    def read         = "b10000".U // used for axi read channel, maybe useless with the following one...
-    def read_burst   = "b10100".U
+    // def read         = "b10000".U // used for axi read channel, maybe useless with the following one...
+    // def read_burst   = "b10100".U
 
     def apply() = UInt(cmdWidth.W)
 }

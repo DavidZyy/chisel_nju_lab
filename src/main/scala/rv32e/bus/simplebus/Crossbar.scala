@@ -125,9 +125,9 @@ class SimpleBusCrossBarNto1(n: Int) extends Module {
 
   val thisReq = inputArb.io.out
 
-  io.out.req.valid := thisReq.valid && ((state === s_idle) || inputArb.io.chosen === inflightSrc) // the later condition for write burst, it issue aw valid and then w valid
+  io.out.req.valid := thisReq.valid && ((state === s_idle) || (inputArb.io.chosen === inflightSrc && thisReq.bits.cmd === write_burst)) // the later condition for write burst, it issue aw valid and then w valid
   io.out.req.bits  := thisReq.bits
-  thisReq.ready    := io.out.req.ready && ((state === s_idle) || inputArb.io.chosen === inflightSrc)
+  thisReq.ready    := io.out.req.ready && ((state === s_idle) || (inputArb.io.chosen === inflightSrc && thisReq.bits.cmd === write_burst))
   //////// bind req channel /////////////
 
 
